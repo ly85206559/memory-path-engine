@@ -12,7 +12,9 @@ license = { text = "MIT" }
 authors = [
   { name = "Open Source Prototype" }
 ]
-dependencies = []
+dependencies = [
+  "pydantic",
+]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

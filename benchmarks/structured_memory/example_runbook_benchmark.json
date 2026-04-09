@@ -1,0 +1,35 @@
+{
+  "dataset_id": "example-runbook-benchmark-v1",
+  "dataset_name": "Example runbook benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/runbook_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "runbook-001",
+      "query": "What should we do if rollback does not recover the API after a deployment incident?",
+      "tags": ["runbook", "rollback", "mitigation"],
+      "expectation": {
+        "evidence_node_ids": ["01_api_incident_runbook:5"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "runbook-002",
+      "query": "When should we escalate to the database owner during an API incident?",
+      "tags": ["runbook", "escalation"],
+      "expectation": {
+        "evidence_node_ids": ["01_api_incident_runbook:6"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "runbook-003",
+      "query": "What should we do if credentials expired during a batch failure?",
+      "tags": ["runbook", "credentials", "recovery"],
+      "expectation": {
+        "evidence_node_ids": ["02_batch_failure_runbook:4"],
+        "minimum_evidence_matches": 1
+      }
+    }
+  ]
+}

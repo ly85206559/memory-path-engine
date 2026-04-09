@@ -6,6 +6,8 @@ The first version of `memory-path-engine` is only useful if it can be evaluated 
 
 The initial example benchmark pack lives in [`examples/contract_pack`](../examples/contract_pack).
 
+Repository-owned benchmark fixtures now live in [`../benchmarks/structured_memory`](../benchmarks/structured_memory) and are modeled through strong pydantic types in the benchmark bounded context.
+
 Inputs:
 
 - synthetic markdown contract-like documents in `examples/contract_pack/contracts`
@@ -94,3 +96,13 @@ The suite output also includes a cross-mode comparison report so you can quickly
 - questions missed only by one mode
 - modes that win on the same question
 - latency trade-offs between lexical, embedding, structure-only, and weighted retrieval
+
+## Benchmark bounded context
+
+The structured benchmark workflow is separated into its own bounded context:
+
+- `benchmarking.domain`: typed dataset, case, expectation, and report models
+- `benchmarking.infrastructure`: JSON fixture loading
+- `benchmarking.application`: runner and end-to-end evaluation service
+
+This keeps evaluation logic explicit and strongly typed instead of spreading anonymous `dict` payloads through the codebase.

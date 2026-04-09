@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from memory_engine.anomaly import AnomalyPolicy, ThresholdAnomalyPolicy
 from memory_engine.schema import ActivationContext, MemoryNode
 
 
@@ -29,9 +30,18 @@ class ScoringStrategy(Protocol):
 
 
 class WeightedSumScoringStrategy:
-    def __init__(self, anomaly_threshold: float = 0.8, depth_penalty: float = 0.25) -> None:
+    def __init__(
+        self,
+        anomaly_threshold: float = 0.8,
+        depth_penalty: float = 0.25,
+        anomaly_policy: AnomalyPolicy | None = None,
+    ) -> None:
         self.anomaly_threshold = anomaly_threshold
         self.depth_penalty = depth_penalty
+        self.anomaly_policy = anomaly_policy or ThresholdAnomalyPolicy(
+            risk_threshold=anomaly_threshold,
+            novelty_threshold=anomaly_threshold,
+        )
 
     def score_node(
         self,
@@ -62,10 +72,7 @@ class WeightedSumScoringStrategy:
         )
 
     def _is_anomalous(self, node: MemoryNode) -> bool:
-        return (
-            node.weights.risk >= self.anomaly_threshold
-            or node.weights.novelty >= self.anomaly_threshold
-        )
+        return bool(self.anomaly_policy.signals_for_node(node=node))
 
 
 class StructureOnlyScoringStrategy:

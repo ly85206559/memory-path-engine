@@ -1,0 +1,35 @@
+{
+  "dataset_id": "example-contract-benchmark-v1",
+  "dataset_name": "Example contract benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/contract_pack/contracts",
+  "cases": [
+    {
+      "case_id": "contract-001",
+      "query": "What happens if the supplier delivers late and still does not cure after notice?",
+      "tags": ["contract", "termination", "risk"],
+      "expectation": {
+        "evidence_node_ids": ["01_supply_agreement:2", "01_supply_agreement:3"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "contract-002",
+      "query": "When may the licensor terminate for breach and what happens after termination?",
+      "tags": ["contract", "termination", "multi_hop"],
+      "expectation": {
+        "evidence_node_ids": ["02_software_license:5", "02_software_license:6"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "contract-003",
+      "query": "What can the customer do if corrective maintenance does not start within 8 hours?",
+      "tags": ["contract", "remedy"],
+      "expectation": {
+        "evidence_node_ids": ["10_maintenance_agreement:4"],
+        "minimum_evidence_matches": 1
+      }
+    }
+  ]
+}
