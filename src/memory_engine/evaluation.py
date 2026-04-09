@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from time import perf_counter
 
-from memory_engine.ingest import ingest_contract_markdown
+from memory_engine.ingest import ingest_document
 from memory_engine.retrieve import (
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
@@ -14,10 +14,10 @@ from memory_engine.retrieve import (
 from memory_engine.store import MemoryStore
 
 
-def load_contract_pack_store(contracts_dir: Path) -> MemoryStore:
+def load_example_benchmark_store(contracts_dir: Path) -> MemoryStore:
     store = MemoryStore()
     for path in sorted(contracts_dir.glob("*.md")):
-        ingest_contract_markdown(path, store, domain_pack="contract_pack")
+        ingest_document(path, store, domain_pack="example_contract_pack")
     return store
 
 
@@ -31,7 +31,7 @@ def run_baseline_evaluation(
     top_k: int = 3,
     detailed: bool = False,
 ) -> dict:
-    store = load_contract_pack_store(contracts_dir)
+    store = load_example_benchmark_store(contracts_dir)
     retriever = BaselineTopKRetriever(store)
     return evaluate_retriever(
         retriever,
@@ -47,7 +47,7 @@ def run_embedding_evaluation(
     top_k: int = 3,
     detailed: bool = False,
 ) -> dict:
-    store = load_contract_pack_store(contracts_dir)
+    store = load_example_benchmark_store(contracts_dir)
     retriever = EmbeddingTopKRetriever(store)
     return evaluate_retriever(
         retriever,
@@ -63,7 +63,7 @@ def run_structure_only_evaluation(
     top_k: int = 3,
     detailed: bool = False,
 ) -> dict:
-    store = load_contract_pack_store(contracts_dir)
+    store = load_example_benchmark_store(contracts_dir)
     retriever = StructureAwareRetriever(store)
     return evaluate_retriever(
         retriever,
@@ -79,7 +79,7 @@ def run_weighted_evaluation(
     top_k: int = 3,
     detailed: bool = False,
 ) -> dict:
-    store = load_contract_pack_store(contracts_dir)
+    store = load_example_benchmark_store(contracts_dir)
     retriever = WeightedGraphRetriever(store)
     return evaluate_retriever(
         retriever,

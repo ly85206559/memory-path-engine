@@ -115,9 +115,9 @@ Long-term goal:
 
 At this stage, the main innovation is not "better retrieval." It is an architecture for memory evolution and activation.
 
-## Why contracts are the first proving ground
+## Why the current example packs span different document types
 
-The long-term core should stay domain-agnostic, but contracts are the right first validation surface because they contain:
+The long-term core should stay domain-agnostic, so the repository now keeps multiple example packs. Contract-like data is useful because it contains:
 
 - natural hierarchy
 - dense dependency chains
@@ -125,7 +125,14 @@ The long-term core should stay domain-agnostic, but contracts are the right firs
 - critical risk-bearing clauses
 - strong demand for explainability
 
-If structure, weighting, and path replay do not help in contracts, they are unlikely to become broadly useful elsewhere.
+Runbook-like data is also useful because it contains:
+
+- ordered action sequences
+- escalation paths
+- operational branching logic
+- process-heavy evidence chains
+
+If structure, weighting, and path replay do not help across these example document benchmarks, they are unlikely to become broadly useful elsewhere.
 
 ## What "not plain RAG" means here
 

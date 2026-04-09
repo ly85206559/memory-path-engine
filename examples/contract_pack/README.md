@@ -1,8 +1,8 @@
 # Contract Pack
 
-`contract_pack` is the first validation domain for `memory-path-engine`.
+`contract_pack` is an example benchmark pack for `memory-path-engine`.
 
-It is intentionally synthetic. The goal is not legal correctness. The goal is to provide a compact dataset with:
+It is intentionally synthetic. The goal is not legal correctness and it does not define the scope of the project. The goal is to provide a compact dataset with:
 
 - hierarchical clauses
 - cross-clause dependencies

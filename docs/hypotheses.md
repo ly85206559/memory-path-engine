@@ -42,7 +42,7 @@ Returning a replayable path of nodes and edges should make retrieval behavior au
 
 - every evaluation result includes a machine-readable `MemoryPath`
 - path steps can be traced back to source evidence
-- median query latency stays under `200 ms` for the synthetic contract-pack dataset on local runs
+- median query latency stays under `200 ms` for the current synthetic benchmark dataset on local runs
 
 **Failure signal**
 

@@ -122,11 +122,12 @@ The core should stay domain-agnostic. Domain packs should provide:
 - weight heuristics
 - evaluation tasks
 
-In the current codebase, this starts with a small `DomainPack` abstraction and a registry-backed `contract_pack`. The intent is to let future packs supply their own ingestion and graph-building logic without rewriting the retrieval core.
+In the current codebase, this starts with a small `DomainPack` abstraction and a registry-backed example pack for contract-like benchmark documents. The intent is to let future packs supply their own ingestion and graph-building logic without rewriting the retrieval core.
 
-Current validation pack:
+Current example packs:
 
-- `contract_pack`
+- `example_contract_pack` (with `contract_pack` kept as a backward-compatible alias)
+- `example_runbook_pack`
 
 Future candidates:
 

@@ -4,11 +4,11 @@ The first version of `memory-path-engine` is only useful if it can be evaluated 
 
 ## Dataset format
 
-The initial evaluation pack lives in [`examples/contract_pack`](../examples/contract_pack).
+The initial example benchmark pack lives in [`examples/contract_pack`](../examples/contract_pack).
 
 Inputs:
 
-- synthetic markdown contracts in `examples/contract_pack/contracts`
+- synthetic markdown contract-like documents in `examples/contract_pack/contracts`
 - annotated evaluation questions in `examples/contract_pack/eval/questions.json`
 
 Each question includes:
@@ -74,7 +74,7 @@ If these ablations produce no meaningful change, the core design assumptions nee
 
 ## What success looks like
 
-- graph-aware retrieval wins on multi-hop contract questions
+- graph-aware retrieval wins on multi-hop structured-document questions in the example benchmark
 - weighted retrieval improves critical clause discovery
 - path output makes failures easy to inspect
 

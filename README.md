@@ -4,7 +4,7 @@ A structured memory engine for AI agents with weighted retrieval and path replay
 
 `Memory Path Engine` is a research prototype for moving beyond plain `top-k` chunk retrieval. Instead of treating memory as a flat vector index, it represents memory as nodes, edges, weights, and replayable evidence paths.
 
-The long-term goal is a general memory substrate that can support different domain packs. The first validation pack in this repository is `contract_pack`, because contracts provide strong structure, clear risk signals, and natural multi-hop reasoning tasks.
+The long-term goal is a general memory substrate that can support many kinds of knowledge domains. The repository currently includes multiple example packs so the architecture can be exercised on different knowledge shapes rather than one domain only.
 
 ## Why this exists
 
@@ -39,7 +39,8 @@ See [`docs/hypotheses.md`](docs/hypotheses.md) for the success criteria.
 
 - [`src/memory_engine`](src/memory_engine): core schema, store, ingestion, retrieval, replay
 - [`docs`](docs): vision, architecture, hypotheses, evaluation plan
-- [`examples/contract_pack`](examples/contract_pack): first domain validation pack
+- [`examples/contract_pack`](examples/contract_pack): structured benchmark pack used to stress-test dense dependencies and exceptions
+- [`examples/runbook_pack`](examples/runbook_pack): non-contract example pack for operational playbooks and process memory
 - [`tests`](tests): initial unit tests for schema and retrieval behavior
 
 ## Read This First
@@ -62,24 +63,24 @@ Run tests:
 python -m unittest discover -s tests -v
 ```
 
-Try the contract-pack example:
+Try the non-contract runbook example:
 
 ```python
 from pathlib import Path
 
-from memory_engine.ingest import ingest_contract_markdown
+from memory_engine.ingest import ingest_document
 from memory_engine.retrieve import WeightedGraphRetriever
 from memory_engine.store import MemoryStore
 
 store = MemoryStore()
-contracts_dir = Path("examples/contract_pack/contracts")
+runbooks_dir = Path("examples/runbook_pack/runbooks")
 
-for path in contracts_dir.glob("*.md"):
-    ingest_contract_markdown(path, store, domain_pack="contract_pack")
+for path in runbooks_dir.glob("*.md"):
+    ingest_document(path, store, domain_pack="example_runbook_pack")
 
 retriever = WeightedGraphRetriever(store)
 result = retriever.search(
-    "What happens if delivery is late and the supplier also misses the cure period?",
+    "What should we do if rollback does not recover the API after a deployment incident?",
     top_k=3,
 )
 
@@ -92,7 +93,7 @@ for step in result.best_path().steps:
 
 - minimal `MemoryNode`, `MemoryEdge`, `MemoryPath`, and `EvidenceRef` schema
 - an in-memory store for fast iteration
-- a simple ingestion path for contract-style markdown
+- simple ingestion paths for multiple example document styles
 - three retrieval modes:
   - a naive lexical top-k baseline
   - an embedding top-k baseline with a pluggable `EmbeddingProvider`
@@ -108,16 +109,17 @@ for step in result.best_path().steps:
 - large-scale benchmarks
 - full UI
 
-## Why contracts first
+## Why the examples span multiple document types
 
-This repository does not assume memory is only useful for contract intelligence. The core is designed to stay domain-agnostic. Contracts are simply the first proving ground because they contain:
+This repository is not limited to any one domain. The core is intended to stay domain-agnostic. The current examples use both contract-like documents and runbooks because together they cover:
 
 - hierarchical structure
 - exception and dependency chains
-- critical risk-bearing clauses
+- critical risk-bearing units
+- procedural and operational steps
 - strong need for evidence-backed reasoning
 
-If the retrieval and replay ideas cannot survive this setting, they are unlikely to generalize.
+If the retrieval and replay ideas cannot survive across these example document types, they are unlikely to generalize well to other structured knowledge domains.
 
 ## Experimental framework
 
@@ -136,7 +138,7 @@ The evaluation layer can also emit detailed per-question reports, which makes mi
 
 - add explicit anomaly detectors and contradiction edges
 - expand the evaluation runner with ablation reports and latency summaries
-- extract a `domain_pack` interface for contracts, code, and research notes
+- extend the `domain_pack` interface for more example domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
 
 ## License

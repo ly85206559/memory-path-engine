@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import Protocol
@@ -20,8 +21,28 @@ class DomainPack(Protocol):
         """Ingest one source document into the memory store."""
 
 
-class ContractDomainPack:
-    name = "contract_pack"
+@dataclass(frozen=True, slots=True)
+class EdgeRule:
+    edge_type: str
+    triggers: tuple[str, ...]
+    minimum_shared_tokens: int = 2
+    weight: float = 0.7
+    bidirectional: bool = False
+
+
+class RuleBasedSectionedDocumentPack:
+    """
+    Shared strategy layer for benchmark packs built from sectioned, numbered documents.
+
+    Concrete packs customize:
+    - node typing
+    - metadata
+    - weighting heuristics
+    - semantic edge rules
+    """
+
+    name = "rule_based_pack"
+    node_type = "memory_unit"
 
     def ingest_document(self, path: Path, store: MemoryStore) -> None:
         current_section = "root"
@@ -43,26 +64,14 @@ class ContractDomainPack:
             if not clause_match:
                 continue
 
-            clause_number = clause_match.group("number")
-            clause_body = clause_match.group("body")
-            node_id = f"{path.stem}:{clause_number}"
-            node = MemoryNode(
-                id=node_id,
-                type="clause",
-                content=clause_body,
-                attributes={
-                    "domain_pack": self.name,
-                    "document_id": path.stem,
-                    "section": current_section,
-                    "clause_number": clause_number,
-                },
-                weights=self._infer_weight(clause_body),
-                source_ref=EvidenceRef(
-                    source_path=str(path),
-                    section_id=clause_number,
-                    line_start=line_number,
-                    line_end=line_number,
-                ),
+            unit_number = clause_match.group("number")
+            unit_body = clause_match.group("body")
+            node = self._build_node(
+                path=path,
+                section_id=current_section,
+                unit_number=unit_number,
+                unit_body=unit_body,
+                line_number=line_number,
             )
             store.add_node(node)
 
@@ -70,45 +79,120 @@ class ContractDomainPack:
                 store.add_edge(
                     MemoryEdge(
                         from_id=previous_node_id,
-                        to_id=node_id,
-                        edge_type="next_clause",
+                        to_id=node.id,
+                        edge_type="next_unit",
                         weight=0.4,
                         bidirectional=True,
                         source_ref=node.source_ref,
                     )
                 )
 
-            previous_node_id = node_id
+            previous_node_id = node.id
             self._create_semantic_edges(store, node)
 
-    def _create_semantic_edges(self, store: MemoryStore, node: MemoryNode) -> None:
-        keywords = {
-            "depends_on": ["subject to", "conditioned on", "if"],
-            "exception_to": ["except", "unless", "notwithstanding"],
-            "causes": ["shall pay", "liable", "terminate", "damages"],
+    def _build_node(
+        self,
+        *,
+        path: Path,
+        section_id: str,
+        unit_number: str,
+        unit_body: str,
+        line_number: int,
+    ) -> MemoryNode:
+        return MemoryNode(
+            id=f"{path.stem}:{unit_number}",
+            type=self.node_type,
+            content=unit_body,
+            attributes=self._build_attributes(path, section_id, unit_number, unit_body),
+            weights=self._infer_weight(unit_body),
+            source_ref=EvidenceRef(
+                source_path=str(path),
+                section_id=unit_number,
+                line_start=line_number,
+                line_end=line_number,
+            ),
+        )
+
+    def _build_attributes(
+        self,
+        path: Path,
+        section_id: str,
+        unit_number: str,
+        unit_body: str,
+    ) -> dict:
+        del unit_body
+        return {
+            "domain_pack": self.name,
+            "document_id": path.stem,
+            "section": section_id,
+            "unit_number": unit_number,
         }
 
+    def _create_semantic_edges(self, store: MemoryStore, node: MemoryNode) -> None:
         text = node.content.lower()
         for existing in store.nodes():
             if existing.id == node.id:
                 continue
 
-            for edge_type, triggers in keywords.items():
-                if any(trigger in text for trigger in triggers) and self._shared_tokens(
+            for rule in self._edge_rules():
+                if any(trigger in text for trigger in rule.triggers) and self._shared_tokens(
                     existing.content,
                     node.content,
-                ) >= 2:
+                ) >= rule.minimum_shared_tokens:
                     store.add_edge(
                         MemoryEdge(
                             from_id=node.id,
                             to_id=existing.id,
-                            edge_type=edge_type,
-                            weight=0.7,
-                            bidirectional=edge_type == "exception_to",
+                            edge_type=rule.edge_type,
+                            weight=rule.weight,
+                            bidirectional=rule.bidirectional,
                             source_ref=node.source_ref,
                         )
                     )
                     break
+
+    def _edge_rules(self) -> tuple[EdgeRule, ...]:
+        raise NotImplementedError
+
+    def _infer_weight(self, text: str) -> MemoryWeight:
+        raise NotImplementedError
+
+    def _shared_tokens(self, left: str, right: str) -> int:
+        return len(set(tokenize(left)) & set(tokenize(right)))
+
+    def _normalize_id(self, value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+class ExampleContractPack(RuleBasedSectionedDocumentPack):
+    """
+    Reference pack used to validate the memory architecture on
+    structured, dependency-heavy documents.
+
+    This pack is an example implementation, not the defining scope
+    of the overall project.
+    """
+
+    name = "example_contract_pack"
+    node_type = "clause"
+
+    def _build_attributes(
+        self,
+        path: Path,
+        section_id: str,
+        unit_number: str,
+        unit_body: str,
+    ) -> dict:
+        attributes = super()._build_attributes(path, section_id, unit_number, unit_body)
+        attributes["clause_number"] = unit_number
+        return attributes
+
+    def _edge_rules(self) -> tuple[EdgeRule, ...]:
+        return (
+            EdgeRule("depends_on", ("subject to", "conditioned on", "if")),
+            EdgeRule("exception_to", ("except", "unless", "notwithstanding"), bidirectional=True),
+            EdgeRule("causes", ("shall pay", "liable", "terminate", "damages")),
+        )
 
     def _infer_weight(self, text: str) -> MemoryWeight:
         lowered = text.lower()
@@ -130,15 +214,72 @@ class ContractDomainPack:
             confidence=confidence,
         )
 
-    def _shared_tokens(self, left: str, right: str) -> int:
-        return len(set(tokenize(left)) & set(tokenize(right)))
 
-    def _normalize_id(self, value: str) -> str:
-        return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+class ExampleRunbookPack(RuleBasedSectionedDocumentPack):
+    """
+    Reference pack for operational playbooks and incident runbooks.
 
+    It exists to show that the memory architecture is not tied to contract-like
+    documents and can also represent process-heavy, action-oriented knowledge.
+    """
+
+    name = "example_runbook_pack"
+    node_type = "step"
+
+    def _build_attributes(
+        self,
+        path: Path,
+        section_id: str,
+        unit_number: str,
+        unit_body: str,
+    ) -> dict:
+        attributes = super()._build_attributes(path, section_id, unit_number, unit_body)
+        attributes["step_number"] = unit_number
+        attributes["contains_action"] = any(
+            keyword in unit_body.lower()
+            for keyword in ("notify", "restart", "roll back", "escalate", "verify")
+        )
+        return attributes
+
+    def _edge_rules(self) -> tuple[EdgeRule, ...]:
+        return (
+            EdgeRule("depends_on", ("if", "when", "after", "once")),
+            EdgeRule("exception_to", ("unless", "except"), bidirectional=True),
+            EdgeRule("causes", ("notify", "restart", "roll back", "escalate", "page")),
+        )
+
+    def _infer_weight(self, text: str) -> MemoryWeight:
+        lowered = text.lower()
+        risk = (
+            0.9
+            if any(
+                word in lowered
+                for word in ("severity", "incident", "outage", "rollback", "page", "degrade")
+            )
+            else 0.35
+        )
+        importance = (
+            0.85
+            if any(word in lowered for word in ("must", "immediately", "within", "verify", "required"))
+            else 0.45
+        )
+        novelty = 0.8 if any(word in lowered for word in ("unless", "except", "manual approval")) else 0.2
+        return MemoryWeight(
+            importance=importance,
+            risk=risk,
+            novelty=novelty,
+            confidence=0.95,
+        )
+
+
+_example_contract_pack = ExampleContractPack()
+_example_runbook_pack = ExampleRunbookPack()
 
 _DOMAIN_PACKS: dict[str, DomainPack] = {
-    "contract_pack": ContractDomainPack(),
+    "example_contract_pack": _example_contract_pack,
+    "example_runbook_pack": _example_runbook_pack,
+    # Backward-compatible alias for the existing example dataset and helpers.
+    "contract_pack": _example_contract_pack,
 }
 
 

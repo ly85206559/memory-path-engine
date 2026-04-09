@@ -1,6 +1,9 @@
 from memory_engine.domain_pack import (
-    ContractDomainPack,
+    ExampleContractPack,
+    ExampleRunbookPack,
     DomainPack,
+    EdgeRule,
+    RuleBasedSectionedDocumentPack,
     get_domain_pack,
     register_domain_pack,
 )
@@ -34,10 +37,12 @@ from memory_engine.store import MemoryStore
 __all__ = [
     "ActivationContext",
     "BaselineTopKRetriever",
-    "ContractDomainPack",
     "DomainPack",
+    "EdgeRule",
     "EmbeddingProvider",
     "EmbeddingTopKRetriever",
+    "ExampleContractPack",
+    "ExampleRunbookPack",
     "EvidenceRef",
     "HashingEmbeddingProvider",
     "MemoryEdge",
@@ -53,6 +58,7 @@ __all__ = [
     "run_evaluation_suite",
     "run_structure_only_evaluation",
     "run_weighted_evaluation",
+    "RuleBasedSectionedDocumentPack",
     "StructureAwareRetriever",
     "StructureOnlyScoringStrategy",
     "WeightedSumScoringStrategy",
