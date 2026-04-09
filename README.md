@@ -87,9 +87,10 @@ for step in result.best_path().steps:
 - minimal `MemoryNode`, `MemoryEdge`, `MemoryPath`, and `EvidenceRef` schema
 - an in-memory store for fast iteration
 - a simple ingestion path for contract-style markdown
-- two retrieval modes:
+- three retrieval modes:
   - a naive lexical top-k baseline
-  - a weighted graph retriever with neighbor expansion and replayable paths
+  - an embedding top-k baseline with a pluggable `EmbeddingProvider`
+  - a weighted graph retriever with neighbor expansion, configurable scoring, and replayable paths
 - a small synthetic contract evaluation set for end-to-end experiments
 
 ## What is explicitly out of scope for now
@@ -112,12 +113,25 @@ This repository does not assume memory is only useful for contract intelligence.
 
 If the retrieval and replay ideas cannot survive this setting, they are unlikely to generalize.
 
+## Experimental framework
+
+The retrieval stack now separates:
+
+- candidate generation
+- semantic similarity backend
+- scoring strategy
+- path replay
+
+This makes it possible to compare lexical baseline, embedding baseline, structure-only traversal, and weighted graph retrieval without rewriting the main search loop.
+
+The evaluation layer can also emit detailed per-question reports, which makes miss analysis and ablation debugging much easier than relying on a single aggregate score.
+
 ## Planned next steps
 
-- replace lexical similarity with pluggable embedding-based scoring
 - add explicit anomaly detectors and contradiction edges
-- add evaluation runners with ablation comparisons
+- expand the evaluation runner with ablation reports and latency summaries
 - extract a `domain_pack` interface for contracts, code, and research notes
+- add stronger embedding backends behind the same `EmbeddingProvider` interface
 
 ## License
 

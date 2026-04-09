@@ -45,15 +45,21 @@ Elapsed time for a single query under local execution.
 - no graph expansion
 - no weight-aware reranking
 
+### `embedding_topk`
+
+- retrieve by embedding similarity through a pluggable `EmbeddingProvider`
+- no graph expansion
+- no weight-aware reranking
+
 ### `structure_only`
 
-- retrieve by lexical similarity
+- retrieve by embedding similarity
 - expand across explicit edges
 - no risk or anomaly boosts
 
 ### `weighted_graph`
 
-- lexical retrieval
+- embedding-based candidate retrieval
 - edge-aware expansion
 - weighted scoring across semantic, structural, anomaly, and importance signals
 - replayable `MemoryPath` output
@@ -71,3 +77,20 @@ If these ablations produce no meaningful change, the core design assumptions nee
 - graph-aware retrieval wins on multi-hop contract questions
 - weighted retrieval improves critical clause discovery
 - path output makes failures easy to inspect
+
+## Detailed reports
+
+The evaluation runner can now emit detailed per-question diagnostics in addition to summary scores.
+
+With `detailed=True`, each mode includes:
+
+- `avg_latency_ms`
+- per-question hit or miss
+- expected vs returned evidence node ids
+- best answer text for inspection
+
+The suite output also includes a cross-mode comparison report so you can quickly spot:
+
+- questions missed only by one mode
+- modes that win on the same question
+- latency trade-offs between lexical, embedding, structure-only, and weighted retrieval

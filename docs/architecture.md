@@ -71,6 +71,15 @@ flowchart TD
     RankPaths --> FinalResult[FinalResult]
 ```
 
+## Retrieval components
+
+The v0 retrieval stack is now split into explicit extension points:
+
+- `EmbeddingProvider`: produces query and node embeddings
+- `EmbeddingTopKRetriever`: runs semantic candidate generation
+- `ScoringStrategy`: converts semantic hits plus memory weights into ranked path steps
+- `WeightedGraphRetriever`: combines candidate search, neighbor expansion, and path replay
+
 ## Scoring model
 
 The first scoring function is intentionally simple:
@@ -84,7 +93,7 @@ final_score = semantic_score * semantic_weight
 
 Where:
 
-- `semantic_score` measures overlap between query and node content
+- `semantic_score` is provided by the active embedding backend
 - `structural_score` rewards traversable supporting edges
 - `anomaly_score` rewards nodes marked as risky, conflicting, unusual, or exception-bearing
 - `importance_score` rewards nodes that matter more even if they are not lexically dominant
@@ -114,10 +123,12 @@ Future candidates:
 The repository starts with three conceptual modes:
 
 1. `baseline_topk`
-   Plain lexical or embedding-based retrieval without structure.
-2. `structure_only`
+   Plain lexical retrieval without structure.
+2. `embedding_topk`
+   Embedding-based retrieval without graph expansion.
+3. `structure_only`
    Retrieval with node and edge awareness, but no extra weighting.
-3. `weighted_graph`
+4. `weighted_graph`
    Retrieval with structure, weighting, and replayable paths.
 
 ## Storage model

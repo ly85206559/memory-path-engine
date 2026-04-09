@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from memory_engine.embeddings import tokenize
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
 
@@ -120,19 +121,3 @@ def shared_tokens(left: str, right: str) -> int:
     left_tokens = set(tokenize(left))
     right_tokens = set(tokenize(right))
     return len(left_tokens & right_tokens)
-
-
-def tokenize(text: str) -> list[str]:
-    return [normalize_token(token) for token in re.findall(r"[a-z0-9]+", text.lower())]
-
-
-def normalize_token(token: str) -> str:
-    if len(token) > 5 and token.endswith("ing"):
-        return token[:-3]
-    if len(token) > 4 and token.endswith("ed"):
-        return token[:-2]
-    if len(token) > 4 and token.endswith("es"):
-        return token[:-2]
-    if len(token) > 3 and token.endswith("s"):
-        return token[:-1]
-    return token

@@ -1,6 +1,11 @@
 import unittest
 
-from memory_engine.retrieve import BaselineTopKRetriever, WeightedGraphRetriever
+from memory_engine.retrieve import (
+    BaselineTopKRetriever,
+    EmbeddingTopKRetriever,
+    WeightedGraphRetriever,
+)
+from memory_engine.scoring import ScoreBreakdown
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
 
@@ -38,10 +43,46 @@ def build_store() -> MemoryStore:
     return store
 
 
+class FakeEmbeddingProvider:
+    def __init__(self, mapping: dict[str, list[float]]) -> None:
+        self.mapping = mapping
+
+    def embed(self, text: str) -> list[float]:
+        return self.mapping[text]
+
+
+class PreferContractOneStrategy:
+    def score_node(self, *, query, node, semantic_score, context, depth):
+        del query, semantic_score, context, depth
+        boost = 1.0 if node.id == "contract:1" else 0.0
+        return ScoreBreakdown(
+            semantic_score=0.0,
+            structural_score=0.0,
+            anomaly_score=0.0,
+            importance_score=boost,
+            total_score=boost,
+        )
+
+
 class RetrieveTests(unittest.TestCase):
     def test_baseline_returns_lexical_hit(self):
         result = BaselineTopKRetriever(build_store()).search("delivery cure period", top_k=1)
         self.assertEqual(result.best_path().steps[0].node_id, "contract:2")
+
+    def test_embedding_retriever_uses_custom_provider(self):
+        provider = FakeEmbeddingProvider(
+            {
+                "Which clause mentions direct damages?": [1.0, 0.0],
+                "Supplier shall deliver goods within 10 days.": [0.0, 1.0],
+                "If Supplier misses delivery, Buyer may issue notice and a 5 day cure period applies.": [0.2, 0.8],
+                "If Supplier fails to cure, Buyer may terminate and recover direct damages.": [1.0, 0.0],
+            }
+        )
+        result = EmbeddingTopKRetriever(build_store(), embedding_provider=provider).search(
+            "Which clause mentions direct damages?",
+            top_k=1,
+        )
+        self.assertEqual(result.best_path().steps[0].node_id, "contract:3")
 
     def test_weighted_graph_retriever_replays_neighbor_path(self):
         result = WeightedGraphRetriever(build_store()).search(
@@ -51,3 +92,19 @@ class RetrieveTests(unittest.TestCase):
         node_ids = [step.node_id for step in result.best_path().steps]
         self.assertIn("contract:3", node_ids)
         self.assertTrue(result.best_path().supporting_evidence)
+
+    def test_weighted_graph_retriever_accepts_custom_scoring_strategy(self):
+        provider = FakeEmbeddingProvider(
+            {
+                "Pick the preferred node.": [1.0, 0.0],
+                "Supplier shall deliver goods within 10 days.": [1.0, 0.0],
+                "If Supplier misses delivery, Buyer may issue notice and a 5 day cure period applies.": [1.0, 0.0],
+                "If Supplier fails to cure, Buyer may terminate and recover direct damages.": [0.5, 0.0],
+            }
+        )
+        result = WeightedGraphRetriever(
+            build_store(),
+            embedding_provider=provider,
+            scoring_strategy=PreferContractOneStrategy(),
+        ).search("Pick the preferred node.", top_k=2)
+        self.assertEqual(result.best_path().steps[0].node_id, "contract:1")
