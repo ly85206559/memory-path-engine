@@ -48,6 +48,7 @@ See [`docs/hypotheses.md`](docs/hypotheses.md) for the success criteria.
 - [`docs/vision.md`](docs/vision.md): why this project exists, how memory palace ideas map to AI memory, and where the architecture is heading
 - [`docs/architecture.md`](docs/architecture.md): what the current implementation looks like
 - [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
+- [`benchmarks/structured_memory`](benchmarks/structured_memory): repository-owned typed benchmark fixtures for structured memory evaluation
 
 ## Quick start
 
@@ -94,10 +95,12 @@ for step in result.best_path().steps:
 - minimal `MemoryNode`, `MemoryEdge`, `MemoryPath`, and `EvidenceRef` schema
 - an in-memory store for fast iteration
 - simple ingestion paths for multiple example document styles
-- three retrieval modes:
+- multiple retrieval modes:
   - a naive lexical top-k baseline
   - an embedding top-k baseline with a pluggable `EmbeddingProvider`
+  - structure-only graph traversal
   - a weighted graph retriever with neighbor expansion, configurable scoring, and replayable paths
+  - activation spreading v1 for explicit graph propagation with decay and thresholds
 - a small synthetic contract evaluation set for end-to-end experiments
 
 ## What is explicitly out of scope for now
@@ -133,6 +136,12 @@ The retrieval stack now separates:
 This makes it possible to compare lexical baseline, embedding baseline, structure-only traversal, and weighted graph retrieval without rewriting the main search loop.
 
 The evaluation layer can also emit detailed per-question reports, which makes miss analysis and ablation debugging much easier than relying on a single aggregate score.
+
+The repository also now includes a dedicated structured benchmark bounded context with:
+
+- strong pydantic dataset models
+- a JSON repository for benchmark fixtures
+- an application service that loads datasets, builds stores, and runs retrievers end to end
 
 ## Planned next steps
 

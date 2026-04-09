@@ -137,7 +137,7 @@ Future candidates:
 
 ## Baselines
 
-The repository starts with three conceptual modes:
+The repository starts with these conceptual modes:
 
 1. `baseline_topk`
   Plain lexical retrieval without structure.
@@ -147,6 +147,8 @@ The repository starts with three conceptual modes:
   Retrieval with node and edge awareness, but no extra weighting.
 4. `weighted_graph`
   Retrieval with structure, weighting, and replayable paths.
+5. `activation_spreading_v1`
+  Seed selection plus explicit activation propagation along edges with decay and thresholds.
 
 ## Storage model
 
@@ -158,4 +160,13 @@ Later storage backends can include:
 - graph database
 - vector store
 - hybrid graph plus vector backends
+
+## Bounded contexts
+
+The repository is beginning to separate responsibilities into clearer bounded contexts:
+
+- `memory core`: node, edge, path, retrieval, and domain-pack abstractions
+- `structured benchmark`: strongly typed benchmark datasets, fixture loading, and evaluation services
+
+This split is meant to support DDD-style evolution: domain concepts stay explicit, and application services orchestrate them without collapsing everything into utility modules.
 
