@@ -1,6 +1,6 @@
 # Contract Pack
 
-`contract_pack` is the first validation domain for `memory-engine`.
+`contract_pack` is the first validation domain for `memory-path-engine`.
 
 It is intentionally synthetic. The goal is not legal correctness. The goal is to provide a compact dataset with:
 

@@ -1,6 +1,6 @@
 # Architecture
 
-`Memory Engine` is intentionally small in v0. The goal is to validate the memory model before scaling infrastructure.
+`Memory Path Engine` is intentionally small in v0. The goal is to validate the memory model before scaling infrastructure.
 
 ## Core abstractions
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in `memory-engine`.
+Thanks for your interest in `memory-path-engine`.
 
 This repository is currently a research prototype, so the most helpful contributions are:
 

@@ -1,8 +1,8 @@
-# Memory Engine
+# Memory Path Engine
 
 A structured memory engine for AI agents with weighted retrieval and path replay.
 
-`Memory Engine` is a research prototype for moving beyond plain `top-k` chunk retrieval. Instead of treating memory as a flat vector index, it represents memory as nodes, edges, weights, and replayable evidence paths.
+`Memory Path Engine` is a research prototype for moving beyond plain `top-k` chunk retrieval. Instead of treating memory as a flat vector index, it represents memory as nodes, edges, weights, and replayable evidence paths.
 
 The long-term goal is a general memory substrate that can support different domain packs. The first validation pack in this repository is `contract_pack`, because contracts provide strong structure, clear risk signals, and natural multi-hop reasoning tasks.
 

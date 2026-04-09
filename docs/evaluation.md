@@ -1,6 +1,6 @@
 # Evaluation Plan
 
-The first version of `memory-engine` is only useful if it can be evaluated against explicit baselines.
+The first version of `memory-path-engine` is only useful if it can be evaluated against explicit baselines.
 
 ## Dataset format
 
