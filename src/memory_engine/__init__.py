@@ -1,3 +1,9 @@
+from memory_engine.domain_pack import (
+    ContractDomainPack,
+    DomainPack,
+    get_domain_pack,
+    register_domain_pack,
+)
 from memory_engine.evaluation import (
     run_baseline_evaluation,
     run_embedding_evaluation,
@@ -5,7 +11,7 @@ from memory_engine.evaluation import (
     run_structure_only_evaluation,
     run_weighted_evaluation,
 )
-from memory_engine.ingest import ingest_contract_markdown
+from memory_engine.ingest import ingest_contract_markdown, ingest_document
 from memory_engine.retrieve import (
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
@@ -28,6 +34,8 @@ from memory_engine.store import MemoryStore
 __all__ = [
     "ActivationContext",
     "BaselineTopKRetriever",
+    "ContractDomainPack",
+    "DomainPack",
     "EmbeddingProvider",
     "EmbeddingTopKRetriever",
     "EvidenceRef",
@@ -38,6 +46,8 @@ __all__ = [
     "MemoryStore",
     "MemoryWeight",
     "RetrievalResult",
+    "get_domain_pack",
+    "register_domain_pack",
     "run_baseline_evaluation",
     "run_embedding_evaluation",
     "run_evaluation_suite",
@@ -47,5 +57,6 @@ __all__ = [
     "StructureOnlyScoringStrategy",
     "WeightedSumScoringStrategy",
     "WeightedGraphRetriever",
+    "ingest_document",
     "ingest_contract_markdown",
 ]

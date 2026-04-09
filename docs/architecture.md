@@ -2,6 +2,18 @@
 
 `Memory Path Engine` is intentionally small in v0. The goal is to validate the memory model before scaling infrastructure.
 
+This document focuses on the current implementation architecture. For the higher-level design intent, principles, and roadmap, see [`vision.md`](vision.md).
+
+## Scope
+
+This file answers:
+
+- what core objects exist in the current implementation
+- how retrieval is assembled today
+- which extension points are already exposed
+
+This file does not try to fully explain the long-term motivation for the project. That belongs in [`vision.md`](vision.md).
+
 ## Core abstractions
 
 ### `MemoryNode`
@@ -71,6 +83,8 @@ flowchart TD
     RankPaths --> FinalResult[FinalResult]
 ```
 
+
+
 ## Retrieval components
 
 The v0 retrieval stack is now split into explicit extension points:
@@ -108,6 +122,8 @@ The core should stay domain-agnostic. Domain packs should provide:
 - weight heuristics
 - evaluation tasks
 
+In the current codebase, this starts with a small `DomainPack` abstraction and a registry-backed `contract_pack`. The intent is to let future packs supply their own ingestion and graph-building logic without rewriting the retrieval core.
+
 Current validation pack:
 
 - `contract_pack`
@@ -123,13 +139,13 @@ Future candidates:
 The repository starts with three conceptual modes:
 
 1. `baseline_topk`
-   Plain lexical retrieval without structure.
+  Plain lexical retrieval without structure.
 2. `embedding_topk`
-   Embedding-based retrieval without graph expansion.
+  Embedding-based retrieval without graph expansion.
 3. `structure_only`
-   Retrieval with node and edge awareness, but no extra weighting.
+  Retrieval with node and edge awareness, but no extra weighting.
 4. `weighted_graph`
-   Retrieval with structure, weighting, and replayable paths.
+  Retrieval with structure, weighting, and replayable paths.
 
 ## Storage model
 
@@ -141,3 +157,4 @@ Later storage backends can include:
 - graph database
 - vector store
 - hybrid graph plus vector backends
+

@@ -38,9 +38,15 @@ See [`docs/hypotheses.md`](docs/hypotheses.md) for the success criteria.
 ## Repository layout
 
 - [`src/memory_engine`](src/memory_engine): core schema, store, ingestion, retrieval, replay
-- [`docs`](docs): architecture, hypotheses, evaluation plan
+- [`docs`](docs): vision, architecture, hypotheses, evaluation plan
 - [`examples/contract_pack`](examples/contract_pack): first domain validation pack
 - [`tests`](tests): initial unit tests for schema and retrieval behavior
+
+## Read This First
+
+- [`docs/vision.md`](docs/vision.md): why this project exists, how memory palace ideas map to AI memory, and where the architecture is heading
+- [`docs/architecture.md`](docs/architecture.md): what the current implementation looks like
+- [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
 
 ## Quick start
 
