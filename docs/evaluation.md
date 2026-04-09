@@ -66,6 +66,14 @@ Elapsed time for a single query under local execution.
 - weighted scoring across semantic, structural, anomaly, and importance signals
 - replayable `MemoryPath` output
 
+### `activation_spreading_v1`
+
+- embedding-based seed selection
+- explicit activation propagation with decay and threshold controls
+- edge-type-aware traversal
+- semantic bonuses for exception, remedy, and escalation nodes
+- replayable path output with propagation-oriented diagnostics
+
 ## Required ablations
 
 - remove structure
@@ -90,12 +98,17 @@ With `detailed=True`, each mode includes:
 - per-question hit or miss
 - expected vs returned evidence node ids
 - best answer text for inspection
+- surfaced semantic roles
+- best-path edge types
+- activated node count and propagation depth
 
 The suite output also includes a cross-mode comparison report so you can quickly spot:
 
 - questions missed only by one mode
 - modes that win on the same question
 - latency trade-offs between lexical, embedding, structure-only, and weighted retrieval
+- path-hit and semantic-hit rates for graph-oriented cases
+- activation breadth and propagation depth for spreading-based retrieval
 
 ## Benchmark bounded context
 
@@ -106,3 +119,10 @@ The structured benchmark workflow is separated into its own bounded context:
 - `benchmarking.application`: runner and end-to-end evaluation service
 
 This keeps evaluation logic explicit and strongly typed instead of spreading anonymous `dict` payloads through the codebase.
+
+Repository-owned graph fixtures now also cover:
+
+- exception override cases
+- multi-hop chain cases
+- path-shape expectations
+- semantic-role and edge-type expectations

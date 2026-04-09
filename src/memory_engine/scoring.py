@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from memory_engine.anomaly import AnomalyPolicy, ThresholdAnomalyPolicy
+from memory_engine.memory_state import MemoryStatePolicy
 from memory_engine.schema import ActivationContext, MemoryNode
 
 
@@ -35,6 +36,7 @@ class WeightedSumScoringStrategy:
         anomaly_threshold: float = 0.8,
         depth_penalty: float = 0.25,
         anomaly_policy: AnomalyPolicy | None = None,
+        memory_state_policy: MemoryStatePolicy | None = None,
     ) -> None:
         self.anomaly_threshold = anomaly_threshold
         self.depth_penalty = depth_penalty
@@ -42,6 +44,7 @@ class WeightedSumScoringStrategy:
             risk_threshold=anomaly_threshold,
             novelty_threshold=anomaly_threshold,
         )
+        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
 
     def score_node(
         self,
@@ -55,7 +58,7 @@ class WeightedSumScoringStrategy:
         del query
         structural_score = max(0.0, 1.0 - depth * self.depth_penalty)
         anomaly_score = 1.0 if self._is_anomalous(node) else 0.0
-        importance_score = node.weights.bounded_score()
+        importance_score = self.memory_state_policy.effective_weight_score(node.weights)
         weighted_bonus_gate = semantic_score
         total_score = (
             semantic_score * context.semantic_weight

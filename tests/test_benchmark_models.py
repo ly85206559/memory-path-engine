@@ -62,6 +62,8 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
         expectation = StructuredBenchmarkExpectation(
             evidence_node_ids=["runbook:1", "runbook:2"],
             minimum_evidence_matches=1,
+            required_edge_types=["depends_on"],
+            required_semantic_roles=["escalation"],
             path_scope="best_path",
             path={
                 "match_mode": "subsequence",
@@ -74,6 +76,7 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
 
         self.assertEqual(expectation.path_scope, "best_path")
         self.assertEqual(expectation.path.steps[1].via_edge_type, "depends_on")
+        self.assertEqual(expectation.required_semantic_roles, ["escalation"])
 
     def test_path_step_rejects_blank_edge_type(self):
         from pydantic import ValidationError

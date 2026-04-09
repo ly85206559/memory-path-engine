@@ -33,6 +33,8 @@ class StructuredBenchmarkExpectation(BaseModel):
     minimum_evidence_matches: int = Field(default=1, ge=1)
     path: PathShapeExpectation | None = None
     path_scope: Literal["any_path", "best_path"] = "any_path"
+    required_edge_types: list[str] = Field(default_factory=list)
+    required_semantic_roles: list[str] = Field(default_factory=list)
 
     @field_validator("minimum_evidence_matches")
     @classmethod
@@ -70,10 +72,15 @@ class StructuredBenchmarkCaseReport(BaseModel):
     tags: list[str] = Field(default_factory=list)
     hit: bool
     path_hit: bool | None = None
+    semantic_hit: bool | None = None
     expected_evidence: list[str]
     matched_evidence: list[str]
     missing_evidence: list[str]
     returned_node_ids: list[str]
+    surfaced_semantic_roles: list[str] = Field(default_factory=list)
+    path_edge_types: list[str] = Field(default_factory=list)
+    activated_node_count: int = Field(default=0, ge=0)
+    best_path_hops: int = Field(default=0, ge=0)
     best_answer: str = ""
     latency_ms: float = Field(ge=0.0)
 
@@ -94,6 +101,10 @@ class StructuredBenchmarkModeSummary(BaseModel):
 
     evidence_recall: float = Field(ge=0.0, le=1.0)
     avg_latency_ms: float = Field(ge=0.0)
+    path_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    semantic_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    avg_activated_nodes: float = Field(default=0.0, ge=0.0)
+    avg_propagation_depth: float = Field(default=0.0, ge=0.0)
 
 
 class StructuredBenchmarkModeCaseResult(BaseModel):

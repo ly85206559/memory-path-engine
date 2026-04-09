@@ -3,21 +3,30 @@ from __future__ import annotations
 from collections import deque
 import time
 
+from memory_engine.activation import (
+    ActivatedNode,
+    ActivationSignal,
+    DefaultPropagationPolicy,
+    PropagationPolicy,
+)
 from memory_engine.embeddings import (
     EmbeddingProvider,
     HashingEmbeddingProvider,
     cosine_similarity,
     lexical_overlap,
 )
+from memory_engine.memory_state import MemoryStatePolicy, decay_unvisited_nodes, reinforce_result_paths
 from memory_engine.replay import path_answer
 from memory_engine.schema import ActivationContext, RetrievalResult
 from memory_engine.scoring import ScoringStrategy, StructureOnlyScoringStrategy, WeightedSumScoringStrategy
+from memory_engine.semantics import semantic_activation_bonus
 from memory_engine.store import MemoryStore
 
 
 class BaselineTopKRetriever:
-    def __init__(self, store: MemoryStore) -> None:
+    def __init__(self, store: MemoryStore, memory_state_policy: MemoryStatePolicy | None = None) -> None:
         self.store = store
+        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
 
     def search(self, query: str, top_k: int = 3) -> RetrievalResult:
         ranked = sorted(
@@ -30,6 +39,12 @@ class BaselineTopKRetriever:
             for node in ranked
             if lexical_overlap(query, node.content) > 0
         ]
+        reinforce_result_paths(self.store, paths=paths, policy=self.memory_state_policy)
+        decay_unvisited_nodes(
+            self.store,
+            visited_node_ids={step.node_id for path in paths for step in path.steps},
+            policy=self.memory_state_policy,
+        )
         return RetrievalResult(query=query, paths=paths)
 
 
@@ -38,10 +53,12 @@ class EmbeddingTopKRetriever:
         self,
         store: MemoryStore,
         embedding_provider: EmbeddingProvider | None = None,
+        memory_state_policy: MemoryStatePolicy | None = None,
     ) -> None:
         self.store = store
         self.embedding_provider = embedding_provider or HashingEmbeddingProvider()
         self._embedding_cache: dict[str, list[float]] = {}
+        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
 
     def search(self, query: str, top_k: int = 3) -> RetrievalResult:
         ranked = self.rank_candidates(query, top_k=top_k)
@@ -50,6 +67,12 @@ class EmbeddingTopKRetriever:
             for node, score in ranked
             if score > 0
         ]
+        reinforce_result_paths(self.store, paths=paths, policy=self.memory_state_policy)
+        decay_unvisited_nodes(
+            self.store,
+            visited_node_ids={step.node_id for path in paths for step in path.steps},
+            policy=self.memory_state_policy,
+        )
         return RetrievalResult(query=query, paths=paths)
 
     def rank_candidates(self, query: str, top_k: int = 3) -> list[tuple]:
@@ -79,13 +102,16 @@ class WeightedGraphRetriever:
         store: MemoryStore,
         embedding_provider: EmbeddingProvider | None = None,
         scoring_strategy: ScoringStrategy | None = None,
+        memory_state_policy: MemoryStatePolicy | None = None,
     ) -> None:
         self.store = store
         self.embedding_retriever = EmbeddingTopKRetriever(
             store=store,
             embedding_provider=embedding_provider,
+            memory_state_policy=memory_state_policy,
         )
         self.scoring_strategy = scoring_strategy or WeightedSumScoringStrategy()
+        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
 
     def search(self, query: str, top_k: int = 3, context: ActivationContext | None = None) -> RetrievalResult:
         context = context or ActivationContext(query=query)
@@ -106,6 +132,12 @@ class WeightedGraphRetriever:
         elapsed_ms = (time.perf_counter() - start) * 1000
         for path in paths:
             path.final_answer = f"{path.final_answer} [latency_ms={elapsed_ms:.2f}]"
+        reinforce_result_paths(self.store, paths=paths, policy=self.memory_state_policy)
+        decay_unvisited_nodes(
+            self.store,
+            visited_node_ids={step.node_id for path in paths for step in path.steps},
+            policy=self.memory_state_policy,
+        )
         return RetrievalResult(query=query, paths=paths)
 
     def _rank_seed_candidates(self, query: str, top_k: int) -> list[tuple]:
@@ -194,3 +226,173 @@ class StructureAwareRetriever(WeightedGraphRetriever):
             embedding_provider=embedding_provider,
             scoring_strategy=StructureOnlyScoringStrategy(),
         )
+
+
+class ActivationSpreadingRetriever(WeightedGraphRetriever):
+    def __init__(
+        self,
+        store: MemoryStore,
+        embedding_provider: EmbeddingProvider | None = None,
+        scoring_strategy: ScoringStrategy | None = None,
+        propagation_policy: PropagationPolicy | None = None,
+        max_activated_nodes: int = 12,
+        memory_state_policy: MemoryStatePolicy | None = None,
+    ) -> None:
+        super().__init__(
+            store=store,
+            embedding_provider=embedding_provider,
+            scoring_strategy=scoring_strategy,
+            memory_state_policy=memory_state_policy,
+        )
+        self.propagation_policy = propagation_policy or DefaultPropagationPolicy()
+        self.max_activated_nodes = max_activated_nodes
+
+    def search(self, query: str, top_k: int = 3, context: ActivationContext | None = None) -> RetrievalResult:
+        context = context or ActivationContext(query=query)
+        start = time.perf_counter()
+        seeds = self._rank_seed_candidates(query, top_k=top_k)
+
+        paths = []
+        for seed, seed_similarity in seeds:
+            path = self._activate_from_seed(
+                query=query,
+                seed_id=seed.id,
+                seed_similarity=seed_similarity,
+                context=context,
+            )
+            if path is not None:
+                paths.append(path)
+
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        for path in paths:
+            path.final_answer = f"{path.final_answer} [latency_ms={elapsed_ms:.2f}]"
+        reinforce_result_paths(self.store, paths=paths, policy=self.memory_state_policy)
+        decay_unvisited_nodes(
+            self.store,
+            visited_node_ids={step.node_id for path in paths for step in path.steps},
+            policy=self.memory_state_policy,
+        )
+        return RetrievalResult(query=query, paths=paths)
+
+    def _activate_from_seed(
+        self,
+        *,
+        query: str,
+        seed_id: str,
+        seed_similarity: float,
+        context: ActivationContext,
+    ):
+        seed_activation = self.propagation_policy.seed_activation(seed_score=seed_similarity)
+        if seed_activation <= 0.0:
+            return None
+
+        queue = deque(
+            [
+                ActivationSignal(
+                    node_id=seed_id,
+                    activation=seed_activation,
+                    hop=0,
+                )
+            ]
+        )
+        visited: set[str] = set()
+        activated_nodes: dict[str, ActivatedNode] = {}
+
+        while queue and len(activated_nodes) < self.max_activated_nodes:
+            signal = queue.popleft()
+            existing = activated_nodes.get(signal.node_id)
+            if existing is not None and existing.activation >= signal.activation:
+                continue
+
+            node = self.store.get_node(signal.node_id)
+            semantic_score = (
+                seed_similarity
+                if signal.hop == 0
+                else self._semantic_similarity(query, node.content)
+            )
+            breakdown = self.scoring_strategy.score_node(
+                query=query,
+                node=node,
+                semantic_score=semantic_score,
+                context=context,
+                depth=signal.hop,
+            )
+            activated_nodes[signal.node_id] = ActivatedNode(
+                node_id=signal.node_id,
+                activation=signal.activation,
+                score=max(signal.activation, breakdown.total_score),
+                hop=signal.hop,
+                source_node_id=signal.source_node_id,
+                via_edge_type=signal.via_edge_type,
+            )
+
+            if signal.hop >= context.max_hops:
+                continue
+
+            visited.add(signal.node_id)
+            for edge in self.store.neighbors(signal.node_id):
+                if edge.to_id in visited:
+                    continue
+                propagation = self.propagation_policy.propagate(signal=signal, edge=edge)
+                if propagation.stopped_reason is not None:
+                    continue
+                destination_node = self.store.get_node(edge.to_id)
+                propagated_activation = propagation.propagated_activation
+                if edge.edge_type == "exception_to":
+                    propagated_activation += 0.12
+                propagated_activation += semantic_activation_bonus(destination_node)
+                queue.append(
+                    ActivationSignal(
+                        node_id=edge.to_id,
+                        activation=min(propagated_activation, 1.0),
+                        hop=propagation.hop,
+                        source_node_id=signal.node_id,
+                        via_edge_type=edge.edge_type,
+                    )
+                )
+
+        if not activated_nodes:
+            return None
+
+        terminal_candidates = [
+            activated
+            for activated in activated_nodes.values()
+            if activated.node_id != seed_id
+        ] or list(activated_nodes.values())
+        terminal = max(
+            terminal_candidates,
+            key=lambda activated: (activated.score, activated.activation, activated.hop),
+        )
+        ordered_path = self._reconstruct_activated_path(
+            seed_id=seed_id,
+            terminal_id=terminal.node_id,
+            activated_nodes=activated_nodes,
+        )
+        chain = []
+        for activated in ordered_path:
+            node = self.store.get_node(activated.node_id)
+            reason = (
+                f"seed activation={activated.activation:.3f}"
+                if activated.hop == 0
+                else f"propagated hop={activated.hop} activation={activated.activation:.3f}"
+            )
+            chain.append((node, activated.score, reason, activated.via_edge_type))
+        return path_answer(query, chain)
+
+    def _reconstruct_activated_path(
+        self,
+        *,
+        seed_id: str,
+        terminal_id: str,
+        activated_nodes: dict[str, ActivatedNode],
+    ) -> list[ActivatedNode]:
+        ordered_path: list[ActivatedNode] = []
+        current_id = terminal_id
+        while True:
+            activated = activated_nodes[current_id]
+            ordered_path.append(activated)
+            if current_id == seed_id or activated.source_node_id is None:
+                break
+            current_id = activated.source_node_id
+        ordered_path.reverse()
+        return ordered_path

@@ -7,6 +7,7 @@ from typing import Protocol
 
 from memory_engine.embeddings import tokenize
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
+from memory_engine.semantics import SemanticRole, infer_semantic_role
 from memory_engine.store import MemoryStore
 
 
@@ -120,12 +121,12 @@ class RuleBasedSectionedDocumentPack:
         unit_number: str,
         unit_body: str,
     ) -> dict:
-        del unit_body
         return {
             "domain_pack": self.name,
             "document_id": path.stem,
             "section": section_id,
             "unit_number": unit_number,
+            "semantic_role": infer_semantic_role(unit_body, node_type=self.node_type).value,
         }
 
     def _create_semantic_edges(self, store: MemoryStore, node: MemoryNode) -> None:
@@ -149,7 +150,18 @@ class RuleBasedSectionedDocumentPack:
                             source_ref=node.source_ref,
                         )
                     )
+                    self._annotate_semantic_link(node, existing, rule)
                     break
+
+    def _annotate_semantic_link(self, node: MemoryNode, existing: MemoryNode, rule: EdgeRule) -> None:
+        if rule.edge_type == "exception_to":
+            node.attributes["exception_target"] = existing.id
+            node.attributes["exception_target_role"] = existing.attributes.get("semantic_role")
+        if (
+            rule.edge_type == "depends_on"
+            and node.attributes.get("semantic_role") == SemanticRole.CONDITION.value
+        ):
+            node.attributes["depends_on_target"] = existing.id
 
     def _edge_rules(self) -> tuple[EdgeRule, ...]:
         raise NotImplementedError

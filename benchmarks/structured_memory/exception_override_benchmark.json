@@ -1,0 +1,21 @@
+{
+  "dataset_id": "exception-override-benchmark-v1",
+  "dataset_name": "Exception override benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/graph_contract_pack/contracts",
+  "cases": [
+    {
+      "case_id": "exception-001",
+      "query": "What overrides the normal 30 day payment rule when goods are defective?",
+      "tags": ["exception", "override", "payment"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_exception_override_contract:2",
+          "01_exception_override_contract:3"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_semantic_roles": ["exception", "remedy"]
+      }
+    }
+  ]
+}

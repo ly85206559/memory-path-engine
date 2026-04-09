@@ -7,6 +7,7 @@ These benchmarks are different from broad conversational-memory benchmarks such 
 - evidence recall on structured documents
 - multi-hop retrieval quality
 - path-oriented reasoning support
+- semantic-role and edge-type correctness
 - latency trade-offs across retrieval modes
 
 ## Why repository-owned fixtures exist
@@ -44,10 +45,16 @@ Current expectation fields:
 
 - `evidence_node_ids`
 - `minimum_evidence_matches`
+- `path`
+- `path_scope`
+- `required_edge_types`
+- `required_semantic_roles`
 
 ## Current fixtures
 
 - `example_contract_benchmark.json`
 - `example_runbook_benchmark.json`
+- `exception_override_benchmark.json`
+- `multi_hop_chain_benchmark.json`
 
 These fixtures are intentionally small. They are meant to support TDD and architectural iteration before larger benchmark suites are introduced.

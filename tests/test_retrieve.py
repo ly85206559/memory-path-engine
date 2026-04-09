@@ -1,10 +1,12 @@
 import unittest
 
 from memory_engine.retrieve import (
+    ActivationSpreadingRetriever,
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
     WeightedGraphRetriever,
 )
+from memory_engine.activation import DefaultPropagationPolicy
 from memory_engine.scoring import ScoreBreakdown
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
@@ -108,3 +110,24 @@ class RetrieveTests(unittest.TestCase):
             scoring_strategy=PreferContractOneStrategy(),
         ).search("Pick the preferred node.", top_k=2)
         self.assertEqual(result.best_path().steps[0].node_id, "contract:1")
+
+    def test_activation_spreading_retriever_replays_ordered_path(self):
+        result = ActivationSpreadingRetriever(build_store()).search(
+            "What happens if delivery is late and not cured?",
+            top_k=1,
+        )
+
+        node_ids = [step.node_id for step in result.best_path().steps]
+        self.assertEqual(node_ids, ["contract:2", "contract:3"])
+
+    def test_activation_spreading_retriever_respects_allowed_edge_types(self):
+        result = ActivationSpreadingRetriever(
+            build_store(),
+            propagation_policy=DefaultPropagationPolicy(allowed_edge_types={"cites"}),
+        ).search(
+            "What happens if delivery is late and not cured?",
+            top_k=1,
+        )
+
+        node_ids = [step.node_id for step in result.best_path().steps]
+        self.assertEqual(node_ids, ["contract:2"])

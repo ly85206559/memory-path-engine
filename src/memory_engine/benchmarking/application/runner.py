@@ -6,6 +6,7 @@ from memory_engine.benchmarking.domain.evaluation_policy import (
     collect_matched_evidence,
     collect_returned_node_ids,
     evaluate_path_hit,
+    evaluate_semantic_hit,
 )
 from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkCaseReport,
@@ -34,7 +35,30 @@ class StructuredBenchmarkRunner:
             matched_evidence = collect_matched_evidence(case.expectation, returned_node_ids)
             evidence_hit = len(matched_evidence) >= case.expectation.minimum_evidence_matches
             path_hit = evaluate_path_hit(case.expectation, result)
-            hit = evidence_hit and (path_hit if path_hit is not None else True)
+            store = getattr(retriever, "store", None)
+            surfaced_semantic_roles = sorted(
+                {
+                    store.get_node(node_id).attributes.get("semantic_role")
+                    for node_id in returned_node_ids
+                    if store is not None and store.get_node(node_id).attributes.get("semantic_role")
+                }
+            )
+            best_path = result.best_path() if result.paths else None
+            path_edge_types = [
+                step.via_edge_type
+                for step in (best_path.steps if best_path else [])
+                if step.via_edge_type is not None
+            ]
+            semantic_hit = evaluate_semantic_hit(
+                case.expectation,
+                surfaced_semantic_roles=surfaced_semantic_roles,
+                path_edge_types=path_edge_types,
+            )
+            hit = (
+                evidence_hit
+                and (path_hit if path_hit is not None else True)
+                and (semantic_hit if semantic_hit is not None else True)
+            )
 
             case_reports.append(
                 StructuredBenchmarkCaseReport(
@@ -43,6 +67,7 @@ class StructuredBenchmarkRunner:
                     tags=case.tags,
                     hit=hit,
                     path_hit=path_hit,
+                    semantic_hit=semantic_hit,
                     expected_evidence=case.expectation.evidence_node_ids,
                     matched_evidence=matched_evidence,
                     missing_evidence=[
@@ -51,7 +76,11 @@ class StructuredBenchmarkRunner:
                         if node_id not in returned_node_ids
                     ],
                     returned_node_ids=returned_node_ids,
-                    best_answer=result.best_path().final_answer if result.paths else "",
+                    surfaced_semantic_roles=surfaced_semantic_roles,
+                    path_edge_types=path_edge_types,
+                    activated_node_count=len(returned_node_ids),
+                    best_path_hops=max(0, len(best_path.steps) - 1) if best_path else 0,
+                    best_answer=best_path.final_answer if best_path else "",
                     latency_ms=round(latency_ms, 3),
                 )
             )

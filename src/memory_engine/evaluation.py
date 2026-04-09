@@ -67,10 +67,15 @@ def _legacy_summary(report: StructuredBenchmarkReport, *, detailed: bool) -> dic
                 "tags": case_report.tags,
                 "hit": case_report.hit,
                 "path_hit": case_report.path_hit,
+                "semantic_hit": case_report.semantic_hit,
                 "expected_evidence": case_report.expected_evidence,
                 "matched_evidence": case_report.matched_evidence,
                 "missing_evidence": case_report.missing_evidence,
                 "returned_node_ids": case_report.returned_node_ids,
+                "surfaced_semantic_roles": case_report.surfaced_semantic_roles,
+                "path_edge_types": case_report.path_edge_types,
+                "activated_node_count": case_report.activated_node_count,
+                "best_path_hops": case_report.best_path_hops,
                 "best_answer": case_report.best_answer,
                 "latency_ms": case_report.latency_ms,
             }
@@ -101,6 +106,10 @@ def _legacy_comparison_report(comparison: StructuredBenchmarkComparisonReport) -
             mode_name: {
                 "evidence_recall": mode_summary.evidence_recall,
                 "avg_latency_ms": mode_summary.avg_latency_ms,
+                "path_hit_rate": mode_summary.path_hit_rate,
+                "semantic_hit_rate": mode_summary.semantic_hit_rate,
+                "avg_activated_nodes": mode_summary.avg_activated_nodes,
+                "avg_propagation_depth": mode_summary.avg_propagation_depth,
             }
             for mode_name, mode_summary in comparison.mode_summary.items()
         },

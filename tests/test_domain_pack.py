@@ -64,3 +64,28 @@ class DomainPackTests(unittest.TestCase):
             self.assertIn("demo_runbook:1", nodes)
             self.assertIn("demo_runbook:2", nodes)
             self.assertEqual(nodes["demo_runbook:1"].type, "step")
+
+    def test_contract_pack_adds_semantic_role_and_exception_target(self):
+        contract_text = "\n".join(
+            [
+                "# Demo",
+                "",
+                "## Payment",
+                "1 Buyer must pay all invoices within 30 days.",
+                "2 Unless goods are defective, Buyer must pay all invoices within 30 days.",
+            ]
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "demo_exception_contract.md"
+            path.write_text(contract_text, encoding="utf-8")
+
+            store = MemoryStore()
+            ingest_document(path, store, domain_pack="example_contract_pack")
+
+            nodes = {node.id: node for node in store.nodes()}
+            self.assertEqual(nodes["demo_exception_contract:2"].attributes["semantic_role"], "exception")
+            self.assertEqual(
+                nodes["demo_exception_contract:2"].attributes["exception_target"],
+                "demo_exception_contract:1",
+            )

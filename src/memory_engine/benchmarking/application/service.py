@@ -18,6 +18,7 @@ from memory_engine.benchmarking.infrastructure.json_repository import (
 from memory_engine.domain_pack import get_domain_pack
 from memory_engine.ingest import ingest_document
 from memory_engine.retrieve import (
+    ActivationSpreadingRetriever,
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
     StructureAwareRetriever,
@@ -30,6 +31,7 @@ DEFAULT_RETRIEVER_MODES = (
     "embedding_baseline",
     "structure_only",
     "weighted_graph",
+    "activation_spreading_v1",
 )
 
 
@@ -48,6 +50,7 @@ def build_retriever(retriever_mode: str, store: MemoryStore):
         "embedding_baseline": EmbeddingTopKRetriever,
         "structure_only": StructureAwareRetriever,
         "weighted_graph": WeightedGraphRetriever,
+        "activation_spreading_v1": ActivationSpreadingRetriever,
     }
     try:
         retriever_builder = retriever_builders[retriever_mode]
@@ -94,6 +97,34 @@ def build_comparison_report(
             mode_name: StructuredBenchmarkModeSummary(
                 evidence_recall=mode_report.evidence_recall,
                 avg_latency_ms=mode_report.avg_latency_ms,
+                path_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.path_hit) / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
+                semantic_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.semantic_hit) / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
+                avg_activated_nodes=(
+                    round(
+                        sum(report.activated_node_count for report in mode_report.case_reports)
+                        / mode_report.questions,
+                        3,
+                    )
+                    if mode_report.questions
+                    else 0.0
+                ),
+                avg_propagation_depth=(
+                    round(
+                        sum(report.best_path_hops for report in mode_report.case_reports)
+                        / mode_report.questions,
+                        3,
+                    )
+                    if mode_report.questions
+                    else 0.0
+                ),
             )
             for mode_name, mode_report in mode_reports.items()
         },

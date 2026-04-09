@@ -1,3 +1,9 @@
+from memory_engine.activation import (
+    ActivatedNode,
+    ActivationSignal,
+    DefaultPropagationPolicy,
+    PropagationStep,
+)
 from memory_engine.benchmarking import (
     DEFAULT_RETRIEVER_MODES,
     JsonStructuredBenchmarkDatasetRepository,
@@ -36,7 +42,13 @@ from memory_engine.evaluation import (
     run_weighted_evaluation,
 )
 from memory_engine.ingest import ingest_contract_markdown, ingest_document
+from memory_engine.memory_state import (
+    MemoryStatePolicy,
+    decay_unvisited_nodes,
+    reinforce_result_paths,
+)
 from memory_engine.retrieve import (
+    ActivationSpreadingRetriever,
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
     StructureAwareRetriever,
@@ -53,12 +65,22 @@ from memory_engine.schema import (
 )
 from memory_engine.embeddings import EmbeddingProvider, HashingEmbeddingProvider
 from memory_engine.scoring import StructureOnlyScoringStrategy, WeightedSumScoringStrategy
+from memory_engine.semantics import (
+    ContradictionCandidate,
+    ExceptionLink,
+    SemanticRole,
+    contradiction_candidates,
+)
 from memory_engine.store import MemoryStore
 
 __all__ = [
+    "ActivatedNode",
+    "ActivationSignal",
     "ActivationContext",
+    "ActivationSpreadingRetriever",
     "BaselineTopKRetriever",
     "DEFAULT_RETRIEVER_MODES",
+    "DefaultPropagationPolicy",
     "DomainPack",
     "EdgeRule",
     "JsonStructuredBenchmarkDatasetRepository",
@@ -75,6 +97,7 @@ __all__ = [
     "MemoryEdge",
     "MemoryNode",
     "MemoryPath",
+    "MemoryStatePolicy",
     "MemoryStore",
     "MemoryWeight",
     "RetrievalResult",
@@ -88,6 +111,7 @@ __all__ = [
     "RuleBasedSectionedDocumentPack",
     "PathShapeExpectation",
     "PathStepExpectation",
+    "PropagationStep",
     "StructuredBenchmarkCase",
     "StructuredBenchmarkCaseReport",
     "StructuredBenchmarkComparisonCaseReport",
@@ -105,6 +129,12 @@ __all__ = [
     "WeightedSumScoringStrategy",
     "WeightedGraphRetriever",
     "build_comparison_report",
+    "ContradictionCandidate",
     "ingest_document",
     "ingest_contract_markdown",
+    "ExceptionLink",
+    "SemanticRole",
+    "contradiction_candidates",
+    "decay_unvisited_nodes",
+    "reinforce_result_paths",
 ]

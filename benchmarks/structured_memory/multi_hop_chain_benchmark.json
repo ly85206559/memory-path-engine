@@ -1,0 +1,33 @@
+{
+  "dataset_id": "multi-hop-chain-benchmark-v1",
+  "dataset_name": "Multi-hop chain benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/runbook_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "chain-001",
+      "query": "If rollback does not recover service and slow queries continue, who should we escalate to?",
+      "tags": ["multi-hop", "escalation", "runbook"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_api_incident_runbook:5",
+          "01_api_incident_runbook:6"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": ["depends_on"],
+        "required_semantic_roles": ["escalation"],
+        "path_scope": "best_path",
+        "path": {
+          "match_mode": "subsequence",
+          "steps": [
+            {"node_id": "01_api_incident_runbook:5"},
+            {
+              "node_id": "01_api_incident_runbook:6",
+              "via_edge_type": "depends_on"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

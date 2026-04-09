@@ -14,6 +14,7 @@ class EvaluationTests(unittest.TestCase):
         self.assertIn("modes", report)
         self.assertIn("comparison", report)
         self.assertIn("weighted_graph", report["modes"])
+        self.assertIn("activation_spreading_v1", report["modes"])
         self.assertIn("per_question", report["comparison"])
         self.assertTrue(report["comparison"]["per_question"])
         self.assertIn("avg_latency_ms", report["comparison"]["mode_summary"]["weighted_graph"])

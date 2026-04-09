@@ -43,6 +43,26 @@ def evaluate_path_hit(
     return any(_path_matches(path, expectation.path) for path in candidate_paths)
 
 
+def evaluate_semantic_hit(
+    expectation: StructuredBenchmarkExpectation,
+    *,
+    surfaced_semantic_roles: list[str],
+    path_edge_types: list[str],
+) -> bool | None:
+    checks = []
+    if expectation.required_semantic_roles:
+        checks.append(
+            all(role in surfaced_semantic_roles for role in expectation.required_semantic_roles)
+        )
+    if expectation.required_edge_types:
+        checks.append(
+            all(edge_type in path_edge_types for edge_type in expectation.required_edge_types)
+        )
+    if not checks:
+        return None
+    return all(checks)
+
+
 def _path_matches(path: MemoryPath, expectation: PathShapeExpectation) -> bool:
     actual_steps = path.steps
     expected_steps = expectation.steps

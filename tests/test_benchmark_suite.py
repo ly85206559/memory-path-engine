@@ -12,15 +12,20 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
 
         suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
             dataset_path=dataset_path,
-            retriever_modes=("embedding_baseline", "weighted_graph"),
+            retriever_modes=("embedding_baseline", "weighted_graph", "activation_spreading_v1"),
             top_k=3,
         )
 
         self.assertEqual(suite_report.dataset_id, "example-runbook-benchmark-v1")
         self.assertIn("embedding_baseline", suite_report.modes)
         self.assertIn("weighted_graph", suite_report.modes)
+        self.assertIn("activation_spreading_v1", suite_report.modes)
         self.assertTrue(suite_report.comparison.per_question)
-        self.assertIn("weighted_graph", suite_report.comparison.mode_summary)
+        self.assertIn("activation_spreading_v1", suite_report.comparison.mode_summary)
+        self.assertIn(
+            "avg_activated_nodes",
+            suite_report.comparison.mode_summary["activation_spreading_v1"].model_dump(),
+        )
         self.assertEqual(
             suite_report.comparison.per_question[0].case_id,
             suite_report.modes["weighted_graph"].case_reports[0].case_id,
