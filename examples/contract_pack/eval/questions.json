@@ -1,0 +1,93 @@
+[
+  {
+    "id": "q01",
+    "query": "What happens if the supplier delivers late and still does not cure after notice?",
+    "answer": "Buyer may terminate the affected order and recover direct damages.",
+    "evidence_node_ids": ["01_supply_agreement:2", "01_supply_agreement:3"],
+    "tags": ["multi_hop", "delivery", "termination", "risk"]
+  },
+  {
+    "id": "q02",
+    "query": "Can the buyer withhold payment if goods are defective or not delivered?",
+    "answer": "Yes. Buyer may withhold payment for goods that are defective or not delivered.",
+    "evidence_node_ids": ["01_supply_agreement:5"],
+    "tags": ["payment", "exception"]
+  },
+  {
+    "id": "q03",
+    "query": "What happens after a license audit finds more than 5 percent underpayment?",
+    "answer": "Customer must pay the shortfall and audit costs.",
+    "evidence_node_ids": ["02_software_license:4"],
+    "tags": ["audit", "payment"]
+  },
+  {
+    "id": "q04",
+    "query": "When can the licensor terminate for breach and what must the customer do after termination?",
+    "answer": "Licensor may terminate if the breach is not cured within 10 days after notice, and Customer must cease use and certify deletion.",
+    "evidence_node_ids": ["02_software_license:5", "02_software_license:6"],
+    "tags": ["multi_hop", "termination"]
+  },
+  {
+    "id": "q05",
+    "query": "What is the consequence of repeated unauthorized discounts by the reseller?",
+    "answer": "Repeated unauthorized discounts constitute material breach and Vendor may terminate if the breach is not cured within 7 days after notice.",
+    "evidence_node_ids": ["03_reseller_agreement:4", "03_reseller_agreement:5"],
+    "tags": ["multi_hop", "pricing", "termination"]
+  },
+  {
+    "id": "q06",
+    "query": "What remedies are available if uptime drops below 98 percent for two consecutive months?",
+    "answer": "Customer may terminate the affected service without penalty.",
+    "evidence_node_ids": ["04_cloud_msa:3"],
+    "tags": ["service_level", "termination", "risk"]
+  },
+  {
+    "id": "q07",
+    "query": "How fast must the provider report a confirmed security incident?",
+    "answer": "Provider must notify Customer within 24 hours.",
+    "evidence_node_ids": ["04_cloud_msa:4"],
+    "tags": ["security", "notification"]
+  },
+  {
+    "id": "q08",
+    "query": "Is the carrier liable for concealed cargo damage if the customer did not document the damage at delivery?",
+    "answer": "No. Carrier is not liable for concealed damage unless Customer documents the damage at delivery.",
+    "evidence_node_ids": ["05_logistics_service:5"],
+    "tags": ["claims", "exception"]
+  },
+  {
+    "id": "q09",
+    "query": "What happens if the distributor sells outside the territory and does not cure?",
+    "answer": "Sales outside the territory are a material breach and Manufacturer may terminate if Distributor does not cure within 14 days after notice.",
+    "evidence_node_ids": ["06_distribution_agreement:5", "06_distribution_agreement:6"],
+    "tags": ["multi_hop", "territory", "termination"]
+  },
+  {
+    "id": "q10",
+    "query": "What can the buyer do if rejected goods are not reworked in time?",
+    "answer": "Buyer may source substitute goods and recover the price difference.",
+    "evidence_node_ids": ["07_manufacturing_agreement:4"],
+    "tags": ["remedy", "supply"]
+  },
+  {
+    "id": "q11",
+    "query": "When may the customer terminate the support order for missed severity one resolution targets?",
+    "answer": "Customer may terminate if the supplier misses the resolution target in three separate months within a quarter.",
+    "evidence_node_ids": ["08_support_sla:4"],
+    "tags": ["support", "termination", "risk"]
+  },
+  {
+    "id": "q12",
+    "query": "What are the processor's duties after a confirmed personal data breach?",
+    "answer": "Processor must notify Controller within 24 hours and may be required to indemnify Controller for third-party claims arising from violation of data protection law.",
+    "evidence_node_ids": ["09_data_processing_addendum:2", "09_data_processing_addendum:4"],
+    "tags": ["multi_hop", "data_breach", "liability"]
+  },
+  {
+    "id": "q13",
+    "query": "What can the customer do if corrective maintenance does not start within 8 hours?",
+    "answer": "Customer may engage a third party and offset reasonable costs against fees owed.",
+    "evidence_node_ids": ["10_maintenance_agreement:4"],
+    "tags": ["maintenance", "offset", "risk"]
+  }
+]
