@@ -1,7 +1,8 @@
 import unittest
 
 from memory_engine.activation import ActivationSignal, DefaultPropagationPolicy
-from memory_engine.schema import MemoryEdge
+from memory_engine.semantics import ContradictionCandidate
+from memory_engine.schema import MemoryEdge, MemoryNode
 
 
 class ActivationPolicyTests(unittest.TestCase):
@@ -35,3 +36,27 @@ class ActivationPolicyTests(unittest.TestCase):
         )
 
         self.assertEqual(step.stopped_reason, "disallowed_edge_type")
+
+    def test_default_policy_adjusts_successful_propagation_with_domain_bonuses(self):
+        policy = DefaultPropagationPolicy()
+
+        adjusted = policy.adjust_propagated_activation(
+            propagated_activation=0.4,
+            edge=MemoryEdge(from_id="contract:2", to_id="contract:1", edge_type="exception_to"),
+            destination_node=MemoryNode(
+                id="contract:1",
+                type="clause",
+                content="Buyer must pay all invoices within 30 days.",
+                attributes={"semantic_role": "exception"},
+            ),
+            source_node_id="contract:2",
+            contradiction_candidates=[
+                ContradictionCandidate(
+                    left_node_id="contract:1",
+                    right_node_id="contract:2",
+                    explanation="exception link may override the general rule",
+                )
+            ],
+        )
+
+        self.assertAlmostEqual(adjusted, 0.81)

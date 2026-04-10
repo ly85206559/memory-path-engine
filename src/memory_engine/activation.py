@@ -3,7 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from memory_engine.schema import MemoryEdge
+from memory_engine.schema import MemoryEdge, MemoryNode
+from memory_engine.semantics import (
+    ContradictionCandidate,
+    contradiction_bonus,
+    semantic_activation_bonus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +52,17 @@ class PropagationPolicy(Protocol):
         edge: MemoryEdge,
     ) -> PropagationStep:
         """Return the propagation result for a single edge traversal."""
+
+    def adjust_propagated_activation(
+        self,
+        *,
+        propagated_activation: float,
+        edge: MemoryEdge,
+        destination_node: MemoryNode,
+        source_node_id: str | None = None,
+        contradiction_candidates: list[ContradictionCandidate] | None = None,
+    ) -> float:
+        """Apply domain-aware propagation adjustments after a successful edge traversal."""
 
 
 class DefaultPropagationPolicy:
@@ -101,3 +117,23 @@ class DefaultPropagationPolicy:
             incoming_activation=signal.activation,
             propagated_activation=propagated_activation,
         )
+
+    def adjust_propagated_activation(
+        self,
+        *,
+        propagated_activation: float,
+        edge: MemoryEdge,
+        destination_node: MemoryNode,
+        source_node_id: str | None = None,
+        contradiction_candidates: list[ContradictionCandidate] | None = None,
+    ) -> float:
+        adjusted_activation = propagated_activation
+        if edge.edge_type == "exception_to":
+            adjusted_activation += 0.12
+        adjusted_activation += semantic_activation_bonus(destination_node)
+        adjusted_activation += contradiction_bonus(
+            node_id=destination_node.id,
+            candidates=contradiction_candidates or [],
+            source_node_id=source_node_id,
+        )
+        return min(adjusted_activation, 1.0)

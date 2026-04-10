@@ -201,6 +201,35 @@ class RetrieveTests(unittest.TestCase):
         self.assertIn("contract:1", returned_node_ids)
         self.assertIn("contract:2", returned_node_ids)
 
+    def test_activation_spreading_does_not_apply_domain_bonuses_to_stopped_steps(self):
+        provider = FakeEmbeddingProvider(
+            {
+                "What overrides the normal payment rule when goods are defective?": [1.0, 0.0],
+                "Buyer must pay all invoices within 30 days.": [0.0, 1.0],
+                "Unless goods are defective, Buyer must pay all invoices within 30 days.": [1.0, 0.0],
+                "If goods are defective, Buyer may withhold invoice payment until Seller cures the defect.": [0.5, 0.5],
+            }
+        )
+        result = ActivationSpreadingRetriever(
+            build_contradiction_store(),
+            embedding_provider=provider,
+            propagation_policy=DefaultPropagationPolicy(
+                activation_decay=0.75,
+                activation_threshold=0.7,
+            ),
+        ).search(
+            "What overrides the normal payment rule when goods are defective?",
+            top_k=1,
+        )
+
+        best_path = result.best_path()
+        stopped_exception_step = next(
+            step
+            for step in best_path.activation_trace
+            if step.edge_type == "exception_to" and step.stopped_reason == "below_threshold"
+        )
+        self.assertAlmostEqual(stopped_exception_step.propagated_activation, 0.6)
+
     def test_weighted_graph_static_mode_does_not_update_usage_counts(self):
         store = build_store()
         WeightedGraphRetriever(

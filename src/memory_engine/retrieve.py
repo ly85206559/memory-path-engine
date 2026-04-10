@@ -20,9 +20,7 @@ from memory_engine.replay import path_answer
 from memory_engine.schema import ActivationContext, ActivationTraceStep, RetrievalResult
 from memory_engine.scoring import ScoringStrategy, StructureOnlyScoringStrategy, WeightedSumScoringStrategy
 from memory_engine.semantics import (
-    contradiction_bonus,
     contradiction_candidates,
-    semantic_activation_bonus,
 )
 from memory_engine.store import MemoryStore
 
@@ -418,14 +416,12 @@ class ActivationSpreadingRetriever(WeightedGraphRetriever):
                     )
                     continue
                 destination_node = self.store.get_node(edge.to_id)
-                propagated_activation = propagation.propagated_activation
-                if edge.edge_type == "exception_to":
-                    propagated_activation += 0.12
-                propagated_activation += semantic_activation_bonus(destination_node)
-                propagated_activation += contradiction_bonus(
-                    node_id=edge.to_id,
-                    candidates=self.contradiction_candidates,
+                propagated_activation = self.propagation_policy.adjust_propagated_activation(
+                    propagated_activation=propagation.propagated_activation,
+                    edge=edge,
+                    destination_node=destination_node,
                     source_node_id=signal.node_id,
+                    contradiction_candidates=self.contradiction_candidates,
                 )
                 activation_trace.append(
                     ActivationTraceStep(
@@ -434,13 +430,13 @@ class ActivationSpreadingRetriever(WeightedGraphRetriever):
                         edge_type=edge.edge_type,
                         hop=propagation.hop,
                         incoming_activation=propagation.incoming_activation,
-                        propagated_activation=min(propagated_activation, 1.0),
+                        propagated_activation=propagated_activation,
                     )
                 )
                 queue.append(
                     ActivationSignal(
                         node_id=edge.to_id,
-                        activation=min(propagated_activation, 1.0),
+                        activation=propagated_activation,
                         hop=propagation.hop,
                         source_node_id=signal.node_id,
                         via_edge_type=edge.edge_type,
