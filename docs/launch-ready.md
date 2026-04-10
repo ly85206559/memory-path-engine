@@ -3,7 +3,7 @@
 These are tightened **first-launch** versions you can paste as-is. Align with [`launch-post.md`](launch-post.md) for variants and titles.
 
 **Repo:** https://github.com/ly85206559/memory-path-engine  
-**Suggested image for link cards:** `docs/assets/open-graph-cover.svg` (export to PNG at 1280×640 for GitHub **Settings → General → Social preview** if you want a custom preview image).
+**Suggested image for link cards:** `docs/assets/open-graph-cover.png` (generate it with `python scripts/export_open_graph_cover.py`, then upload it in GitHub **Settings → General → Social preview**).
 
 ---
 
@@ -78,3 +78,19 @@ python -m memory_engine.demo --scenario runbook
 ```
 
 https://github.com/ly85206559/memory-path-engine
+
+---
+
+## English — ultra-short post (X / short social)
+
+Open-sourced **Memory Path Engine**.
+
+Structured memory retrieval for agents with **replayable evidence paths** instead of flat `top-k` chunks.
+
+https://github.com/ly85206559/memory-path-engine
+
+## 中文 — 超短首发帖（即刻 / V2EX / 群公告）
+
+开源 **Memory Path Engine**：给 AI agent 的检索结果加上一条**可回放证据路径**，而不只是 `top-k` 片段。
+
+仓库：https://github.com/ly85206559/memory-path-engine
