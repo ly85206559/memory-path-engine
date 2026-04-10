@@ -1,8 +1,11 @@
 # Final Launch Posts
 
-These are the final, ready-to-publish versions for the two channels you asked for.
+This file is the **final long-form layer**: polished, channel-specific posts that are ready to publish with minimal or no editing.
 
-Repo: https://github.com/ly85206559/memory-path-engine
+For reusable message components, see [`launch-post.md`](launch-post.md).  
+For shorter copy-paste variants, see [`launch-ready.md`](launch-ready.md).
+
+Repo: [https://github.com/ly85206559/memory-path-engine](https://github.com/ly85206559/memory-path-engine)
 
 Recommended preview image:
 
@@ -19,7 +22,7 @@ Memory Path Engine: replayable evidence paths for agent memory retrieval
 
 I just open-sourced **Memory Path Engine**, a research-first prototype for **structured memory retrieval** in AI agents.
 
-Most retrieval pipelines still stop at `top-k` chunks: split content, embed it, fetch the nearest matches, and leave the actual reasoning implicit. This project explores a different shape. Instead of treating memory as a flat index, it models memory as **typed nodes, edges, and weights**, then returns a **`MemoryPath`**: a stitched answer plus an ordered, replayable evidence path with per-step scores and edge types.
+Most retrieval pipelines still stop at `top-k` chunks: split content, embed it, fetch the nearest matches, and leave the actual reasoning implicit. This project explores a different shape. Instead of treating memory as a flat index, it models memory as **typed nodes, edges, and weights**, then returns a `MemoryPath`: a stitched answer plus an ordered, replayable evidence path with per-step scores and edge types.
 
 The goal is not to hide more logic inside the model. The goal is to make retrieval easier to **inspect, compare, and debug**, especially for multi-hop questions.
 
@@ -39,7 +42,7 @@ python -m memory_engine.demo --scenario runbook
 
 If you are interested in agent memory, graph-aware retrieval, or evidence-backed multi-hop reasoning, I would love feedback.
 
-Repo: https://github.com/ly85206559/memory-path-engine
+Repo: [https://github.com/ly85206559/memory-path-engine](https://github.com/ly85206559/memory-path-engine)
 
 ## 中文社区首发帖
 
@@ -78,4 +81,4 @@ python -m memory_engine.demo --scenario runbook
 
 仓库地址：
 
-https://github.com/ly85206559/memory-path-engine
+[https://github.com/ly85206559/memory-path-engine](https://github.com/ly85206559/memory-path-engine)
