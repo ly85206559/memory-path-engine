@@ -18,9 +18,14 @@ class EvaluationTests(unittest.TestCase):
         self.assertIn("activation_spreading_v1", report["modes"])
         self.assertIn("per_question", report["comparison"])
         self.assertTrue(report["comparison"]["per_question"])
+        self.assertIn("evidence_hit_rate", report["modes"]["weighted_graph"])
         self.assertIn("avg_latency_ms", report["comparison"]["mode_summary"]["weighted_graph"])
         self.assertIn(
             "activation_trace_hit_rate",
+            report["comparison"]["mode_summary"]["activation_spreading_v1"],
+        )
+        self.assertIn(
+            "evidence_hit_rate",
             report["comparison"]["mode_summary"]["activation_spreading_v1"],
         )
         expected_question_count = len(json.loads(questions_path.read_text(encoding="utf-8")))
@@ -47,6 +52,7 @@ class EvaluationTests(unittest.TestCase):
         )
         self.assertTrue(
             {
+                "evidence_hit",
                 "hit",
                 "path_hit",
                 "activation_trace_hit",

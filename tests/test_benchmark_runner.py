@@ -69,7 +69,9 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
         self.assertEqual(report.dataset_id, "runbook-benchmark-v1")
         self.assertEqual(report.retriever_name, "weighted_graph")
         self.assertEqual(report.questions, 1)
+        self.assertEqual(report.evidence_hit_rate, 1.0)
         self.assertEqual(len(report.case_reports), 1)
+        self.assertTrue(report.case_reports[0].evidence_hit)
         self.assertTrue(report.case_reports[0].hit)
 
     def test_runner_supports_optional_path_expectation(self):
@@ -259,6 +261,81 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
             report.case_reports[0].activation_stopped_reasons,
             ["below_threshold"],
         )
+
+    def test_runner_reports_evidence_hit_even_when_full_hit_fails(self):
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
+        from memory_engine.schema import MemoryPath, PathStep, RetrievalResult
+
+        class FakeRetriever:
+            def search(self, query: str, top_k: int = 3) -> RetrievalResult:
+                del query, top_k
+                return RetrievalResult(
+                    query="rollback recovery",
+                    paths=[
+                        MemoryPath(
+                            query="rollback recovery",
+                            steps=[
+                                PathStep(
+                                    node_id="01_api_incident_runbook:4",
+                                    reason="seed",
+                                    score=0.8,
+                                ),
+                                PathStep(
+                                    node_id="01_api_incident_runbook:5",
+                                    reason="expansion",
+                                    score=0.9,
+                                    via_edge_type="depends_on",
+                                ),
+                            ],
+                            final_answer="Restart the worker service and confirm queue drain behavior.",
+                            final_score=0.9,
+                        )
+                    ],
+                )
+
+        dataset = StructuredBenchmarkDataset.model_validate(
+            {
+                "dataset_id": "metric-honesty-benchmark-v1",
+                "dataset_name": "Metric honesty benchmark",
+                "domain_pack_name": "example_runbook_pack",
+                "document_directory": "runbooks",
+                "cases": [
+                    {
+                        "case_id": "rb-metric-001",
+                        "query": "What should happen after rollback does not recover service?",
+                        "expectation": {
+                            "evidence_node_ids": ["01_api_incident_runbook:5"],
+                            "minimum_evidence_matches": 1,
+                            "path_scope": "best_path",
+                            "path": {
+                                "match_mode": "prefix",
+                                "steps": [
+                                    {"node_id": "01_api_incident_runbook:4"},
+                                    {
+                                        "node_id": "01_api_incident_runbook:5",
+                                        "via_edge_type": "exception_to",
+                                    },
+                                ],
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+        report = StructuredBenchmarkRunner().run(
+            dataset=dataset,
+            retriever_name="fake_weighted_graph",
+            retriever=FakeRetriever(),
+            top_k=3,
+        )
+
+        self.assertEqual(report.evidence_hit_rate, 1.0)
+        self.assertEqual(report.evidence_recall, 0.0)
+        self.assertTrue(report.case_reports[0].evidence_hit)
+        self.assertFalse(report.case_reports[0].path_hit)
+        self.assertFalse(report.case_reports[0].hit)
 
     def test_evaluation_service_runs_dataset_file_end_to_end(self):
         from memory_engine.benchmarking.application.service import (

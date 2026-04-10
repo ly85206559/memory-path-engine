@@ -118,6 +118,7 @@ class StructuredBenchmarkRunner:
                     case_id=case.case_id,
                     query=case.query,
                     tags=case.tags,
+                    evidence_hit=evidence_hit,
                     hit=hit,
                     path_hit=path_hit,
                     activation_trace_hit=activation_trace_hit,
@@ -146,6 +147,11 @@ class StructuredBenchmarkRunner:
             )
 
         questions = len(case_reports)
+        evidence_hit_rate = (
+            sum(1 for report in case_reports if report.evidence_hit) / questions
+            if questions
+            else 0.0
+        )
         evidence_recall = (
             sum(1 for report in case_reports if report.hit) / questions
             if questions
@@ -161,6 +167,7 @@ class StructuredBenchmarkRunner:
             dataset_id=dataset.dataset_id,
             retriever_name=retriever_name,
             questions=questions,
+            evidence_hit_rate=evidence_hit_rate,
             evidence_recall=evidence_recall,
             avg_latency_ms=avg_latency_ms,
             case_reports=case_reports,

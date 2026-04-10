@@ -97,6 +97,7 @@ def build_comparison_report(
                 item for item in mode_report.case_reports if item.case_id == case_id
             )
             per_mode[mode_name] = StructuredBenchmarkModeCaseResult(
+                evidence_hit=case_report.evidence_hit,
                 hit=case_report.hit,
                 path_hit=case_report.path_hit,
                 activation_trace_hit=case_report.activation_trace_hit,
@@ -120,6 +121,7 @@ def build_comparison_report(
         per_question=per_question,
         mode_summary={
             mode_name: StructuredBenchmarkModeSummary(
+                evidence_hit_rate=mode_report.evidence_hit_rate,
                 evidence_recall=mode_report.evidence_recall,
                 avg_latency_ms=mode_report.avg_latency_ms,
                 path_hit_rate=(

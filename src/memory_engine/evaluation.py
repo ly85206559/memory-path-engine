@@ -56,6 +56,7 @@ def _run_legacy_mode(
 def _legacy_summary(report: StructuredBenchmarkReport, *, detailed: bool) -> dict:
     summary = {
         "questions": report.questions,
+        "evidence_hit_rate": report.evidence_hit_rate,
         "evidence_recall": report.evidence_recall,
         "avg_latency_ms": report.avg_latency_ms,
     }
@@ -65,6 +66,7 @@ def _legacy_summary(report: StructuredBenchmarkReport, *, detailed: bool) -> dic
                 "question_id": case_report.case_id,
                 "query": case_report.query,
                 "tags": case_report.tags,
+                "evidence_hit": case_report.evidence_hit,
                 "hit": case_report.hit,
                 "path_hit": case_report.path_hit,
                 "activation_trace_hit": case_report.activation_trace_hit,
@@ -98,6 +100,7 @@ def _legacy_comparison_report(comparison: StructuredBenchmarkComparisonReport) -
                 "question_id": case_report.case_id,
                 "modes": {
                     mode_name: {
+                        "evidence_hit": mode_result.evidence_hit,
                         "hit": mode_result.hit,
                         "path_hit": mode_result.path_hit,
                         "activation_trace_hit": mode_result.activation_trace_hit,
@@ -115,6 +118,7 @@ def _legacy_comparison_report(comparison: StructuredBenchmarkComparisonReport) -
         ],
         "mode_summary": {
             mode_name: {
+                "evidence_hit_rate": mode_summary.evidence_hit_rate,
                 "evidence_recall": mode_summary.evidence_recall,
                 "avg_latency_ms": mode_summary.avg_latency_ms,
                 "path_hit_rate": mode_summary.path_hit_rate,
@@ -258,6 +262,7 @@ def build_comparison_report(mode_results: dict[str, dict]) -> dict:
         for mode_name, mode_result in mode_results.items():
             detail = next(item for item in mode_result["details"] if item["question_id"] == question_id)
             per_mode[mode_name] = {
+                "evidence_hit": detail.get("evidence_hit"),
                 "hit": detail["hit"],
                 "path_hit": detail.get("path_hit"),
                 "activation_trace_hit": detail.get("activation_trace_hit"),
@@ -283,6 +288,7 @@ def build_comparison_report(mode_results: dict[str, dict]) -> dict:
         "per_question": per_question,
         "mode_summary": {
             mode_name: {
+                "evidence_hit_rate": mode_result.get("evidence_hit_rate"),
                 "evidence_recall": mode_result["evidence_recall"],
                 "avg_latency_ms": mode_result["avg_latency_ms"],
             }

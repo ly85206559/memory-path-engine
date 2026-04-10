@@ -104,6 +104,7 @@ class StructuredBenchmarkCaseReport(BaseModel):
     case_id: str
     query: str
     tags: list[str] = Field(default_factory=list)
+    evidence_hit: bool
     hit: bool
     path_hit: bool | None = None
     activation_trace_hit: bool | None = None
@@ -132,6 +133,7 @@ class StructuredBenchmarkReport(BaseModel):
     dataset_id: str
     retriever_name: str
     questions: int = Field(ge=0)
+    evidence_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_recall: float = Field(ge=0.0, le=1.0)
     avg_latency_ms: float = Field(ge=0.0)
     case_reports: list[StructuredBenchmarkCaseReport] = Field(default_factory=list)
@@ -140,6 +142,7 @@ class StructuredBenchmarkReport(BaseModel):
 class StructuredBenchmarkModeSummary(BaseModel):
     model_config = ConfigDict(frozen=True)
 
+    evidence_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_recall: float = Field(ge=0.0, le=1.0)
     avg_latency_ms: float = Field(ge=0.0)
     path_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -154,6 +157,7 @@ class StructuredBenchmarkModeSummary(BaseModel):
 class StructuredBenchmarkModeCaseResult(BaseModel):
     model_config = ConfigDict(frozen=True)
 
+    evidence_hit: bool
     hit: bool
     path_hit: bool | None = None
     activation_trace_hit: bool | None = None
