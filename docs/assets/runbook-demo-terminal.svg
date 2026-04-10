@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 654 480" width="654" height="480">
+  <title>memory_engine.demo --scenario runbook (captured stdout)</title>
+  <desc>Terminal-style rendering of actual demo output; regenerate with scripts/generate_runbook_demo_terminal_svg.py</desc>
+  <rect width="100%" height="100%" fill="#0d0d0d"/>
+  <text xml:space="preserve" x="0" y="28" font-family="ui-monospace, 'Cascadia Mono', 'Cascadia Code', Consolas, monospace" font-size="12px" fill="#e8e8e8"><tspan x="16" dy="0">========================================================================</tspan>
+    <tspan x="16" dy="14">  Memory Path Engine  |  demo</tspan>
+    <tspan x="16" dy="14">  scenario: runbook</tspan>
+    <tspan x="16" dy="14">========================================================================</tspan>
+    <tspan x="16" dy="14">-------------------------------- QUERY ---------------------------------</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">  What should we do if rollback does not recover the API after a</tspan>
+    <tspan x="16" dy="14">  deployment incident?</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">----------------- PATH-AWARE  weighted graph retrieval -----------------</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">  BEST ANSWER</tspan>
+    <tspan x="16" dy="14">    If rollback does not recover service, restart the worker service</tspan>
+    <tspan x="16" dy="14">    and confirm queue drain behavior. | If the latest deployment is</tspan>
+    <tspan x="16" dy="14">    implicated, roll back the release and verify latency recovery. |</tspan>
+    <tspan x="16" dy="14">    When p95 latency exceeds the alert threshold, notify the</tspan>
+    <tspan x="16" dy="14">    incident commander and open an incident channel.</tspan>
+    <tspan x="16" dy="14">    [latency_ms=3.04]</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">  REPLAY PATH</tspan>
+    <tspan x="16" dy="14">    1. 01_api_incident_runbook:5  |  score=0.500  |  via=seed</tspan>
+    <tspan x="16" dy="14">       seed hit semantic=0.501</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">    2. 01_api_incident_runbook:4  |  score=0.299  |  via=next_unit</tspan>
+    <tspan x="16" dy="14">       expanded at hop 1 total=0.299 exception=0.450</tspan>
+    <tspan x="16" dy="14">       contradiction=0.000</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">    3. 01_api_incident_runbook:1  |  score=0.293  |  via=depends_on</tspan>
+    <tspan x="16" dy="14">       expanded at hop 1 total=0.293 exception=0.000</tspan>
+    <tspan x="16" dy="14">       contradiction=0.000</tspan>
+    <tspan x="16" dy="14"></tspan>
+    <tspan x="16" dy="14">========================================================================</tspan></text>
+</svg>

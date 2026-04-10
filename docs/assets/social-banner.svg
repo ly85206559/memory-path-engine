@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Memory Path Engine social banner</title>
+  <desc id="desc">Wide social banner for Memory Path Engine showing the project name, positioning, and a compact terminal-style preview of replayable evidence paths.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#151a2f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="44" y="44" width="1112" height="542" rx="24" fill="#101524" stroke="#28324b" stroke-width="2"/>
+
+  <text x="74" y="118" fill="#e8eefc" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">Memory Path Engine</text>
+  <text x="74" y="160" fill="#9fb0d9" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24">Structured memory retrieval for AI agents that returns replayable evidence paths, not just top-k chunks.</text>
+
+  <text x="74" y="218" fill="#8fe1c2" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="600">Typed graph memory  |  weighted retrieval  |  replayable path steps</text>
+
+  <rect x="74" y="258" width="1052" height="286" rx="18" fill="#0b0f18" stroke="#2c3650" stroke-width="2"/>
+  <rect x="74" y="258" width="1052" height="38" rx="18" fill="#161d2d"/>
+  <circle cx="101" cy="277" r="6" fill="#ff5f56"/>
+  <circle cx="123" cy="277" r="6" fill="#ffbd2e"/>
+  <circle cx="145" cy="277" r="6" fill="#27c93f"/>
+  <text x="600" y="282" text-anchor="middle" fill="#cdd6f4" font-family="Consolas, 'Liberation Mono', monospace" font-size="16">python -m memory_engine.demo --scenario runbook</text>
+
+  <g fill="#d8e3ff" font-family="Consolas, 'Liberation Mono', monospace" font-size="16" xml:space="preserve">
+    <text x="96" y="330">QUERY</text>
+    <text x="96" y="358">What should we do if rollback does not recover the API after a deployment incident?</text>
+
+    <text x="96" y="406">BEST ANSWER</text>
+    <text x="96" y="434">If rollback does not recover service, restart the worker service and confirm queue drain behavior.</text>
+    <text x="96" y="458">If the latest deployment is implicated, roll back the release and verify latency recovery.</text>
+
+    <text x="96" y="506">REPLAY PATH</text>
+    <text x="96" y="534">1. 01_api_incident_runbook:5  |  score=0.500  |  via=seed</text>
+    <text x="96" y="558">2. 01_api_incident_runbook:4  |  score=0.299  |  via=next_unit</text>
+  </g>
+
+  <text x="74" y="576" fill="#7f90b8" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">Repo-ready visual for social previews and launch posts.</text>
+</svg>

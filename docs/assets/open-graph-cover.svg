@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="ogTitle ogDesc">
+  <title id="ogTitle">Memory Path Engine  Open Graph cover</title>
+  <desc id="ogDesc">GitHub repository social preview: project name, tagline, and repo URL with safe margins for cropping.</desc>
+  <defs>
+    <linearGradient id="ogBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070b14"/>
+      <stop offset="55%" stop-color="#0f1628"/>
+      <stop offset="100%" stop-color="#121a30"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3d8bfd"/>
+      <stop offset="100%" stop-color="#58d6a4"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" fill="url(#ogBg)"/>
+  <!-- subtle grid for depth -->
+  <g opacity="0.06" stroke="#a8b8e0" stroke-width="1">
+    <path d="M0 160 H1280 M0 320 H1280 M0 480 H1280"/>
+    <path d="M320 0 V640 M640 0 V640 M960 0 V640"/>
+  </g>
+  <rect x="96" y="96" width="1088" height="448" rx="28" fill="none" stroke="#2a3550" stroke-width="2" opacity="0.85"/>
+  <rect x="96" y="96" width="6" height="448" rx="2" fill="url(#accent)"/>
+
+  <!-- Safe zone: keep key text inside ~1040x400 from (120,140) -->
+  <text x="132" y="200" fill="#f0f4ff" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="56" font-weight="700">Memory Path Engine</text>
+  <text x="132" y="262" fill="#9eb0d8" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="28">Replayable evidence paths for agent memory  not only flat top-k chunks.</text>
+  <text x="132" y="318" fill="#6ee7b7" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="22" font-weight="600">Research prototype · Python · MIT</text>
+
+  <rect x="132" y="352" width="1016" height="132" rx="14" fill="#0c101c" stroke="#2f3d5c" stroke-width="1"/>
+  <text x="156" y="392" fill="#8ba3cc" font-family="Consolas, 'Cascadia Mono', monospace" font-size="18">$ python -m memory_engine.demo --scenario runbook</text>
+  <text x="156" y="428" fill="#c8d4f0" font-family="Consolas, 'Cascadia Mono', monospace" font-size="17">REPLAY PATH  ’  node id  |  score  |  via=edge_type</text>
+  <text x="156" y="460" fill="#7d92b8" font-family="Consolas, 'Cascadia Mono', monospace" font-size="16">Bundled runbook + contract demos · multiple retrieval baselines in one repo</text>
+
+  <text x="132" y="586" fill="#5c6d94" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="20">github.com/ly85206559/memory-path-engine</text>
+  <text x="1148" y="586" text-anchor="end" fill="#4a5a7a" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="18">1280×640 · OG / GitHub Social preview</text>
+</svg>

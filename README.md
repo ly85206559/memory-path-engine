@@ -1,54 +1,57 @@
 # Memory Path Engine
 
-A structured memory engine for AI agents with weighted retrieval and path replay.
+[![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Status: Research Prototype](https://img.shields.io/badge/status-research%20prototype-lightgrey.svg)](docs/vision.md)
 
-`Memory Path Engine` is a research prototype for moving beyond plain `top-k` chunk retrieval. Instead of treating memory as a flat vector index, it represents memory as nodes, edges, weights, and replayable evidence paths.
+Structured memory retrieval for AI agents that returns evidence paths, not just `top-k` chunks.
 
-The long-term goal is a general memory substrate that can support many kinds of knowledge domains. The repository currently includes multiple example packs so the architecture can be exercised on different knowledge shapes rather than one domain only.
+`Memory Path Engine` is a research-first prototype for moving beyond flat retrieval. Instead of treating memory as an unordered vector index, it models memory as typed nodes, edges, weights, and replayable paths so a system can retrieve, traverse, and explain how it reached an answer.
 
-## Why this exists
+This repository is aimed at people exploring agent memory, graph-aware retrieval, and explainable evidence chains across more than one document shape.
+
+### System shape (v0)
+
+Bundled markdown packs are ingested into an in-memory graph (`MemoryNode` / `MemoryEdge`, with weights). Retrievers return a `MemoryPath`: a composed answer plus ordered steps you can inspect. The CLI demo exercises exactly this path end to end.
+
+```text
+ examples/*_pack  ──▶  ingest  ──▶  MemoryStore (typed graph)
+                                       │
+                         ┌──────────────┼──────────────┐
+                         ▼              ▼              ▼
+                   BaselineTopK    other modes    WeightedGraph
+                   (flat answers)  in `retrieve`  (path + scores)
+                                       │
+                                       ▼
+                         stitched answer + replayable step list
+```
+
+## Why this project is different
 
 Most RAG systems still look like this:
 
 1. Split documents into chunks.
 2. Embed chunks.
-3. Return top-k matches.
-4. Ask an LLM to improvise the reasoning.
+3. Return `top-k` matches.
+4. Ask the LLM to improvise the reasoning.
 
 This repo explores a different question:
 
-> Can we retrieve, traverse, and replay a memory path instead of only returning similar chunks?
+> Can we retrieve a memory path instead of only retrieving similar chunks?
 
-The prototype focuses on three ideas:
+The prototype is built around three ideas:
 
 - `structure`: memory is not flat; it has typed nodes and edges
 - `weight`: not every memory should be treated equally
-- `path`: the system should expose how it moved from query to evidence
+- `path`: retrieval should expose the chain of evidence, not hide it
 
-## Research hypotheses
+## What you can do here
 
-The first milestone tests three hypotheses:
-
-- `H1`: graph-aware retrieval beats vanilla top-k retrieval on multi-hop questions
-- `H2`: anomaly and importance weighting improve recall of critical evidence
-- `H3`: replayable memory paths improve explainability without unacceptable latency
-
-See [`docs/hypotheses.md`](docs/hypotheses.md) for the success criteria.
-
-## Repository layout
-
-- [`src/memory_engine`](src/memory_engine): core schema, store, ingestion, retrieval, replay
-- [`docs`](docs): vision, architecture, hypotheses, evaluation plan
-- [`examples/contract_pack`](examples/contract_pack): structured benchmark pack used to stress-test dense dependencies and exceptions
-- [`examples/runbook_pack`](examples/runbook_pack): non-contract example pack for operational playbooks and process memory
-- [`tests`](tests): initial unit tests for schema and retrieval behavior
-
-## Read This First
-
-- [`docs/vision.md`](docs/vision.md): why this project exists, how memory palace ideas map to AI memory, and where the architecture is heading
-- [`docs/architecture.md`](docs/architecture.md): what the current implementation looks like
-- [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
-- [`benchmarks/structured_memory`](benchmarks/structured_memory): repository-owned typed benchmark fixtures for structured memory evaluation
+- compare multiple retrieval modes in one codebase
+- inspect replayable evidence paths instead of only final answers
+- test graph-aware retrieval on contract-like and operational documents
+- run repository-owned structured benchmarks instead of toy snippets
 
 ## Quick start
 
@@ -58,52 +61,149 @@ Install the project in editable mode:
 python -m pip install --no-build-isolation -e .
 ```
 
-Run tests:
+Run the test suite:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Try the non-contract runbook example:
+Run the runbook demo:
 
-```python
-from pathlib import Path
-
-from memory_engine.ingest import ingest_document
-from memory_engine.retrieve import WeightedGraphRetriever
-from memory_engine.store import MemoryStore
-
-store = MemoryStore()
-runbooks_dir = Path("examples/runbook_pack/runbooks")
-
-for path in runbooks_dir.glob("*.md"):
-    ingest_document(path, store, domain_pack="example_runbook_pack")
-
-retriever = WeightedGraphRetriever(store)
-result = retriever.search(
-    "What should we do if rollback does not recover the API after a deployment incident?",
-    top_k=3,
-)
-
-print(result.best_path().final_answer)
-for step in result.best_path().steps:
-    print(step.node_id, step.reason, round(step.score, 3))
+```bash
+python -m memory_engine.demo --scenario runbook
 ```
+
+Terminal-style capture of real stdout (refresh with `python scripts/generate_runbook_demo_terminal_svg.py`; `latency_ms` may differ run to run):
+
+![Runbook demo terminal output](docs/assets/runbook-demo-terminal.svg)
+
+Run the contract comparison demo:
+
+```bash
+python -m memory_engine.demo --scenario contract
+```
+
+### What you will see
+
+`python -m memory_engine.demo` prints a small banner, the query, then path-aware output: a **BEST ANSWER** line built from the winning walk, and a **REPLAY PATH** with one line per hop (`node id`, `score`, `via=<edge type>`) plus short scoring reasons on the following lines. With `--scenario contract`, a **BASELINE** block (flat top-k answers) appears above the path-aware section for the same query.
+
+Representative runbook excerpt (answer line shortened; latency and hop scores can vary slightly between runs):
+
+```text
+========================================================================
+  Memory Path Engine  |  demo
+  scenario: runbook
+========================================================================
+-------------------------------- QUERY ---------------------------------
+  What should we do if rollback does not recover the API after a
+  deployment incident?
+----------------- PATH-AWARE  weighted graph retrieval -----------------
+  BEST ANSWER
+    … stitched runbook units … [latency_ms=…]
+
+  REPLAY PATH
+    1. 01_api_incident_runbook:5  |  score=0.500  |  via=seed
+       seed hit semantic=0.501
+    2. 01_api_incident_runbook:4  |  score=0.299  |  via=next_unit
+       expanded at hop 1 total=0.299 exception=0.450 contradiction=0.000
+========================================================================
+```
+
+## What the demos show
+
+### Runbook demo
+
+The runbook demo loads incident and recovery procedures, then asks a multi-step operational question:
+
+```text
+What should we do if rollback does not recover the API after a deployment incident?
+```
+
+The output includes:
+
+- a **BEST ANSWER** line composed from the graph walk
+- a **REPLAY PATH** with per-step scores, `via` edge types, and short reasons
+
+For a representative stdout excerpt, see **What you will see** (under Quick start).
+
+### Contract demo
+
+The contract demo runs the same query through a baseline retriever and the weighted graph retriever. Stdout shows flat top-k answers first, then the path-aware best answer and replay steps, so you can compare shapes of evidence without relying on a single aggregate metric.
+
+## Retrieval modes in this repo
+
+| Retriever | What it emphasizes | Useful for |
+| --- | --- | --- |
+| lexical baseline | keyword overlap | simple lookups and sanity checks |
+| embedding baseline | semantic similarity | paraphrases and fuzzy matches |
+| structure-only traversal | graph connectivity | linked evidence exploration |
+| weighted graph retrieval | structure plus importance weighting | multi-hop retrieval with replayable evidence |
+| activation spreading v1 | explicit propagation with decay | graph diffusion experiments |
+
+## Why the examples span multiple document types
+
+The core is meant to stay domain-agnostic. The current examples use both contract-like documents and runbooks because together they stress:
+
+- hierarchical structure
+- exception and dependency chains
+- critical risk-bearing units
+- procedural and operational steps
+- strong need for evidence-backed reasoning
+
+If the retrieval and replay ideas cannot survive across these document types, they are unlikely to generalize well to other structured knowledge domains.
+
+## Repository layout
+
+- [`src/memory_engine`](src/memory_engine): schema, storage, ingestion, retrieval, scoring, replay
+- [`examples/contract_pack`](examples/contract_pack): contract-like demo pack with dense dependencies and exceptions
+- [`examples/runbook_pack`](examples/runbook_pack): operational runbook pack for procedural retrieval
+- [`benchmarks/structured_memory`](benchmarks/structured_memory): typed benchmark fixtures and evaluation assets
+- [`docs`](docs): architecture, evaluation, hypotheses, and project vision
+- [`tests`](tests): unit tests for schema, retrieval behavior, and benchmark support
+
+## Read this first
+
+- [`docs/vision.md`](docs/vision.md): why this project exists and where it is heading
+- [`docs/architecture.md`](docs/architecture.md): how the current system is structured
+- [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
+- [`docs/hypotheses.md`](docs/hypotheses.md): milestone hypotheses and success criteria
+
+## Research hypotheses
+
+The first milestone tests three claims:
+
+- `H1`: graph-aware retrieval beats vanilla `top-k` retrieval on multi-hop questions
+- `H2`: anomaly and importance weighting improve recall of critical evidence
+- `H3`: replayable memory paths improve explainability without unacceptable latency
+
+## Experimental framework
+
+The retrieval stack separates:
+
+- candidate generation
+- semantic similarity backend
+- scoring strategy
+- path replay
+
+That separation makes it possible to compare lexical baseline, embedding baseline, structure-only traversal, and weighted graph retrieval without rewriting the main search loop.
+
+The evaluation layer can emit detailed per-question reports, which is useful for miss analysis and ablation debugging instead of relying only on a single aggregate score.
+
+The repository also includes a dedicated structured benchmark bounded context with:
+
+- strong pydantic dataset models
+- a JSON repository for benchmark fixtures
+- application services that load datasets, build stores, and run retrievers end to end
 
 ## What is in scope for v0
 
 - minimal `MemoryNode`, `MemoryEdge`, `MemoryPath`, and `EvidenceRef` schema
 - an in-memory store for fast iteration
 - simple ingestion paths for multiple example document styles
-- multiple retrieval modes:
-  - a naive lexical top-k baseline
-  - an embedding top-k baseline with a pluggable `EmbeddingProvider`
-  - structure-only graph traversal
-  - a weighted graph retriever with neighbor expansion, configurable scoring, and replayable paths
-  - activation spreading v1 for explicit graph propagation with decay and thresholds
+- multiple retrieval modes in one research harness
 - a small synthetic contract evaluation set for end-to-end experiments
 
-## What is explicitly out of scope for now
+## What is out of scope for now
 
 - production infrastructure
 - MCP integration
@@ -112,42 +212,11 @@ for step in result.best_path().steps:
 - large-scale benchmarks
 - full UI
 
-## Why the examples span multiple document types
-
-This repository is not limited to any one domain. The core is intended to stay domain-agnostic. The current examples use both contract-like documents and runbooks because together they cover:
-
-- hierarchical structure
-- exception and dependency chains
-- critical risk-bearing units
-- procedural and operational steps
-- strong need for evidence-backed reasoning
-
-If the retrieval and replay ideas cannot survive across these example document types, they are unlikely to generalize well to other structured knowledge domains.
-
-## Experimental framework
-
-The retrieval stack now separates:
-
-- candidate generation
-- semantic similarity backend
-- scoring strategy
-- path replay
-
-This makes it possible to compare lexical baseline, embedding baseline, structure-only traversal, and weighted graph retrieval without rewriting the main search loop.
-
-The evaluation layer can also emit detailed per-question reports, which makes miss analysis and ablation debugging much easier than relying on a single aggregate score.
-
-The repository also now includes a dedicated structured benchmark bounded context with:
-
-- strong pydantic dataset models
-- a JSON repository for benchmark fixtures
-- an application service that loads datasets, builds stores, and runs retrievers end to end
-
 ## Planned next steps
 
 - add explicit anomaly detectors and contradiction edges
 - expand the evaluation runner with ablation reports and latency summaries
-- extend the `domain_pack` interface for more example domains such as code, research notes, and policy-like documents
+- extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
 
 ## License
