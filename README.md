@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Status: Research Prototype](https://img.shields.io/badge/status-research%20prototype-lightgrey.svg)](docs/vision.md)
 
-Structured memory retrieval for AI agents that returns evidence paths, not just `top-k` chunks.
+Structured memory retrieval for AI agents that returns evidence paths, not just `top-k` chunks. Think **navigable memory** in a memory-palace-style sense: a graph you can walk, not only a flat similarity list.
 
 `Memory Path Engine` is a research-first prototype for moving beyond flat retrieval. Instead of treating memory as an unordered vector index, it models memory as typed nodes, edges, weights, and replayable paths so a system can retrieve, traverse, and explain how it reached an answer.
 
@@ -17,13 +17,13 @@ Bundled markdown packs are ingested into an in-memory graph (`MemoryNode` / `Mem
 
 ```text
  examples/*_pack  ──▶  ingest  ──▶  MemoryStore (typed graph)
-                                       │
+                                        │
                          ┌──────────────┼──────────────┐
                          ▼              ▼              ▼
                    BaselineTopK    other modes    WeightedGraph
                    (flat answers)  in `retrieve`  (path + scores)
-                                       │
-                                       ▼
+                                        │
+                                        ▼
                          stitched answer + replayable step list
 ```
 
@@ -56,8 +56,6 @@ The prototype is built around three ideas:
 ## Quick start
 
 Maintainers: configure the GitHub link-card image using [docs/social-preview.md](docs/social-preview.md) (`docs/assets/open-graph-cover.png`).
-
-First outbound round: see [docs/first-launch-checklist.md](docs/first-launch-checklist.md).
 
 Install the project in editable mode:
 
@@ -136,13 +134,15 @@ The contract demo runs the same query through a baseline retriever and the weigh
 
 ## Retrieval modes in this repo
 
-| Retriever | What it emphasizes | Useful for |
-| --- | --- | --- |
-| lexical baseline | keyword overlap | simple lookups and sanity checks |
-| embedding baseline | semantic similarity | paraphrases and fuzzy matches |
-| structure-only traversal | graph connectivity | linked evidence exploration |
+
+| Retriever                | What it emphasizes                  | Useful for                                   |
+| ------------------------ | ----------------------------------- | -------------------------------------------- |
+| lexical baseline         | keyword overlap                     | simple lookups and sanity checks             |
+| embedding baseline       | semantic similarity                 | paraphrases and fuzzy matches                |
+| structure-only traversal | graph connectivity                  | linked evidence exploration                  |
 | weighted graph retrieval | structure plus importance weighting | multi-hop retrieval with replayable evidence |
-| activation spreading v1 | explicit propagation with decay | graph diffusion experiments |
+| activation spreading v1  | explicit propagation with decay     | graph diffusion experiments                  |
+
 
 ## Why the examples span multiple document types
 
