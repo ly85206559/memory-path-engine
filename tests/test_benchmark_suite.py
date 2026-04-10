@@ -121,3 +121,35 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
         self.assertIn("weighted_graph_dynamic", suite_report.comparison.mode_summary)
         self.assertIn("activation_spreading_static", suite_report.comparison.mode_summary)
         self.assertIn("activation_spreading_dynamic", suite_report.comparison.mode_summary)
+
+    def test_suite_exposes_dynamic_priming_divergence_for_activation_spreading(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/dynamic_memory_priming_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("activation_spreading_static", "activation_spreading_dynamic"),
+            top_k=1,
+        )
+
+        static_prime = suite_report.modes["activation_spreading_static"].case_reports[0]
+        dynamic_prime = suite_report.modes["activation_spreading_dynamic"].case_reports[0]
+        static_probe = suite_report.modes["activation_spreading_static"].case_reports[-1]
+        dynamic_probe = suite_report.modes["activation_spreading_dynamic"].case_reports[-1]
+
+        self.assertEqual(static_prime.case_id, "prime-001")
+        self.assertEqual(dynamic_prime.case_id, "prime-001")
+        self.assertEqual(static_prime.best_path_hops, dynamic_prime.best_path_hops)
+        self.assertEqual(static_prime.activation_trace_length, dynamic_prime.activation_trace_length)
+        self.assertEqual(static_probe.case_id, "probe-009")
+        self.assertEqual(dynamic_probe.case_id, "probe-009")
+        self.assertTrue(static_probe.evidence_hit)
+        self.assertTrue(static_probe.path_hit)
+        self.assertTrue(static_probe.hit)
+        self.assertFalse(dynamic_probe.evidence_hit)
+        self.assertFalse(dynamic_probe.path_hit)
+        self.assertFalse(dynamic_probe.hit)
+        self.assertEqual(static_probe.matched_evidence, ["dynamic_memory_priming_runbook:7"])
+        self.assertEqual(dynamic_probe.matched_evidence, [])

@@ -1,0 +1,103 @@
+{
+  "dataset_id": "dynamic-memory-priming-benchmark-v1",
+  "dataset_name": "Dynamic memory priming benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/priming_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "prime-001",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-002",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-003",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-004",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-005",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-006",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-007",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-008",
+      "query": "If alpha cache queue health stays degraded, restart the alpha cache worker.",
+      "tags": ["priming", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "probe-009",
+      "query": "What step comes after beta cache diagnostics?",
+      "tags": ["priming", "beta", "probe"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_memory_priming_runbook:7"],
+        "minimum_evidence_matches": 1,
+        "path_scope": "best_path",
+        "path": {
+          "match_mode": "prefix",
+          "steps": [
+            {
+              "node_id": "dynamic_memory_priming_runbook:6",
+              "via_edge_type": null
+            },
+            {
+              "node_id": "dynamic_memory_priming_runbook:7",
+              "via_edge_type": "next_unit"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
