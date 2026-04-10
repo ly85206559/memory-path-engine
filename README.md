@@ -55,6 +55,10 @@ The prototype is built around three ideas:
 
 ## Quick start
 
+Maintainers: configure the GitHub link-card image using [docs/social-preview.md](docs/social-preview.md) (`docs/assets/open-graph-cover.png`).
+
+First outbound round: see [docs/first-launch-checklist.md](docs/first-launch-checklist.md).
+
 Install the project in editable mode:
 
 ```bash
@@ -218,6 +222,8 @@ The repository also includes a dedicated structured benchmark bounded context wi
 - expand the evaluation runner with ablation reports and latency summaries
 - extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
+
+For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 
 ## License
 
