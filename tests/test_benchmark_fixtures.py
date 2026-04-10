@@ -3,6 +3,43 @@ from pathlib import Path
 
 
 class BenchmarkFixtureTests(unittest.TestCase):
+    def test_all_structured_benchmark_json_files_load(self):
+        from memory_engine.benchmarking.infrastructure.json_repository import (
+            JsonStructuredBenchmarkDatasetRepository,
+        )
+
+        repository = JsonStructuredBenchmarkDatasetRepository()
+        fixtures_dir = Path("benchmarks/structured_memory")
+        dataset_paths = sorted(fixtures_dir.glob("*.json"))
+
+        self.assertTrue(dataset_paths)
+        for dataset_path in dataset_paths:
+            with self.subTest(dataset_path=dataset_path.name):
+                dataset = repository.load(dataset_path)
+                self.assertTrue(dataset.dataset_id)
+                self.assertTrue(dataset.cases)
+                self.assertTrue((dataset_path.parent / dataset.document_directory).resolve().exists())
+
+    def test_contract_benchmark_fixture_loads_and_runs(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+        from memory_engine.benchmarking.infrastructure.json_repository import (
+            JsonStructuredBenchmarkDatasetRepository,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/example_contract_benchmark.json")
+        dataset = JsonStructuredBenchmarkDatasetRepository().load(dataset_path)
+        self.assertEqual(dataset.domain_pack_name, "example_contract_pack")
+
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+        self.assertEqual(report.dataset_id, "example-contract-benchmark-v1")
+        self.assertGreaterEqual(report.evidence_recall, 0.5)
+
     def test_runbook_benchmark_fixture_loads_and_runs(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,
