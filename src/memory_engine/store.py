@@ -34,5 +34,12 @@ class MemoryStore:
     def nodes(self) -> list[MemoryNode]:
         return list(self._nodes.values())
 
+    def edges(self) -> list[MemoryEdge]:
+        return [
+            edge
+            for adjacency in self._adjacency.values()
+            for edge in adjacency
+        ]
+
     def neighbors(self, node_id: str) -> list[MemoryEdge]:
         return list(self._adjacency.get(node_id, []))

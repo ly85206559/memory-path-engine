@@ -44,6 +44,7 @@ from memory_engine.evaluation import (
 from memory_engine.ingest import ingest_contract_markdown, ingest_document
 from memory_engine.memory_state import (
     MemoryStatePolicy,
+    StaticMemoryStatePolicy,
     decay_unvisited_nodes,
     reinforce_result_paths,
 )
@@ -56,6 +57,7 @@ from memory_engine.retrieve import (
 )
 from memory_engine.schema import (
     ActivationContext,
+    ActivationTraceStep,
     EvidenceRef,
     MemoryEdge,
     MemoryNode,
@@ -76,6 +78,7 @@ from memory_engine.store import MemoryStore
 __all__ = [
     "ActivatedNode",
     "ActivationSignal",
+    "ActivationTraceStep",
     "ActivationContext",
     "ActivationSpreadingRetriever",
     "BaselineTopKRetriever",
@@ -98,6 +101,7 @@ __all__ = [
     "MemoryNode",
     "MemoryPath",
     "MemoryStatePolicy",
+    "StaticMemoryStatePolicy",
     "MemoryStore",
     "MemoryWeight",
     "RetrievalResult",

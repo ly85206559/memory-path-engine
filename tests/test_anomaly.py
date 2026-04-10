@@ -36,3 +36,27 @@ class AnomalyPolicyTests(unittest.TestCase):
         )
 
         self.assertEqual(breakdown.anomaly_score, 1.0)
+
+    def test_weighted_sum_strategy_emits_semantic_scores(self):
+        node = MemoryNode(
+            id="node-3",
+            type="clause",
+            content="Unless goods are defective, Buyer must pay all invoices within 30 days.",
+            attributes={
+                "semantic_role": "exception",
+                "contradiction_targets": ["node-4"],
+            },
+            weights=MemoryWeight(risk=0.2, novelty=0.85, confidence=0.8),
+        )
+
+        breakdown = WeightedSumScoringStrategy().score_node(
+            query="What overrides the payment rule?",
+            node=node,
+            semantic_score=0.9,
+            context=ActivationContext(query="What overrides the payment rule?"),
+            depth=1,
+            source_node_id="node-4",
+        )
+
+        self.assertGreater(breakdown.exception_score, 0.0)
+        self.assertGreater(breakdown.contradiction_score, 0.0)

@@ -36,6 +36,15 @@ class BenchmarkFixtureTests(unittest.TestCase):
 
         self.assertEqual(report.dataset_id, "exception-override-benchmark-v1")
         self.assertTrue(report.case_reports[0].surfaced_semantic_roles)
+        self.assertTrue(report.case_reports[0].contradiction_hit)
+        self.assertTrue(report.case_reports[0].surfaced_contradictions)
+        self.assertTrue(report.case_reports[0].activation_trace_hit)
+        self.assertGreater(report.case_reports[0].best_path_contradiction_score, 0.0)
+        self.assertEqual(report.case_reports[0].activation_trace_length, 5)
+        self.assertEqual(
+            report.case_reports[0].activation_stopped_reasons,
+            ["below_threshold"],
+        )
 
     def test_multi_hop_chain_fixture_runs_with_activation_spreading(self):
         from memory_engine.benchmarking.application.service import (

@@ -144,6 +144,122 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
         self.assertTrue(report.case_reports[0].hit)
         self.assertTrue(report.case_reports[0].path_hit)
 
+    def test_runner_supports_activation_trace_expectation(self):
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
+        from memory_engine.schema import (
+            ActivationTraceStep,
+            MemoryPath,
+            PathStep,
+            RetrievalResult,
+        )
+
+        class FakeRetriever:
+            def search(self, query: str, top_k: int = 3) -> RetrievalResult:
+                del query, top_k
+                return RetrievalResult(
+                    query="rollback recovery",
+                    paths=[
+                        MemoryPath(
+                            query="rollback recovery",
+                            steps=[
+                                PathStep(
+                                    node_id="01_api_incident_runbook:4",
+                                    reason="seed",
+                                    score=0.8,
+                                ),
+                                PathStep(
+                                    node_id="01_api_incident_runbook:5",
+                                    reason="expansion",
+                                    score=0.9,
+                                    via_edge_type="depends_on",
+                                ),
+                            ],
+                            activation_trace=[
+                                ActivationTraceStep(
+                                    node_id="01_api_incident_runbook:4",
+                                    hop=0,
+                                    incoming_activation=0.82,
+                                    propagated_activation=0.82,
+                                    is_seed=True,
+                                ),
+                                ActivationTraceStep(
+                                    node_id="01_api_incident_runbook:5",
+                                    source_node_id="01_api_incident_runbook:4",
+                                    edge_type="depends_on",
+                                    hop=1,
+                                    incoming_activation=0.74,
+                                    propagated_activation=0.74,
+                                    activated_score=0.91,
+                                ),
+                                ActivationTraceStep(
+                                    node_id="01_api_incident_runbook:6",
+                                    source_node_id="01_api_incident_runbook:5",
+                                    edge_type="related_to",
+                                    hop=2,
+                                    incoming_activation=0.04,
+                                    propagated_activation=0.0,
+                                    stopped_reason="below_threshold",
+                                ),
+                            ],
+                            final_answer="Restart the worker service and confirm queue drain behavior.",
+                            final_score=0.9,
+                        )
+                    ],
+                )
+
+        dataset = StructuredBenchmarkDataset.model_validate(
+            {
+                "dataset_id": "trace-benchmark-v1",
+                "dataset_name": "Trace benchmark",
+                "domain_pack_name": "example_runbook_pack",
+                "document_directory": "runbooks",
+                "cases": [
+                    {
+                        "case_id": "rb-trace-001",
+                        "query": "What should happen after rollback does not recover service?",
+                        "expectation": {
+                            "evidence_node_ids": ["01_api_incident_runbook:5"],
+                            "minimum_evidence_matches": 1,
+                            "min_activation_trace_length": 3,
+                            "max_activation_trace_length": 3,
+                            "required_trace_stop_reasons": ["below_threshold"],
+                            "activation_trace": {
+                                "match_mode": "prefix",
+                                "steps": [
+                                    {
+                                        "node_id": "01_api_incident_runbook:4",
+                                        "is_seed": True,
+                                        "hop": 0,
+                                    },
+                                    {
+                                        "node_id": "01_api_incident_runbook:5",
+                                        "edge_type": "depends_on",
+                                        "hop": 1,
+                                    },
+                                ],
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+        report = StructuredBenchmarkRunner().run(
+            dataset=dataset,
+            retriever_name="fake_activation_spreading",
+            retriever=FakeRetriever(),
+            top_k=3,
+        )
+
+        self.assertTrue(report.case_reports[0].hit)
+        self.assertTrue(report.case_reports[0].activation_trace_hit)
+        self.assertEqual(report.case_reports[0].activation_trace_length, 3)
+        self.assertEqual(
+            report.case_reports[0].activation_stopped_reasons,
+            ["below_threshold"],
+        )
+
     def test_evaluation_service_runs_dataset_file_end_to_end(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,

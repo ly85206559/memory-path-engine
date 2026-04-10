@@ -67,15 +67,22 @@ def _legacy_summary(report: StructuredBenchmarkReport, *, detailed: bool) -> dic
                 "tags": case_report.tags,
                 "hit": case_report.hit,
                 "path_hit": case_report.path_hit,
+                "activation_trace_hit": case_report.activation_trace_hit,
                 "semantic_hit": case_report.semantic_hit,
+                "contradiction_hit": case_report.contradiction_hit,
                 "expected_evidence": case_report.expected_evidence,
                 "matched_evidence": case_report.matched_evidence,
                 "missing_evidence": case_report.missing_evidence,
                 "returned_node_ids": case_report.returned_node_ids,
                 "surfaced_semantic_roles": case_report.surfaced_semantic_roles,
+                "surfaced_contradictions": case_report.surfaced_contradictions,
                 "path_edge_types": case_report.path_edge_types,
                 "activated_node_count": case_report.activated_node_count,
+                "activation_trace_length": case_report.activation_trace_length,
+                "activation_stopped_reasons": case_report.activation_stopped_reasons,
                 "best_path_hops": case_report.best_path_hops,
+                "best_path_exception_score": case_report.best_path_exception_score,
+                "best_path_contradiction_score": case_report.best_path_contradiction_score,
                 "best_answer": case_report.best_answer,
                 "latency_ms": case_report.latency_ms,
             }
@@ -92,6 +99,10 @@ def _legacy_comparison_report(comparison: StructuredBenchmarkComparisonReport) -
                 "modes": {
                     mode_name: {
                         "hit": mode_result.hit,
+                        "path_hit": mode_result.path_hit,
+                        "activation_trace_hit": mode_result.activation_trace_hit,
+                        "semantic_hit": mode_result.semantic_hit,
+                        "contradiction_hit": mode_result.contradiction_hit,
                         "matched_evidence": mode_result.matched_evidence,
                         "latency_ms": mode_result.latency_ms,
                     }
@@ -107,9 +118,12 @@ def _legacy_comparison_report(comparison: StructuredBenchmarkComparisonReport) -
                 "evidence_recall": mode_summary.evidence_recall,
                 "avg_latency_ms": mode_summary.avg_latency_ms,
                 "path_hit_rate": mode_summary.path_hit_rate,
+                "activation_trace_hit_rate": mode_summary.activation_trace_hit_rate,
                 "semantic_hit_rate": mode_summary.semantic_hit_rate,
+                "contradiction_hit_rate": mode_summary.contradiction_hit_rate,
                 "avg_activated_nodes": mode_summary.avg_activated_nodes,
                 "avg_propagation_depth": mode_summary.avg_propagation_depth,
+                "avg_activation_trace_length": mode_summary.avg_activation_trace_length,
             }
             for mode_name, mode_summary in comparison.mode_summary.items()
         },
@@ -245,6 +259,10 @@ def build_comparison_report(mode_results: dict[str, dict]) -> dict:
             detail = next(item for item in mode_result["details"] if item["question_id"] == question_id)
             per_mode[mode_name] = {
                 "hit": detail["hit"],
+                "path_hit": detail.get("path_hit"),
+                "activation_trace_hit": detail.get("activation_trace_hit"),
+                "semantic_hit": detail.get("semantic_hit"),
+                "contradiction_hit": detail.get("contradiction_hit"),
                 "matched_evidence": detail["matched_evidence"],
                 "latency_ms": detail["latency_ms"],
             }

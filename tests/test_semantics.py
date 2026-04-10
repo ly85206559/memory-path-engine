@@ -4,8 +4,10 @@ from memory_engine.schema import MemoryEdge, MemoryNode
 from memory_engine.semantics import (
     ContradictionCandidate,
     SemanticRole,
+    contradiction_bonus,
     contradiction_candidates,
     infer_semantic_role,
+    surfaced_contradictions,
 )
 
 
@@ -45,3 +47,37 @@ class SemanticTests(unittest.TestCase):
 
         self.assertEqual(len(candidates), 1)
         self.assertIsInstance(candidates[0], ContradictionCandidate)
+
+    def test_contradiction_bonus_prefers_candidate_pairs(self):
+        candidates = [
+            ContradictionCandidate(
+                left_node_id="clause:1",
+                right_node_id="clause:2",
+                explanation="exception overrides obligation",
+            )
+        ]
+
+        self.assertGreater(
+            contradiction_bonus(
+                node_id="clause:2",
+                candidates=candidates,
+                source_node_id="clause:1",
+            ),
+            contradiction_bonus(
+                node_id="clause:2",
+                candidates=candidates,
+            ),
+        )
+
+    def test_surfaced_contradictions_returns_present_pairs(self):
+        candidates = [
+            ContradictionCandidate(
+                left_node_id="clause:1",
+                right_node_id="clause:2",
+                explanation="exception overrides obligation",
+            )
+        ]
+
+        surfaced = surfaced_contradictions(["clause:1", "clause:2"], candidates)
+
+        self.assertEqual(surfaced, [("clause:1", "clause:2")])

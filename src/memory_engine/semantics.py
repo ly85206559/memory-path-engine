@@ -30,6 +30,12 @@ class ContradictionCandidate:
     explanation: str
 
 
+@dataclass(frozen=True, slots=True)
+class SemanticScoreSignals:
+    exception_score: float = 0.0
+    contradiction_score: float = 0.0
+
+
 def infer_semantic_role(text: str, *, node_type: str) -> SemanticRole:
     lowered = text.lower()
     if any(keyword in lowered for keyword in ("unless", "except", "notwithstanding")):
@@ -75,3 +81,68 @@ def contradiction_candidates(nodes: list[MemoryNode], edges: list[MemoryEdge]) -
                 )
             )
     return candidates
+
+
+def semantic_score_signals(
+    node: MemoryNode,
+    *,
+    source_node_id: str | None = None,
+) -> SemanticScoreSignals:
+    role_name = node.attributes.get("semantic_role")
+    exception_score = 0.0
+    if role_name == SemanticRole.EXCEPTION.value:
+        exception_score = 1.0
+    elif role_name in {SemanticRole.REMEDY.value, SemanticRole.ESCALATION.value}:
+        exception_score = 0.45
+
+    contradiction_targets = set(node.attributes.get("contradiction_targets", []))
+    contradiction_score = 0.0
+    if contradiction_targets:
+        contradiction_score = 0.45
+    if source_node_id is not None and source_node_id in contradiction_targets:
+        contradiction_score = 1.0
+
+    return SemanticScoreSignals(
+        exception_score=exception_score,
+        contradiction_score=contradiction_score,
+    )
+
+
+def contradiction_bonus(
+    *,
+    node_id: str,
+    candidates: list[ContradictionCandidate],
+    source_node_id: str | None = None,
+) -> float:
+    contradiction_targets = set()
+    for candidate in candidates:
+        pair = {candidate.left_node_id, candidate.right_node_id}
+        if node_id not in pair:
+            continue
+        contradiction_targets.update(pair - {node_id})
+    probe_node = MemoryNode(
+        id=node_id,
+        type="semantic_probe",
+        content="",
+        attributes={"contradiction_targets": sorted(contradiction_targets)},
+    )
+    score = semantic_score_signals(
+        probe_node,
+        source_node_id=source_node_id,
+    ).contradiction_score
+    return 0.14 if score >= 1.0 else 0.06 if score > 0 else 0.0
+
+
+def surfaced_contradictions(
+    returned_node_ids: list[str] | set[str],
+    candidates: list[ContradictionCandidate],
+) -> list[tuple[str, str]]:
+    returned_node_id_set = set(returned_node_ids)
+    surfaced: list[tuple[str, str]] = []
+    for candidate in candidates:
+        if (
+            candidate.left_node_id in returned_node_id_set
+            and candidate.right_node_id in returned_node_id_set
+        ):
+            surfaced.append((candidate.left_node_id, candidate.right_node_id))
+    return surfaced

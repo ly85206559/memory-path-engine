@@ -7,6 +7,7 @@ from memory_engine.retrieve import (
     WeightedGraphRetriever,
 )
 from memory_engine.activation import DefaultPropagationPolicy
+from memory_engine.memory_state import StaticMemoryStatePolicy
 from memory_engine.scoring import ScoreBreakdown
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
@@ -45,6 +46,55 @@ def build_store() -> MemoryStore:
     return store
 
 
+def build_contradiction_store() -> MemoryStore:
+    store = MemoryStore()
+    store.add_node(
+        MemoryNode(
+            id="contract:1",
+            type="clause",
+            content="Buyer must pay all invoices within 30 days.",
+            attributes={"semantic_role": "obligation"},
+            weights=MemoryWeight(importance=0.6, risk=0.2, novelty=0.2, confidence=0.9),
+        )
+    )
+    store.add_node(
+        MemoryNode(
+            id="contract:2",
+            type="clause",
+            content="Unless goods are defective, Buyer must pay all invoices within 30 days.",
+            attributes={"semantic_role": "exception"},
+            weights=MemoryWeight(importance=0.75, risk=0.4, novelty=0.85, confidence=0.95),
+        )
+    )
+    store.add_node(
+        MemoryNode(
+            id="contract:3",
+            type="clause",
+            content="If goods are defective, Buyer may withhold invoice payment until Seller cures the defect.",
+            attributes={"semantic_role": "remedy"},
+            weights=MemoryWeight(importance=0.8, risk=0.7, novelty=0.5, confidence=0.95),
+        )
+    )
+    store.add_edge(
+        MemoryEdge(
+            from_id="contract:2",
+            to_id="contract:1",
+            edge_type="exception_to",
+            weight=0.8,
+            bidirectional=True,
+        )
+    )
+    store.add_edge(
+        MemoryEdge(
+            from_id="contract:2",
+            to_id="contract:3",
+            edge_type="depends_on",
+            weight=0.7,
+        )
+    )
+    return store
+
+
 class FakeEmbeddingProvider:
     def __init__(self, mapping: dict[str, list[float]]) -> None:
         self.mapping = mapping
@@ -62,6 +112,8 @@ class PreferContractOneStrategy:
             structural_score=0.0,
             anomaly_score=0.0,
             importance_score=boost,
+            exception_score=0.0,
+            contradiction_score=0.0,
             total_score=boost,
         )
 
@@ -117,8 +169,11 @@ class RetrieveTests(unittest.TestCase):
             top_k=1,
         )
 
-        node_ids = [step.node_id for step in result.best_path().steps]
+        best_path = result.best_path()
+        node_ids = [step.node_id for step in best_path.steps]
         self.assertEqual(node_ids, ["contract:2", "contract:3"])
+        self.assertTrue(best_path.activation_trace)
+        self.assertTrue(best_path.activation_trace[0].is_seed)
 
     def test_activation_spreading_retriever_respects_allowed_edge_types(self):
         result = ActivationSpreadingRetriever(
@@ -131,3 +186,34 @@ class RetrieveTests(unittest.TestCase):
 
         node_ids = [step.node_id for step in result.best_path().steps]
         self.assertEqual(node_ids, ["contract:2"])
+
+    def test_activation_spreading_surfaces_contradiction_pair(self):
+        result = ActivationSpreadingRetriever(build_contradiction_store()).search(
+            "What overrides the normal payment rule when goods are defective?",
+            top_k=2,
+        )
+
+        returned_node_ids = {
+            step.node_id
+            for path in result.paths
+            for step in path.steps
+        }
+        self.assertIn("contract:1", returned_node_ids)
+        self.assertIn("contract:2", returned_node_ids)
+
+    def test_weighted_graph_static_mode_does_not_update_usage_counts(self):
+        store = build_store()
+        WeightedGraphRetriever(
+            store,
+            memory_state_policy=StaticMemoryStatePolicy(),
+        ).search("What happens if delivery is late and not cured?", top_k=1)
+
+        self.assertEqual(store.get_node("contract:2").weights.usage_count, 0)
+
+    def test_weighted_graph_dynamic_mode_updates_usage_counts(self):
+        store = build_store()
+        WeightedGraphRetriever(
+            store,
+        ).search("What happens if delivery is late and not cured?", top_k=1)
+
+        self.assertGreaterEqual(store.get_node("contract:2").weights.usage_count, 1)

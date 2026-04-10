@@ -2,6 +2,7 @@ import unittest
 
 from memory_engine.memory_state import (
     MemoryStatePolicy,
+    StaticMemoryStatePolicy,
     decay_unvisited_nodes,
     reinforce_result_paths,
 )
@@ -49,3 +50,19 @@ class MemoryStateTests(unittest.TestCase):
 
         self.assertGreater(score, weight.bounded_score() * 0.8)
         self.assertLessEqual(score, 1.0)
+
+    def test_static_memory_state_policy_is_noop(self):
+        policy = StaticMemoryStatePolicy()
+        node = MemoryNode(
+            id="memory:2",
+            type="clause",
+            content="Buyer must pay invoices within 30 days.",
+            weights=MemoryWeight(usage_count=2, decay_factor=0.9),
+        )
+
+        policy.reinforce_node(node)
+        policy.decay_node(node, steps=3)
+
+        self.assertEqual(node.weights.usage_count, 2)
+        self.assertEqual(node.weights.decay_factor, 0.9)
+        self.assertEqual(policy.effective_weight_score(node.weights), node.weights.bounded_score())

@@ -14,7 +14,33 @@
           "01_exception_override_contract:3"
         ],
         "minimum_evidence_matches": 2,
-        "required_semantic_roles": ["exception", "remedy"]
+        "activation_trace": {
+          "match_mode": "subsequence",
+          "steps": [
+            {
+              "node_id": "01_exception_override_contract:3",
+              "is_seed": true,
+              "hop": 0
+            },
+            {
+              "node_id": "01_exception_override_contract:2",
+              "edge_type": "depends_on",
+              "hop": 1
+            },
+            {
+              "node_id": "01_exception_override_contract:1",
+              "edge_type": "exception_to",
+              "hop": 2
+            }
+          ]
+        },
+        "required_trace_stop_reasons": ["below_threshold"],
+        "min_activation_trace_length": 5,
+        "max_activation_trace_length": 5,
+        "required_semantic_roles": ["exception", "remedy"],
+        "required_contradiction_pairs": [
+          ["01_exception_override_contract:1", "01_exception_override_contract:2"]
+        ]
       }
     }
   ]

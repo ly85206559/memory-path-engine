@@ -57,10 +57,12 @@ class MemoryEdge:
 @dataclass(slots=True)
 class ActivationContext:
     query: str
-    semantic_weight: float = 0.55
-    structural_weight: float = 0.2
+    semantic_weight: float = 0.45
+    structural_weight: float = 0.15
     anomaly_weight: float = 0.15
     importance_weight: float = 0.1
+    exception_weight: float = 0.075
+    contradiction_weight: float = 0.075
     max_hops: int = 2
 
 
@@ -73,9 +75,23 @@ class PathStep:
 
 
 @dataclass(slots=True)
+class ActivationTraceStep:
+    node_id: str
+    source_node_id: str | None = None
+    edge_type: str | None = None
+    hop: int = 0
+    incoming_activation: float = 0.0
+    propagated_activation: float = 0.0
+    activated_score: float | None = None
+    stopped_reason: str | None = None
+    is_seed: bool = False
+
+
+@dataclass(slots=True)
 class MemoryPath:
     query: str
     steps: list[PathStep] = field(default_factory=list)
+    activation_trace: list[ActivationTraceStep] = field(default_factory=list)
     supporting_evidence: list[EvidenceRef] = field(default_factory=list)
     final_answer: str = ""
     final_score: float = 0.0

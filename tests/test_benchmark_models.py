@@ -64,6 +64,7 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
             minimum_evidence_matches=1,
             required_edge_types=["depends_on"],
             required_semantic_roles=["escalation"],
+            required_contradiction_pairs=[("runbook:1", "runbook:2")],
             path_scope="best_path",
             path={
                 "match_mode": "subsequence",
@@ -77,6 +78,35 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
         self.assertEqual(expectation.path_scope, "best_path")
         self.assertEqual(expectation.path.steps[1].via_edge_type, "depends_on")
         self.assertEqual(expectation.required_semantic_roles, ["escalation"])
+        self.assertEqual(expectation.required_contradiction_pairs, [("runbook:1", "runbook:2")])
+
+    def test_expectation_accepts_optional_activation_trace_shape(self):
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkExpectation
+
+        expectation = StructuredBenchmarkExpectation(
+            evidence_node_ids=["runbook:2"],
+            minimum_evidence_matches=1,
+            min_activation_trace_length=2,
+            max_activation_trace_length=4,
+            required_trace_stop_reasons=["below_threshold"],
+            activation_trace={
+                "match_mode": "prefix",
+                "steps": [
+                    {"node_id": "runbook:1", "is_seed": True, "hop": 0},
+                    {
+                        "node_id": "runbook:2",
+                        "edge_type": "depends_on",
+                        "hop": 1,
+                    },
+                ],
+            },
+        )
+
+        self.assertEqual(expectation.min_activation_trace_length, 2)
+        self.assertEqual(expectation.max_activation_trace_length, 4)
+        self.assertEqual(expectation.required_trace_stop_reasons, ["below_threshold"])
+        self.assertTrue(expectation.activation_trace.steps[0].is_seed)
+        self.assertEqual(expectation.activation_trace.steps[1].edge_type, "depends_on")
 
     def test_path_step_rejects_blank_edge_type(self):
         from pydantic import ValidationError
@@ -92,4 +122,17 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
                         {"node_id": "runbook:1", "via_edge_type": "   "},
                     ],
                 },
+            )
+
+    def test_expectation_rejects_inconsistent_trace_length_bounds(self):
+        from pydantic import ValidationError
+
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkExpectation
+
+        with self.assertRaises(ValidationError):
+            StructuredBenchmarkExpectation(
+                evidence_node_ids=["runbook:1"],
+                minimum_evidence_matches=1,
+                min_activation_trace_length=4,
+                max_activation_trace_length=2,
             )

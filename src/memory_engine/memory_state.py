@@ -31,6 +31,18 @@ class MemoryStatePolicy:
         return max(0.0, min(score, 1.0))
 
 
+@dataclass(slots=True)
+class StaticMemoryStatePolicy(MemoryStatePolicy):
+    def reinforce_node(self, node: MemoryNode) -> None:
+        del node
+
+    def decay_node(self, node: MemoryNode, *, steps: int = 1) -> None:
+        del node, steps
+
+    def effective_weight_score(self, weight: MemoryWeight) -> float:
+        return weight.bounded_score()
+
+
 def reinforce_result_paths(store: MemoryStore, *, paths, policy: MemoryStatePolicy | None = None) -> None:
     policy = policy or MemoryStatePolicy()
     seen_node_ids: set[str] = set()

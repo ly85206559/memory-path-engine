@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from memory_engine.schema import MemoryNode, MemoryPath, PathStep
+from memory_engine.schema import ActivationTraceStep, MemoryNode, MemoryPath, PathStep
 
 
-def path_answer(query: str, chain: list[tuple[MemoryNode, float, str, str | None]]) -> MemoryPath:
+def path_answer(
+    query: str,
+    chain: list[tuple[MemoryNode, float, str, str | None]],
+    *,
+    activation_trace: list[ActivationTraceStep] | None = None,
+) -> MemoryPath:
     supporting_evidence = [item[0].source_ref for item in chain if item[0].source_ref is not None]
     steps = [
         PathStep(
@@ -19,6 +24,7 @@ def path_answer(query: str, chain: list[tuple[MemoryNode, float, str, str | None
     return MemoryPath(
         query=query,
         steps=steps,
+        activation_trace=activation_trace or [],
         supporting_evidence=supporting_evidence,
         final_answer=final_answer,
         final_score=final_score,
