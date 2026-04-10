@@ -14,7 +14,7 @@ For polished long-form channel posts, see [`final-launch-posts.md`](final-launch
 
 I just open-sourced **Memory Path Engine**, a small research prototype for **agent memory retrieval**.
 
-The usual pattern is chunk -> embed -> `top-k`, then the model fills in the reasoning. Here the memory is a **typed graph** (nodes, edges, weights), and retrieval returns a `MemoryPath`: a stitched answer plus a **replayable hop list** (scores, `via=` edge types, short reasons). That makes multi-hop evidence easier to **inspect** than hiding everything inside the model.
+The usual pattern is chunk -> embed -> `top-k`, then the model fills in the reasoning. Here the memory is a **typed graph** (nodes, edges, weights), and retrieval returns a `MemoryPath`: a stitched answer plus a **replayable hop list** (scores, `via=` edge types, short reasons). You can think of it as a memory-palace-style idea for agents: memory should feel navigable, not like a pile of unrelated chunks.
 
 **In the repo**
 
@@ -36,7 +36,7 @@ MIT · feedback welcome
 
 ## English — short post
 
-Open-sourced **Memory Path Engine**: agent memory retrieval that returns **replayable evidence paths**, not just `top-k` chunks.
+Open-sourced **Memory Path Engine**: a memory-palace-style retrieval prototype for agents that returns **replayable evidence paths**, not just `top-k` chunks.
 
 Typed graph + weighted retrieval. Runbook + contract demos.
 
@@ -52,7 +52,7 @@ python -m memory_engine.demo --scenario runbook
 
 刚把 **Memory Path Engine（记忆路径引擎）** 开源了。
 
-很多做法还是：切 chunk、做向量、`top-k` 检索，然后让模型自己把推理补上。这个项目想试的是：把记忆建成**带类型的图**（节点、边、权重），检索时除了答案，再给一条**可回放的证据路径**——每一步有分数、`via` 边类型和简短理由，方便看多跳证据是怎么连起来的。
+很多做法还是：切 chunk、做向量、`top-k` 检索，然后让模型自己把推理补上。这个项目想试的是：把记忆建成**带类型的图**（节点、边、权重），检索时除了答案，再给一条**可回放的证据路径**——每一步有分数、`via` 边类型和简短理由，方便看多跳证据是怎么连起来的。你也可以把它理解成一种面向 agent 的“记忆宫殿”思路：记忆不是一堆碎片，而是一个可导航、可回访的结构。
 
 **仓库里有什么**
 
@@ -74,7 +74,7 @@ MIT，欢迎 issue / PR / 吐槽
 
 ## 中文 — 短帖
 
-开源 **Memory Path Engine**：面向 AI agent 的结构化记忆检索，返回**可回放证据路径**，而不只是 `top-k` 片段。
+开源 **Memory Path Engine**：一种面向 AI agent 的“记忆宫殿”式结构化检索，返回**可回放证据路径**，而不只是 `top-k` 片段。
 
 ```bash
 python -m memory_engine.demo --scenario runbook
@@ -88,12 +88,12 @@ python -m memory_engine.demo --scenario runbook
 
 Open-sourced **Memory Path Engine**.
 
-Structured memory retrieval for agents with **replayable evidence paths** instead of flat `top-k` chunks.
+Structured, memory-palace-style retrieval for agents with **replayable evidence paths** instead of flat `top-k` chunks.
 
 [https://github.com/ly85206559/memory-path-engine](https://github.com/ly85206559/memory-path-engine)
 
 ## 中文 — 超短帖
 
-开源 **Memory Path Engine**：给 AI agent 的检索结果加上一条**可回放证据路径**，而不只是 `top-k` 片段。
+开源 **Memory Path Engine**：给 AI agent 做一种“记忆宫殿”式检索，返回**可回放证据路径**，而不只是 `top-k` 片段。
 
 仓库：[https://github.com/ly85206559/memory-path-engine](https://github.com/ly85206559/memory-path-engine)

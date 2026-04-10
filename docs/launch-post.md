@@ -41,6 +41,16 @@ Most retrieval stacks stop at `top-k` chunks and leave the reasoning implicit.
 
 `Memory Path Engine` 把记忆组织成带类型的节点、边和权重，检索时返回 `MemoryPath`：不仅有拼接后的答案，还有一条可回放的证据路径，包含每一步的分数和边类型。
 
+### Memory palace angle
+
+**English**
+
+If you want a more intuitive framing, you can describe it as a memory-palace-style idea for agents: memory should feel navigable, not like a pile of unrelated chunks.
+
+**中文**
+
+如果想用一个更好传播的比喻，可以把它描述成一种面向 agent 的“记忆宫殿”思路：记忆应该是可导航、可回访的，而不是一堆彼此割裂的片段。
+
 ### Honest scope
 
 **English**
