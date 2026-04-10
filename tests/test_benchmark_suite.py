@@ -104,11 +104,20 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
         dataset_path = Path("benchmarks/structured_memory/example_runbook_benchmark.json")
         suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
             dataset_path=dataset_path,
-            retriever_modes=("weighted_graph_static", "weighted_graph_dynamic"),
+            retriever_modes=(
+                "weighted_graph_static",
+                "weighted_graph_dynamic",
+                "activation_spreading_static",
+                "activation_spreading_dynamic",
+            ),
             top_k=3,
         )
 
         self.assertIn("weighted_graph_static", suite_report.modes)
         self.assertIn("weighted_graph_dynamic", suite_report.modes)
+        self.assertIn("activation_spreading_static", suite_report.modes)
+        self.assertIn("activation_spreading_dynamic", suite_report.modes)
         self.assertIn("weighted_graph_static", suite_report.comparison.mode_summary)
         self.assertIn("weighted_graph_dynamic", suite_report.comparison.mode_summary)
+        self.assertIn("activation_spreading_static", suite_report.comparison.mode_summary)
+        self.assertIn("activation_spreading_dynamic", suite_report.comparison.mode_summary)

@@ -66,3 +66,16 @@ class MemoryStateTests(unittest.TestCase):
         self.assertEqual(node.weights.usage_count, 2)
         self.assertEqual(node.weights.decay_factor, 0.9)
         self.assertEqual(policy.effective_weight_score(node.weights), node.weights.bounded_score())
+
+    def test_propagation_factor_differs_for_dynamic_and_static_policies(self):
+        dynamic_policy = MemoryStatePolicy()
+        static_policy = StaticMemoryStatePolicy()
+        node = MemoryNode(
+            id="memory:3",
+            type="clause",
+            content="Buyer must pay invoices within 30 days.",
+            weights=MemoryWeight(decay_factor=0.6),
+        )
+
+        self.assertEqual(dynamic_policy.propagation_factor(node), 0.6)
+        self.assertEqual(static_policy.propagation_factor(node), 1.0)

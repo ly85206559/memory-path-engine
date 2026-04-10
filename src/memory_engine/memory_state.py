@@ -30,6 +30,9 @@ class MemoryStatePolicy:
         score = (weight.bounded_score() + usage_bonus) * weight.decay_factor
         return max(0.0, min(score, 1.0))
 
+    def propagation_factor(self, node: MemoryNode) -> float:
+        return max(0.0, min(node.weights.decay_factor, 1.0))
+
 
 @dataclass(slots=True)
 class StaticMemoryStatePolicy(MemoryStatePolicy):
@@ -41,6 +44,10 @@ class StaticMemoryStatePolicy(MemoryStatePolicy):
 
     def effective_weight_score(self, weight: MemoryWeight) -> float:
         return weight.bounded_score()
+
+    def propagation_factor(self, node: MemoryNode) -> float:
+        del node
+        return 1.0
 
 
 def reinforce_result_paths(store: MemoryStore, *, paths, policy: MemoryStatePolicy | None = None) -> None:

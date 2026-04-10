@@ -246,3 +246,50 @@ class RetrieveTests(unittest.TestCase):
         ).search("What happens if delivery is late and not cured?", top_k=1)
 
         self.assertGreaterEqual(store.get_node("contract:2").weights.usage_count, 1)
+
+    def test_activation_spreading_dynamic_mode_modulates_propagation_with_decay(self):
+        provider = FakeEmbeddingProvider(
+            {
+                "What happens if delivery is late and not cured?": [1.0, 0.0],
+                "Supplier shall deliver goods within 10 days.": [0.0, 1.0],
+                "If Supplier misses delivery, Buyer may issue notice and a 5 day cure period applies.": [1.0, 0.0],
+                "If Supplier fails to cure, Buyer may terminate and recover direct damages.": [0.5, 0.5],
+            }
+        )
+        static_store = build_store()
+        dynamic_store = build_store()
+        static_store.get_node("contract:3").weights.decay_factor = 0.5
+        dynamic_store.get_node("contract:3").weights.decay_factor = 0.5
+
+        static_result = ActivationSpreadingRetriever(
+            static_store,
+            embedding_provider=provider,
+            propagation_policy=DefaultPropagationPolicy(
+                activation_decay=0.75,
+                activation_threshold=0.5,
+            ),
+            memory_state_policy=StaticMemoryStatePolicy(),
+        ).search("What happens if delivery is late and not cured?", top_k=1)
+        dynamic_result = ActivationSpreadingRetriever(
+            dynamic_store,
+            embedding_provider=provider,
+            propagation_policy=DefaultPropagationPolicy(
+                activation_decay=0.75,
+                activation_threshold=0.5,
+            ),
+        ).search("What happens if delivery is late and not cured?", top_k=1)
+
+        self.assertEqual(
+            [step.node_id for step in static_result.best_path().steps],
+            ["contract:2", "contract:3"],
+        )
+        self.assertEqual(
+            [step.node_id for step in dynamic_result.best_path().steps],
+            ["contract:2"],
+        )
+        stopped_step = next(
+            step
+            for step in dynamic_result.best_path().activation_trace
+            if step.node_id == "contract:3" and step.stopped_reason == "below_threshold"
+        )
+        self.assertAlmostEqual(stopped_step.propagated_activation, 0.3)

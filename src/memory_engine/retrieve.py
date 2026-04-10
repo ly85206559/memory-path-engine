@@ -416,8 +416,25 @@ class ActivationSpreadingRetriever(WeightedGraphRetriever):
                     )
                     continue
                 destination_node = self.store.get_node(edge.to_id)
+                propagated_activation = (
+                    propagation.propagated_activation
+                    * self.memory_state_policy.propagation_factor(destination_node)
+                )
+                if propagated_activation < getattr(self.propagation_policy, "activation_threshold", 0.0):
+                    activation_trace.append(
+                        ActivationTraceStep(
+                            node_id=edge.to_id,
+                            source_node_id=signal.node_id,
+                            edge_type=edge.edge_type,
+                            hop=propagation.hop,
+                            incoming_activation=propagation.incoming_activation,
+                            propagated_activation=propagated_activation,
+                            stopped_reason="below_threshold",
+                        )
+                    )
+                    continue
                 propagated_activation = self.propagation_policy.adjust_propagated_activation(
-                    propagated_activation=propagation.propagated_activation,
+                    propagated_activation=propagated_activation,
                     edge=edge,
                     destination_node=destination_node,
                     source_node_id=signal.node_id,
