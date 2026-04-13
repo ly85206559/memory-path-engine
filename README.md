@@ -91,6 +91,12 @@ Run the HotpotQA tiny benchmark smoke check:
 python scripts/run_hotpotqa_benchmark.py
 ```
 
+Download the official HotpotQA dev distractor file for local benchmark runs:
+
+```bash
+python scripts/download_hotpotqa.py
+```
+
 ### What you will see
 
 `python -m memory_engine.demo` prints a small banner, the query, then path-aware output: a **BEST ANSWER** line built from the winning walk, and a **REPLAY PATH** with one line per hop (`node id`, `score`, `via=<edge type>`) plus short scoring reasons on the following lines. With `--scenario contract`, a **BASELINE** block (flat top-k answers) appears above the path-aware section for the same query.
