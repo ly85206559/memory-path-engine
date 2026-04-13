@@ -287,9 +287,27 @@ class ExampleRunbookPack(RuleBasedSectionedDocumentPack):
 _example_contract_pack = ExampleContractPack()
 _example_runbook_pack = ExampleRunbookPack()
 
+
+class HotpotQASentencePack:
+    """
+    Placeholder pack for HotpotQA adapter datasets.
+
+    Hotpot graphs are built in code (`benchmarking.adapters.hotpotqa`); markdown
+    ingest is not used for this benchmark path.
+    """
+
+    name = "hotpotqa_sentence_pack"
+
+    def ingest_document(self, path: Path, store: MemoryStore) -> None:
+        return
+
+
+_hotpotqa_sentence_pack = HotpotQASentencePack()
+
 _DOMAIN_PACKS: dict[str, DomainPack] = {
     "example_contract_pack": _example_contract_pack,
     "example_runbook_pack": _example_runbook_pack,
+    "hotpotqa_sentence_pack": _hotpotqa_sentence_pack,
     # Backward-compatible alias for the existing example dataset and helpers.
     "contract_pack": _example_contract_pack,
 }

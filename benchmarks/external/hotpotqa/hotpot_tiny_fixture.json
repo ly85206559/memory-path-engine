@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "tiny-001",
+    "question": "Which paragraph states the sky color in the farm story?",
+    "answer": "blue",
+    "type": "bridge",
+    "context": [
+      ["Farm story", ["The sky is blue.", "The grass is green."]],
+      ["City story", ["The sky is gray.", "Traffic is loud."]]
+    ],
+    "supporting_facts": [["Farm story", 0]]
+  },
+  {
+    "_id": "tiny-002",
+    "question": "What is loud in the city story?",
+    "answer": "Traffic",
+    "type": "bridge",
+    "context": [
+      ["Farm story", ["The sky is blue.", "The grass is green."]],
+      ["City story", ["The sky is gray.", "Traffic is loud."]]
+    ],
+    "supporting_facts": [["City story", 1]]
+  }
+]

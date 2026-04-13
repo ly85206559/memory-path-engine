@@ -97,3 +97,58 @@ class BenchmarkFixtureTests(unittest.TestCase):
 
         self.assertEqual(report.dataset_id, "multi-hop-chain-benchmark-v1")
         self.assertGreaterEqual(report.case_reports[0].best_path_hops, 1)
+
+    def test_dynamic_memory_priming_fixture_exposes_static_dynamic_divergence(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/dynamic_memory_priming_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("activation_spreading_static", "activation_spreading_dynamic"),
+            top_k=1,
+        )
+
+        static_probe = suite_report.modes["activation_spreading_static"].case_reports[-1]
+        dynamic_probe = suite_report.modes["activation_spreading_dynamic"].case_reports[-1]
+
+        self.assertEqual(static_probe.case_id, "probe-009")
+        self.assertEqual(dynamic_probe.case_id, "probe-009")
+        self.assertTrue(static_probe.hit)
+        self.assertFalse(dynamic_probe.hit)
+        self.assertEqual(static_probe.matched_evidence, ["dynamic_memory_priming_runbook:7"])
+        self.assertEqual(dynamic_probe.matched_evidence, [])
+
+    def test_contract_exception_priming_fixture_exposes_path_divergence(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/contract_exception_priming_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("activation_spreading_static", "activation_spreading_dynamic"),
+            top_k=1,
+        )
+
+        static_prime = suite_report.modes["activation_spreading_static"].case_reports[0]
+        dynamic_prime = suite_report.modes["activation_spreading_dynamic"].case_reports[0]
+        static_probe = suite_report.modes["activation_spreading_static"].case_reports[-1]
+        dynamic_probe = suite_report.modes["activation_spreading_dynamic"].case_reports[-1]
+
+        self.assertEqual(static_prime.case_id, "prime-001")
+        self.assertEqual(dynamic_prime.case_id, "prime-001")
+        self.assertTrue(static_prime.hit)
+        self.assertTrue(dynamic_prime.hit)
+        self.assertEqual(static_prime.activation_trace_length, dynamic_prime.activation_trace_length)
+        self.assertEqual(static_probe.case_id, "probe-009")
+        self.assertEqual(dynamic_probe.case_id, "probe-009")
+        self.assertTrue(static_probe.evidence_hit)
+        self.assertTrue(dynamic_probe.evidence_hit)
+        self.assertFalse(static_probe.path_hit)
+        self.assertTrue(dynamic_probe.path_hit)
+        self.assertFalse(static_probe.hit)
+        self.assertTrue(dynamic_probe.hit)
+        self.assertEqual(static_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])
+        self.assertEqual(dynamic_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])

@@ -2,6 +2,8 @@
 
 The first version of `memory-path-engine` is only useful if it can be evaluated against explicit baselines.
 
+For the higher-level benchmark portfolio strategy across public datasets, repository-owned fixtures, and private real-world gold sets, see [`benchmark-strategy.md`](benchmark-strategy.md).
+
 ## Dataset format
 
 The initial example benchmark pack lives in [`examples/contract_pack`](../examples/contract_pack).
@@ -41,13 +43,13 @@ Elapsed time for a single query under local execution.
 
 ## Baselines
 
-### `baseline_topk`
+### `lexical_baseline`
 
 - retrieve by lexical similarity only
 - no graph expansion
 - no weight-aware reranking
 
-### `embedding_topk`
+### `embedding_baseline`
 
 - retrieve by embedding similarity through a pluggable `EmbeddingProvider`
 - no graph expansion
@@ -73,6 +75,22 @@ Elapsed time for a single query under local execution.
 - edge-type-aware traversal
 - semantic bonuses for exception, remedy, and escalation nodes
 - replayable path output with propagation-oriented diagnostics
+
+### Static vs dynamic memory experiment modes
+
+The repository also exposes paired experiment modes that keep the retriever logic fixed while changing whether memory state is updated across queries:
+
+- `weighted_graph_static`
+- `weighted_graph_dynamic`
+- `activation_spreading_static`
+- `activation_spreading_dynamic`
+
+Interpretation:
+
+- `*_static` uses `StaticMemoryStatePolicy`, so query order should not change node memory state
+- `*_dynamic` uses `MemoryStatePolicy`, so repeated queries can reinforce some nodes and decay others before later cases run
+
+The primary repository-owned fixture for this comparison is `benchmarks/structured_memory/dynamic_memory_priming_benchmark.json`, which is intentionally ordered as repeated `prime-*` cases followed by a final `probe-*` case.
 
 ## Required ablations
 
@@ -126,3 +144,4 @@ Repository-owned graph fixtures now also cover:
 - multi-hop chain cases
 - path-shape expectations
 - semantic-role and edge-type expectations
+- dynamic priming cases for static vs dynamic memory comparison

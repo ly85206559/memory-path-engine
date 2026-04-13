@@ -2,7 +2,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from memory_engine.domain_pack import ExampleContractPack, ExampleRunbookPack, get_domain_pack
+from memory_engine.domain_pack import (
+    ExampleContractPack,
+    ExampleRunbookPack,
+    HotpotQASentencePack,
+    get_domain_pack,
+)
 from memory_engine.ingest import ingest_document
 from memory_engine.store import MemoryStore
 
@@ -19,6 +24,10 @@ class DomainPackTests(unittest.TestCase):
     def test_example_runbook_pack_is_registered(self):
         domain_pack = get_domain_pack("example_runbook_pack")
         self.assertIsInstance(domain_pack, ExampleRunbookPack)
+
+    def test_hotpotqa_sentence_pack_is_registered(self):
+        domain_pack = get_domain_pack("hotpotqa_sentence_pack")
+        self.assertIsInstance(domain_pack, HotpotQASentencePack)
 
     def test_generic_ingest_uses_domain_pack_registry(self):
         contract_text = "\n".join(

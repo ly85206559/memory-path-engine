@@ -139,9 +139,9 @@ Future candidates:
 
 The repository starts with these conceptual modes:
 
-1. `baseline_topk`
+1. `lexical_baseline`
   Plain lexical retrieval without structure.
-2. `embedding_topk`
+2. `embedding_baseline`
   Embedding-based retrieval without graph expansion.
 3. `structure_only`
   Retrieval with node and edge awareness, but no extra weighting.

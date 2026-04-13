@@ -49,12 +49,40 @@ Current expectation fields:
 - `path_scope`
 - `required_edge_types`
 - `required_semantic_roles`
+- `activation_trace`
+- `required_trace_stop_reasons`
+- `min_activation_trace_length`
+- `max_activation_trace_length`
 
 ## Current fixtures
 
 - `example_contract_benchmark.json`
 - `example_runbook_benchmark.json`
+- `contract_exception_priming_benchmark.json`
+- `dynamic_memory_priming_benchmark.json`
 - `exception_override_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 
 These fixtures are intentionally small. They are meant to support TDD and architectural iteration before larger benchmark suites are introduced.
+
+## Dynamic Memory Priming
+
+`dynamic_memory_priming_benchmark.json` is the first repository-owned fixture designed to show a real sequential-memory effect across cases.
+
+It uses repeated `prime-*` cases to reinforce one branch of a small runbook graph, then uses a final `probe-*` case to compare `activation_spreading_static` and `activation_spreading_dynamic` on the same graph.
+
+How to read it:
+
+- `activation_spreading_static` keeps memory state frozen across queries
+- `activation_spreading_dynamic` reinforces visited path nodes and decays unvisited nodes between queries
+- the `prime-*` cases should stay aligned between static and dynamic
+- the final `probe-*` case is expected to diverge, showing that dynamic memory state now changes later retrieval outcomes
+
+In the calibrated version of this fixture, the divergence is visible at more than one level:
+
+- case-level: `evidence_hit`, `path_hit`, and `hit`
+- summary-level: `evidence_hit_rate` and `path_hit_rate`
+
+The source document for this benchmark lives in `examples/priming_pack/runbooks`.
+
+`contract_exception_priming_benchmark.json` adds a second priming-oriented fixture on top of the contract pack. It keeps evidence recall stable on the final probe, but expects `activation_spreading_dynamic` to replay a more sequentially correct beta termination path than `activation_spreading_static` after repeated alpha exception priming.

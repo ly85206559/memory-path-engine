@@ -1,0 +1,103 @@
+{
+  "dataset_id": "contract-exception-priming-benchmark-v1",
+  "dataset_name": "Contract exception priming benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/contract_priming_pack/contracts",
+  "cases": [
+    {
+      "case_id": "prime-001",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-002",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-003",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-004",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-005",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-006",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-007",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "prime-008",
+      "query": "Unless alpha service credits are disputed, Buyer must pay alpha service invoices within 30 days of receipt.",
+      "tags": ["priming", "contract", "exception", "alpha"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:2"],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "probe-009",
+      "query": "What clause comes after beta termination evidence is collected?",
+      "tags": ["priming", "contract", "termination", "beta", "probe"],
+      "expectation": {
+        "evidence_node_ids": ["dynamic_exception_priming_contract:7"],
+        "minimum_evidence_matches": 1,
+        "path_scope": "best_path",
+        "path": {
+          "match_mode": "prefix",
+          "steps": [
+            {
+              "node_id": "dynamic_exception_priming_contract:7",
+              "via_edge_type": null
+            },
+            {
+              "node_id": "dynamic_exception_priming_contract:6",
+              "via_edge_type": "depends_on"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

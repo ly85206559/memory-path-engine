@@ -85,6 +85,12 @@ Run the contract comparison demo:
 python -m memory_engine.demo --scenario contract
 ```
 
+Run the HotpotQA tiny benchmark smoke check:
+
+```bash
+python scripts/run_hotpotqa_benchmark.py
+```
+
 ### What you will see
 
 `python -m memory_engine.demo` prints a small banner, the query, then path-aware output: a **BEST ANSWER** line built from the winning walk, and a **REPLAY PATH** with one line per hop (`node id`, `score`, `via=<edge type>`) plus short scoring reasons on the following lines. With `--scenario contract`, a **BASELINE** block (flat top-k answers) appears above the path-aware section for the same query.
@@ -170,6 +176,8 @@ If the retrieval and replay ideas cannot survive across these document types, th
 - [`docs/vision.md`](docs/vision.md): why this project exists and where it is heading
 - [`docs/architecture.md`](docs/architecture.md): how the current system is structured
 - [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
+- [`docs/benchmark-strategy.md`](docs/benchmark-strategy.md): how public, repo-owned, and private benchmarks should be used
+- [`docs/private-contract-dataset-guide.md`](docs/private-contract-dataset-guide.md): how to build and annotate a private contract golden set
 - [`docs/hypotheses.md`](docs/hypotheses.md): milestone hypotheses and success criteria
 
 ## Research hypotheses
