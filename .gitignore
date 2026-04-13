@@ -5,3 +5,7 @@ __pycache__/
 dist/
 build/
 .DS_Store
+
+# Downloaded benchmark payloads and local reports
+benchmarks/**/data/*.json
+benchmarks/**/*report*.json
