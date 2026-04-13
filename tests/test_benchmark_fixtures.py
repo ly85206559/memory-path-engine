@@ -152,3 +152,80 @@ class BenchmarkFixtureTests(unittest.TestCase):
         self.assertTrue(dynamic_probe.hit)
         self.assertEqual(static_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])
         self.assertEqual(dynamic_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])
+
+    def test_exception_override_path_fixture_requires_spreading_for_full_hit(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/exception_override_path_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("weighted_graph", "activation_spreading_v1"),
+            top_k=2,
+        )
+
+        weighted_case = suite_report.modes["weighted_graph"].case_reports[0]
+        spreading_case = suite_report.modes["activation_spreading_v1"].case_reports[0]
+
+        self.assertTrue(weighted_case.evidence_hit)
+        self.assertFalse(weighted_case.path_hit)
+        self.assertFalse(weighted_case.semantic_hit)
+        self.assertTrue(weighted_case.contradiction_hit)
+        self.assertFalse(weighted_case.hit)
+        self.assertTrue(spreading_case.path_hit)
+        self.assertTrue(spreading_case.semantic_hit)
+        self.assertTrue(spreading_case.contradiction_hit)
+        self.assertTrue(spreading_case.hit)
+
+    def test_dynamic_override_sequence_fixture_exposes_path_divergence(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/dynamic_override_sequence_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("activation_spreading_static", "activation_spreading_dynamic"),
+            top_k=2,
+        )
+
+        static_probe = suite_report.modes["activation_spreading_static"].case_reports[-1]
+        dynamic_probe = suite_report.modes["activation_spreading_dynamic"].case_reports[-1]
+
+        self.assertEqual(static_probe.case_id, "probe-007")
+        self.assertEqual(dynamic_probe.case_id, "probe-007")
+        self.assertTrue(static_probe.evidence_hit)
+        self.assertTrue(dynamic_probe.evidence_hit)
+        self.assertFalse(static_probe.path_hit)
+        self.assertTrue(dynamic_probe.path_hit)
+        self.assertFalse(static_probe.hit)
+        self.assertTrue(dynamic_probe.hit)
+
+    def test_structure_ablation_fixture_highlights_graph_semantics(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/structure_ablation_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=(
+                "embedding_baseline",
+                "structure_only",
+                "weighted_graph",
+                "activation_spreading_v1",
+            ),
+            top_k=2,
+        )
+
+        embedding_case = suite_report.modes["embedding_baseline"].case_reports[0]
+        structure_case = suite_report.modes["structure_only"].case_reports[0]
+
+        self.assertTrue(embedding_case.evidence_hit)
+        self.assertFalse(embedding_case.semantic_hit)
+        self.assertTrue(structure_case.semantic_hit)
+        self.assertGreater(
+            suite_report.comparison.mode_summary["structure_only"].avg_activated_nodes,
+            suite_report.comparison.mode_summary["embedding_baseline"].avg_activated_nodes,
+        )

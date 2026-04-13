@@ -1,0 +1,38 @@
+{
+  "dataset_id": "exception-override-path-benchmark-v1",
+  "dataset_name": "Exception override path benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/graph_contract_pack/contracts",
+  "cases": [
+    {
+      "case_id": "exception-path-001",
+      "query": "If goods are defective, what path overrides the normal 30 day payment rule?",
+      "tags": ["exception", "override", "payment", "path"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_exception_override_contract:2",
+          "01_exception_override_contract:3"
+        ],
+        "minimum_evidence_matches": 2,
+        "path_scope": "best_path",
+        "path": {
+          "match_mode": "subsequence",
+          "steps": [
+            {
+              "node_id": "01_exception_override_contract:3"
+            },
+            {
+              "node_id": "01_exception_override_contract:2",
+              "via_edge_type": "depends_on"
+            }
+          ]
+        },
+        "required_edge_types": ["depends_on"],
+        "required_semantic_roles": ["exception", "remedy"],
+        "required_contradiction_pairs": [
+          ["01_exception_override_contract:1", "01_exception_override_contract:2"]
+        ]
+      }
+    }
+  ]
+}

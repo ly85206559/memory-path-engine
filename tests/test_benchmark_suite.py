@@ -189,3 +189,50 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
             suite_report.comparison.mode_summary["activation_spreading_static"].path_hit_rate,
             suite_report.comparison.mode_summary["activation_spreading_dynamic"].path_hit_rate,
         )
+
+    def test_suite_exposes_exception_override_path_diagnostics(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/exception_override_path_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("weighted_graph", "activation_spreading_v1"),
+            top_k=2,
+        )
+
+        first_question = suite_report.comparison.per_question[0]
+        self.assertFalse(first_question.modes["weighted_graph"].hit)
+        self.assertTrue(first_question.modes["activation_spreading_v1"].hit)
+        self.assertTrue(
+            suite_report.comparison.mode_summary["activation_spreading_v1"].contradiction_hit_rate
+            >= suite_report.comparison.mode_summary["weighted_graph"].contradiction_hit_rate
+        )
+        self.assertGreater(
+            suite_report.comparison.mode_summary["activation_spreading_v1"].path_hit_rate,
+            suite_report.comparison.mode_summary["weighted_graph"].path_hit_rate,
+        )
+
+    def test_suite_exposes_dynamic_override_sequence_divergence(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/dynamic_override_sequence_benchmark.json")
+        suite_report = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("activation_spreading_static", "activation_spreading_dynamic"),
+            top_k=2,
+        )
+
+        static_probe = suite_report.modes["activation_spreading_static"].case_reports[-1]
+        dynamic_probe = suite_report.modes["activation_spreading_dynamic"].case_reports[-1]
+        self.assertEqual(static_probe.case_id, "probe-007")
+        self.assertEqual(dynamic_probe.case_id, "probe-007")
+        self.assertFalse(static_probe.hit)
+        self.assertTrue(dynamic_probe.hit)
+        self.assertGreater(
+            suite_report.comparison.mode_summary["activation_spreading_dynamic"].path_hit_rate,
+            suite_report.comparison.mode_summary["activation_spreading_static"].path_hit_rate,
+        )
