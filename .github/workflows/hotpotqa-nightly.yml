@@ -14,7 +14,7 @@ on:
       modes:
         description: "Comma-separated retriever modes."
         required: false
-        default: "lexical_baseline,embedding_baseline"
+        default: "lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1"
   schedule:
     - cron: "0 2 * * *"
 
@@ -43,12 +43,20 @@ jobs:
           --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json"
           --limit "${{ github.event.inputs.sample_limit || '0' }}"
           --top-k "${{ github.event.inputs.top_k || '10' }}"
-          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline' }}"
+          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1' }}"
           --output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json"
+          --summary-output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-summary.json"
 
       - name: Upload HotpotQA report artifact
         uses: actions/upload-artifact@v4
         with:
           name: hotpotqa-nightly-report
           path: benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json
+          if-no-files-found: error
+
+      - name: Upload HotpotQA summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotpotqa-nightly-summary
+          path: benchmarks/external/hotpotqa/data/hotpotqa-nightly-summary.json
           if-no-files-found: error

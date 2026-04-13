@@ -1,0 +1,54 @@
+[
+  {
+    "question_id": "lme-tiny-001",
+    "question_type": "single-session-user",
+    "question": "What dessert does Maya prefer after dinner?",
+    "answer": "Mango sticky rice.",
+    "question_date": "2025-01-12",
+    "haystack_session_ids": ["sess-001", "sess-002", "sess-003"],
+    "haystack_dates": ["2024-12-10", "2024-12-18", "2025-01-05"],
+    "haystack_sessions": [
+      [
+        {"role": "user", "content": "I started learning pottery this month."},
+        {"role": "assistant", "content": "That sounds relaxing."}
+      ],
+      [
+        {"role": "user", "content": "After dinner I always want mango sticky rice.", "has_answer": true},
+        {"role": "assistant", "content": "I'll remember your dessert preference."}
+      ],
+      [
+        {"role": "user", "content": "I'm visiting Bangkok next spring."},
+        {"role": "assistant", "content": "That will be a great trip."}
+      ]
+    ],
+    "answer_session_ids": ["sess-002"]
+  },
+  {
+    "question_id": "lme-tiny-002",
+    "question_type": "multi-session",
+    "question": "Which sessions explain why the Orion launch slipped to March?",
+    "answer": "The vendor delay and the certification retest caused the March slip.",
+    "question_date": "2025-03-08",
+    "haystack_session_ids": ["sess-101", "sess-102", "sess-103", "sess-104"],
+    "haystack_dates": ["2025-01-04", "2025-01-20", "2025-02-11", "2025-02-28"],
+    "haystack_sessions": [
+      [
+        {"role": "user", "content": "The Orion launch was initially targeted for February."},
+        {"role": "assistant", "content": "Understood."}
+      ],
+      [
+        {"role": "user", "content": "Our avionics vendor slipped the delivery by three weeks.", "has_answer": true},
+        {"role": "assistant", "content": "I'll track the vendor delay."}
+      ],
+      [
+        {"role": "user", "content": "The certification team requested a retest before launch.", "has_answer": true},
+        {"role": "assistant", "content": "That explains the extra schedule risk."}
+      ],
+      [
+        {"role": "user", "content": "We moved the Orion launch to March to absorb those delays."},
+        {"role": "assistant", "content": "March is now the official launch window."}
+      ]
+    ],
+    "answer_session_ids": ["sess-102", "sess-103"]
+  }
+]

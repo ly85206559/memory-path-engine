@@ -91,10 +91,22 @@ Run the HotpotQA tiny benchmark smoke check:
 python scripts/run_hotpotqa_benchmark.py
 ```
 
+Run the LongMemEval tiny benchmark smoke check:
+
+```bash
+python scripts/run_longmemeval_benchmark.py
+```
+
 Download the official HotpotQA dev distractor file for local benchmark runs:
 
 ```bash
 python scripts/download_hotpotqa.py
+```
+
+Download the cleaned LongMemEval-S file for local benchmark runs:
+
+```bash
+python scripts/download_longmemeval.py
 ```
 
 ### What you will see
@@ -212,6 +224,22 @@ The repository also includes a dedicated structured benchmark bounded context wi
 - strong pydantic dataset models
 - a JSON repository for benchmark fixtures
 - application services that load datasets, build stores, and run retrievers end to end
+
+## Benchmarks
+
+The benchmark story is intentionally split into three layers:
+
+- **External positioning:** LongMemEval retrieval-only session recall (`R@5`, `R@10`, `NDCG@10`) for broad long-memory comparison
+- **Public retrieval sanity:** HotpotQA evidence retrieval on distractor-style multi-document questions
+- **Mechanism validation:** repository-owned structured fixtures for path, semantic, contradiction, and dynamic-memory behavior
+
+Current run matrix:
+
+- `benchmarks/structured_memory/*.json`: CI
+- `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI
+- `benchmarks/external/hotpotqa/data/*.json`: local / nightly
+- `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local smoke
+- `benchmarks/external/longmemeval/data/*.json`: local / manual
 
 ## What is in scope for v0
 

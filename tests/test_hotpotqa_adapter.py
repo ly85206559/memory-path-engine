@@ -74,6 +74,20 @@ class HotpotQAAdapterTests(unittest.TestCase):
         self.assertTrue(report.case_reports[0].evidence_hit)
         self.assertIn("farm_story:0", report.case_reports[0].matched_evidence)
 
+    def test_hotpot_case_tags_include_question_type(self):
+        from memory_engine.benchmarking.adapters.hotpotqa import hotpot_sample_to_benchmark_case
+
+        sample = {
+            "_id": "typed-001",
+            "question": "q",
+            "answer": "a",
+            "type": "comparison",
+            "context": [["Story", ["One."]]],
+            "supporting_facts": [["Story", 0]],
+        }
+        case = hotpot_sample_to_benchmark_case(sample)
+        self.assertIn("comparison", case.tags)
+
     def test_tiny_fixture_load_and_suite_runs(self):
         from memory_engine.benchmarking.adapters.hotpotqa import (
             load_hotpotqa_json_array,
@@ -93,3 +107,45 @@ class HotpotQAAdapterTests(unittest.TestCase):
         self.assertEqual(suite.modes["embedding_baseline"].questions, 2)
         self.assertGreaterEqual(suite.modes["lexical_baseline"].evidence_hit_rate, 0.5)
         self.assertGreaterEqual(suite.modes["embedding_baseline"].evidence_hit_rate, 0.5)
+
+    def test_summarize_hotpotqa_suite_reports_breakdown_by_type(self):
+        from memory_engine.benchmarking.adapters.hotpotqa import (
+            run_hotpotqa_benchmark,
+            summarize_hotpotqa_suite,
+        )
+
+        samples = [
+            {
+                "_id": "bridge-001",
+                "question": "Which story mentions an apple orchard?",
+                "answer": "Farm story",
+                "type": "bridge",
+                "context": [
+                    ["Farm story", ["The apple orchard is beside the barn."]],
+                    ["City story", ["The subway arrives every four minutes."]],
+                ],
+                "supporting_facts": [["Farm story", 0]],
+            },
+            {
+                "_id": "comparison-001",
+                "question": "Which story mentions a subway?",
+                "answer": "City story",
+                "type": "comparison",
+                "context": [
+                    ["Farm story", ["The apple orchard is beside the barn."]],
+                    ["City story", ["The subway arrives every four minutes."]],
+                ],
+                "supporting_facts": [["City story", 0]],
+            },
+        ]
+        suite = run_hotpotqa_benchmark(
+            samples,
+            retriever_modes=("lexical_baseline", "embedding_baseline"),
+            top_k=4,
+            dataset_id="hotpot-summary",
+        )
+        summary = summarize_hotpotqa_suite(samples, suite)
+        lexical = summary.modes["lexical_baseline"]
+        self.assertIn("bridge", lexical.breakdown_by_type)
+        self.assertIn("comparison", lexical.breakdown_by_type)
+        self.assertTrue(summary.per_question_matrix[0].modes["lexical_baseline"].evidence_hit)

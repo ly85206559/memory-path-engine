@@ -6,6 +6,7 @@ from memory_engine.domain_pack import (
     ExampleContractPack,
     ExampleRunbookPack,
     HotpotQASentencePack,
+    LongMemEvalSessionPack,
     get_domain_pack,
 )
 from memory_engine.ingest import ingest_document
@@ -28,6 +29,10 @@ class DomainPackTests(unittest.TestCase):
     def test_hotpotqa_sentence_pack_is_registered(self):
         domain_pack = get_domain_pack("hotpotqa_sentence_pack")
         self.assertIsInstance(domain_pack, HotpotQASentencePack)
+
+    def test_longmemeval_session_pack_is_registered(self):
+        domain_pack = get_domain_pack("longmemeval_session_pack")
+        self.assertIsInstance(domain_pack, LongMemEvalSessionPack)
 
     def test_generic_ingest_uses_domain_pack_registry(self):
         contract_text = "\n".join(

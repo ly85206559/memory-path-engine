@@ -4,7 +4,6 @@ import json
 import re
 import unicodedata
 from pathlib import Path
-
 from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
 from memory_engine.benchmarking.application.service import (
     build_comparison_report,
@@ -16,6 +15,13 @@ from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkExpectation,
     StructuredBenchmarkReport,
     StructuredBenchmarkSuiteReport,
+)
+from memory_engine.benchmarking.domain.public_models import (
+    BenchmarkBucketSummary,
+    HotpotQAModeSummary,
+    HotpotQAPerQuestionModeResult,
+    HotpotQAPerQuestionSummary,
+    HotpotQASummaryReport,
 )
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
@@ -186,7 +192,114 @@ def load_hotpotqa_json_array(path: Path) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError(f"Expected JSON array in {path}, got {type(data)}")
+    for idx, sample in enumerate(data):
+        if not isinstance(sample, dict):
+            raise ValueError(f"Expected object at index {idx} in {path}, got {type(sample)}")
+        missing = {"question", "context", "supporting_facts"} - set(sample)
+        if missing:
+            raise ValueError(
+                f"HotpotQA sample at index {idx} is missing required fields: {sorted(missing)}"
+            )
     return data
+
+
+def _hotpot_case_type(case_tags: list[str]) -> str:
+    for tag in case_tags:
+        if tag in {"bridge", "comparison"}:
+            return tag
+    return "unknown"
+
+
+def _hotpot_case_level(sample_or_case) -> str:
+    if isinstance(sample_or_case, dict):
+        return str(sample_or_case.get("level") or "unknown")
+    return "unknown"
+
+
+def _summarize_case_reports(case_reports) -> BenchmarkBucketSummary:
+    questions = len(case_reports)
+    if not questions:
+        return BenchmarkBucketSummary(
+            questions=0,
+            evidence_hit_rate=0.0,
+            evidence_recall=0.0,
+            avg_latency_ms=0.0,
+        )
+    return BenchmarkBucketSummary(
+        questions=questions,
+        evidence_hit_rate=round(
+            sum(1 for report in case_reports if report.evidence_hit) / questions,
+            6,
+        ),
+        evidence_recall=round(
+            sum(1 for report in case_reports if report.hit) / questions,
+            6,
+        ),
+        avg_latency_ms=round(
+            sum(report.latency_ms for report in case_reports) / questions,
+            3,
+        ),
+    )
+
+
+def summarize_hotpotqa_suite(
+    samples: list[dict],
+    suite: StructuredBenchmarkSuiteReport,
+) -> HotpotQASummaryReport:
+    sample_by_case_id = {
+        str(sample.get("_id", sample.get("id", f"hotpot-{i}"))): sample
+        for i, sample in enumerate(samples)
+    }
+    mode_summaries: dict[str, HotpotQAModeSummary] = {}
+    per_question_matrix: list[HotpotQAPerQuestionSummary] = []
+
+    for mode_name, report in suite.modes.items():
+        by_type: dict[str, list] = {}
+        by_level: dict[str, list] = {}
+        for case_report in report.case_reports:
+            sample = sample_by_case_id.get(case_report.case_id, {})
+            case_type = _hotpot_case_type(case_report.tags)
+            case_level = _hotpot_case_level(sample)
+            by_type.setdefault(case_type, []).append(case_report)
+            by_level.setdefault(case_level, []).append(case_report)
+
+        mode_summaries[mode_name] = HotpotQAModeSummary(
+            overall=_summarize_case_reports(report.case_reports),
+            breakdown_by_type={
+                case_type: _summarize_case_reports(reports)
+                for case_type, reports in sorted(by_type.items())
+            },
+            breakdown_by_level={
+                level: _summarize_case_reports(reports)
+                for level, reports in sorted(by_level.items())
+            },
+        )
+
+    for case_report in suite.comparison.per_question:
+        sample = sample_by_case_id.get(case_report.case_id, {})
+        per_question_matrix.append(
+            HotpotQAPerQuestionSummary(
+                case_id=case_report.case_id,
+                question_type=str(sample.get("type") or "unknown"),
+                difficulty_level=str(sample.get("level") or "unknown"),
+                modes={
+                    mode_name: HotpotQAPerQuestionModeResult(
+                        evidence_hit=result.evidence_hit,
+                        hit=result.hit,
+                        matched_evidence=result.matched_evidence,
+                        latency_ms=result.latency_ms,
+                    )
+                    for mode_name, result in case_report.modes.items()
+                },
+            )
+        )
+
+    return HotpotQASummaryReport(
+        benchmark_name="HotpotQA",
+        dataset_id=suite.dataset_id,
+        modes=mode_summaries,
+        per_question_matrix=per_question_matrix,
+    )
 
 
 def run_hotpotqa_benchmark(

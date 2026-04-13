@@ -4,7 +4,24 @@ from memory_engine.benchmarking.adapters.hotpotqa import (
     hotpot_samples_to_dataset,
     load_hotpotqa_json_array,
     run_hotpotqa_benchmark,
+    summarize_hotpotqa_suite,
     supporting_facts_to_evidence_node_ids,
+)
+from memory_engine.benchmarking.adapters.longmemeval import (
+    build_longmemeval_memory_store,
+    load_longmemeval_json,
+    longmemeval_gold_node_ids,
+    longmemeval_question_to_benchmark_case,
+    validate_longmemeval_sample,
+    run_longmemeval_benchmark,
+)
+from memory_engine.benchmarking.application.public_benchmarks import (
+    build_public_case_result,
+    build_public_mode_report,
+    compute_ndcg_at_k,
+    compute_recall_at_k,
+    matched_ranks,
+    ranked_node_ids_from_result,
 )
 from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
 from memory_engine.benchmarking.application.service import (
@@ -26,6 +43,16 @@ from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkReport,
     StructuredBenchmarkSuiteReport,
 )
+from memory_engine.benchmarking.domain.public_models import (
+    BenchmarkBucketSummary,
+    HotpotQAModeSummary,
+    HotpotQAPerQuestionModeResult,
+    HotpotQAPerQuestionSummary,
+    HotpotQASummaryReport,
+    PublicBenchmarkCaseResult,
+    PublicBenchmarkModeReport,
+    PublicBenchmarkSuiteReport,
+)
 from memory_engine.benchmarking.infrastructure.json_repository import (
     JsonStructuredBenchmarkDatasetRepository,
 )
@@ -42,8 +69,21 @@ __all__ = [
     "hotpot_samples_to_dataset",
     "load_hotpotqa_json_array",
     "run_hotpotqa_benchmark",
+    "summarize_hotpotqa_suite",
+    "build_longmemeval_memory_store",
+    "load_longmemeval_json",
+    "longmemeval_gold_node_ids",
+    "longmemeval_question_to_benchmark_case",
+    "validate_longmemeval_sample",
+    "run_longmemeval_benchmark",
     "DEFAULT_RETRIEVER_MODES",
     "build_comparison_report",
+    "build_public_case_result",
+    "build_public_mode_report",
+    "compute_ndcg_at_k",
+    "compute_recall_at_k",
+    "matched_ranks",
+    "ranked_node_ids_from_result",
     "PathShapeExpectation",
     "PathStepExpectation",
     "StructuredBenchmarkCase",
@@ -56,6 +96,14 @@ __all__ = [
     "StructuredBenchmarkModeSummary",
     "StructuredBenchmarkReport",
     "StructuredBenchmarkSuiteReport",
+    "PublicBenchmarkCaseResult",
+    "PublicBenchmarkModeReport",
+    "PublicBenchmarkSuiteReport",
+    "BenchmarkBucketSummary",
+    "HotpotQAModeSummary",
+    "HotpotQAPerQuestionModeResult",
+    "HotpotQAPerQuestionSummary",
+    "HotpotQASummaryReport",
     "StructuredBenchmarkEvaluationService",
     "StructuredBenchmarkRunner",
 ]

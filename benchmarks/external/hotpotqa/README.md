@@ -8,6 +8,7 @@ This directory holds documentation and optional tiny fixtures for the **HotpotQA
 - Sentence-level nodes: `{paragraph_stem}:{sentence_index}`
 - Within-paragraph edges: `next_unit` (bidirectional) between adjacent sentences
 - Evaluation via existing `StructuredBenchmarkRunner` (**retrieval-only**): `evidence_hit` / `evidence_hit_rate` (not official EM/F1)
+- Summary breakdowns by `type` (`bridge` / `comparison`) for local or nightly runs
 
 ## Data
 
@@ -34,7 +35,7 @@ python scripts/run_hotpotqa_benchmark.py
 Run a downloaded official file:
 
 ```bash
-python scripts/run_hotpotqa_benchmark.py --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json" --limit 64 --top-k 10 --modes lexical_baseline,embedding_baseline
+python scripts/run_hotpotqa_benchmark.py --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json" --limit 64 --top-k 10 --modes lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1
 ```
 
 Pretty-print the full suite JSON:
@@ -49,11 +50,17 @@ Write the full suite report JSON to a file:
 python scripts/run_hotpotqa_benchmark.py --output "benchmarks/external/hotpotqa/data/local-report.json"
 ```
 
+Write a compact summary JSON (overall + per-type breakdowns) for dashboards or nightly artifacts:
+
+```bash
+python scripts/run_hotpotqa_benchmark.py --summary-output "benchmarks/external/hotpotqa/data/local-summary.json"
+```
+
 ## CI note
 
 The main CI workflow does **not** download HotpotQA. A dedicated smoke job uses the checked-in `hotpot_tiny_fixture.json` (two synthetic items) so pull requests stay fast and deterministic.
 
-A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads the suite JSON as an artifact.
+A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads both the full suite JSON and a compact summary artifact.
 
 ## Important limitation
 

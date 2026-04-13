@@ -41,6 +41,16 @@ Whether the path crosses edges that are semantically allowed by the domain pack.
 
 Elapsed time for a single query under local execution.
 
+### Public benchmark metrics
+
+For retrieval-only public benchmarks, the repository also reports:
+
+- `R@5`
+- `R@10`
+- `NDCG@10`
+
+These are currently used for LongMemEval session retrieval and should be interpreted as external positioning metrics, not as direct proof of `MemoryPath` correctness.
+
 ## Baselines
 
 ### `lexical_baseline`
@@ -144,4 +154,10 @@ Repository-owned graph fixtures now also cover:
 - multi-hop chain cases
 - path-shape expectations
 - semantic-role and edge-type expectations
+- contradiction-pair expectations
 - dynamic priming cases for static vs dynamic memory comparison
+
+The public benchmark adapters now split into two tracks:
+
+- `HotpotQA`: evidence retrieval sanity on multi-document QA (`evidence_hit_rate`, `evidence_recall`, per-type breakdowns)
+- `LongMemEval`: session-level retrieval-only memory recall (`R@5`, `R@10`, `NDCG@10`)

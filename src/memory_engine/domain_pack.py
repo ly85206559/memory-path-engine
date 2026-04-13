@@ -304,10 +304,28 @@ class HotpotQASentencePack:
 
 _hotpotqa_sentence_pack = HotpotQASentencePack()
 
+
+class LongMemEvalSessionPack:
+    """
+    Placeholder pack for LongMemEval adapter datasets.
+
+    LongMemEval session graphs are built directly in code
+    (`benchmarking.adapters.longmemeval`); markdown ingest is not used.
+    """
+
+    name = "longmemeval_session_pack"
+
+    def ingest_document(self, path: Path, store: MemoryStore) -> None:
+        return
+
+
+_longmemeval_session_pack = LongMemEvalSessionPack()
+
 _DOMAIN_PACKS: dict[str, DomainPack] = {
     "example_contract_pack": _example_contract_pack,
     "example_runbook_pack": _example_runbook_pack,
     "hotpotqa_sentence_pack": _hotpotqa_sentence_pack,
+    "longmemeval_session_pack": _longmemeval_session_pack,
     # Backward-compatible alias for the existing example dataset and helpers.
     "contract_pack": _example_contract_pack,
 }

@@ -12,6 +12,16 @@ from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkReport,
     StructuredBenchmarkSuiteReport,
 )
+from memory_engine.benchmarking.domain.public_models import (
+    BenchmarkBucketSummary,
+    HotpotQAModeSummary,
+    HotpotQAPerQuestionModeResult,
+    HotpotQAPerQuestionSummary,
+    HotpotQASummaryReport,
+    PublicBenchmarkCaseResult,
+    PublicBenchmarkModeReport,
+    PublicBenchmarkSuiteReport,
+)
 
 __all__ = [
     "PathShapeExpectation",
@@ -26,4 +36,12 @@ __all__ = [
     "StructuredBenchmarkModeSummary",
     "StructuredBenchmarkReport",
     "StructuredBenchmarkSuiteReport",
+    "PublicBenchmarkCaseResult",
+    "PublicBenchmarkModeReport",
+    "PublicBenchmarkSuiteReport",
+    "BenchmarkBucketSummary",
+    "HotpotQAModeSummary",
+    "HotpotQAPerQuestionModeResult",
+    "HotpotQAPerQuestionSummary",
+    "HotpotQASummaryReport",
 ]

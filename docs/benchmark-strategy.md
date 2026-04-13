@@ -215,6 +215,7 @@ Useful for:
 Useful but incomplete because:
 
 - it is much broader than your current architectural claims
+- it reports retrieval sanity and external positioning, not path/semantic/dynamic correctness
 
 ### Weak fit
 
@@ -235,6 +236,11 @@ Use [`evaluation.md`](evaluation.md) as the source of truth for the metric defin
 - `contradiction_hit_rate` where exception or conflict cases exist
 - `activation_trace_hit_rate` for spreading-based experiments
 - `avg_latency_ms`
+
+Current implemented public benchmark adapters:
+
+- `HotpotQA` retrieval-only evidence benchmark with local/nightly full-dev support
+- `LongMemEval` retrieval-only session benchmark (`R@5`, `R@10`, `NDCG@10`) for external positioning
 
 At minimum, every benchmark report should make it easy to compare:
 
@@ -492,6 +498,14 @@ The table below is a **default rolling schedule** for a small team. Adjust dates
 - **Hard gate**: anything that already has CI today (tests + JSON load) must stay green.
 - **Soft gate**: public benchmark deltas are reported honestly; do not block merges on HotpotQA leaderboard scores until the adapter is stable.
 - **Release gate** (optional): before tagging `v0.x`, require Week 1 B-suite comparison + Week 3 HotpotQA tiny evidence metrics logged in release notes.
+
+## Suggested run matrix
+
+- `benchmarks/structured_memory/*.json`: main CI
+- `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: main CI smoke
+- `benchmarks/external/hotpotqa/data/*.json`: nightly or local only
+- `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local smoke
+- `benchmarks/external/longmemeval/data/*.json`: manual or nightly after the adapter stabilizes
 
 For a contract-focused private rollout plan, including inventory template, sampling rules, and golden annotation workflow, see [`private-contract-dataset-guide.md`](private-contract-dataset-guide.md).
 

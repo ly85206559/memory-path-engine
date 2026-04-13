@@ -7,7 +7,19 @@ from memory_engine.benchmarking.adapters.hotpotqa import (
     normalize_hotpot_title_for_match,
     resolve_context_title,
     run_hotpotqa_benchmark,
+    summarize_hotpotqa_suite,
     supporting_facts_to_evidence_node_ids,
+)
+from memory_engine.benchmarking.adapters.longmemeval import (
+    build_longmemeval_memory_store,
+    load_longmemeval_json,
+    longmemeval_gold_node_ids,
+    longmemeval_question_to_benchmark_case,
+    longmemeval_session_node_id,
+    normalize_session_id,
+    run_longmemeval_benchmark,
+    session_turns_to_text,
+    validate_longmemeval_sample,
 )
 
 __all__ = [
@@ -19,5 +31,15 @@ __all__ = [
     "normalize_hotpot_title_for_match",
     "resolve_context_title",
     "run_hotpotqa_benchmark",
+    "summarize_hotpotqa_suite",
     "supporting_facts_to_evidence_node_ids",
+    "build_longmemeval_memory_store",
+    "load_longmemeval_json",
+    "longmemeval_gold_node_ids",
+    "longmemeval_question_to_benchmark_case",
+    "longmemeval_session_node_id",
+    "normalize_session_id",
+    "run_longmemeval_benchmark",
+    "session_turns_to_text",
+    "validate_longmemeval_sample",
 ]
