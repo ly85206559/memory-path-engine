@@ -1,0 +1,54 @@
+name: hotpotqa-nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_limit:
+        description: "Optional sample limit. Use 0 for the full downloaded file."
+        required: false
+        default: "0"
+      top_k:
+        description: "Retriever top_k for each mode."
+        required: false
+        default: "10"
+      modes:
+        description: "Comma-separated retriever modes."
+        required: false
+        default: "lexical_baseline,embedding_baseline"
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  hotpotqa-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: python -m pip install --no-build-isolation -e .
+
+      - name: Download HotpotQA dev distractor
+        run: python scripts/download_hotpotqa.py --force
+
+      - name: Run HotpotQA nightly benchmark
+        run: >
+          python scripts/run_hotpotqa_benchmark.py
+          --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json"
+          --limit "${{ github.event.inputs.sample_limit || '0' }}"
+          --top-k "${{ github.event.inputs.top_k || '10' }}"
+          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline' }}"
+          --output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json"
+
+      - name: Upload HotpotQA report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotpotqa-nightly-report
+          path: benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json
+          if-no-files-found: error

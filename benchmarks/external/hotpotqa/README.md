@@ -43,9 +43,17 @@ Pretty-print the full suite JSON:
 python scripts/run_hotpotqa_benchmark.py --pretty
 ```
 
+Write the full suite report JSON to a file:
+
+```bash
+python scripts/run_hotpotqa_benchmark.py --output "benchmarks/external/hotpotqa/data/local-report.json"
+```
+
 ## CI note
 
 The main CI workflow does **not** download HotpotQA. A dedicated smoke job uses the checked-in `hotpot_tiny_fixture.json` (two synthetic items) so pull requests stay fast and deterministic.
+
+A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads the suite JSON as an artifact.
 
 ## Important limitation
 

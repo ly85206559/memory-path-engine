@@ -54,6 +54,12 @@ def main() -> None:
         action="store_true",
         help="Pretty-print the full suite report JSON instead of a compact summary.",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional path to write the full suite report JSON.",
+    )
     args = parser.parse_args()
 
     dataset_path = args.dataset
@@ -70,6 +76,13 @@ def main() -> None:
         top_k=args.top_k,
         dataset_id=f"hotpotqa::{dataset_path.stem}",
     )
+
+    if args.output is not None:
+        output_path = args.output
+        if not output_path.is_absolute():
+            output_path = (repo_root() / output_path).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(suite.model_dump_json(indent=2), encoding="utf-8")
 
     if args.pretty:
         print(suite.model_dump_json(indent=2))
