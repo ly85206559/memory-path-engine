@@ -14,13 +14,15 @@ from memory_engine.store import MemoryStore
 
 
 def collect_returned_node_ids(result: RetrievalResult) -> list[str]:
-    return sorted(
-        {
-            step.node_id
-            for path in result.paths
-            for step in path.steps
-        }
-    )
+    palace_result = result.palace_result
+    returned = {
+        step.node_id
+        for path in result.paths
+        for step in path.steps
+    }
+    if palace_result is not None:
+        returned.update(item.memory_id for item in palace_result.retrieved_memories)
+    return sorted(returned)
 
 
 def collect_matched_evidence(
@@ -52,14 +54,24 @@ def evaluate_route_hit(
     expectation: StructuredBenchmarkExpectation,
     result: RetrievalResult,
 ) -> bool | None:
-    if expectation.route is None:
+    if expectation.route is None and not expectation.required_route_sources:
         return None
 
     palace_result = PalaceRecallResult.from_legacy_result(result)
+
+    source_ok = True
+    if expectation.required_route_sources:
+        sources = {route.route_source for route in palace_result.routes}
+        source_ok = bool(sources & set(expectation.required_route_sources))
+
+    if expectation.route is None:
+        return source_ok
+
     candidate_routes = list(palace_result.routes)
     if expectation.route_scope == "best_route":
         candidate_routes = candidate_routes[:1]
-    return any(_route_matches(route.step_memory_ids, expectation.route) for route in candidate_routes)
+    shape_ok = any(_route_matches(route.step_memory_ids, expectation.route) for route in candidate_routes)
+    return shape_ok and source_ok
 
 
 def evaluate_activation_trace_hit(

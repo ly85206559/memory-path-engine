@@ -146,6 +146,56 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
         self.assertTrue(report.case_reports[0].hit)
         self.assertTrue(report.case_reports[0].path_hit)
 
+    def test_runner_counts_palace_retrieved_memories_without_paths(self) -> None:
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
+        from memory_engine.memory.domain.retrieval_result import PalaceRecallResult, RetrievedMemory
+        from memory_engine.schema import RetrievalResult
+
+        class FakeRetriever:
+            def search(self, query: str, top_k: int = 3) -> RetrievalResult:
+                del query, top_k
+                palace_result = PalaceRecallResult(
+                    query="rollback recovery",
+                    retrieved_memories=(
+                        RetrievedMemory(
+                            memory_id="01_api_incident_runbook:2",
+                            score=0.95,
+                            reason="seed",
+                        ),
+                    ),
+                )
+                return RetrievalResult(query="rollback recovery", paths=[], palace_result=palace_result)
+
+        dataset = StructuredBenchmarkDataset.model_validate(
+            {
+                "dataset_id": "palace-only-benchmark-v1",
+                "dataset_name": "Palace only benchmark",
+                "domain_pack_name": "example_runbook_pack",
+                "document_directory": "runbooks",
+                "cases": [
+                    {
+                        "case_id": "rb-palace-001",
+                        "query": "What should happen after rollback does not recover service?",
+                        "expectation": {
+                            "evidence_node_ids": ["01_api_incident_runbook:2"],
+                            "minimum_evidence_matches": 1,
+                        },
+                    }
+                ],
+            }
+        )
+
+        report = StructuredBenchmarkRunner().run(
+            dataset=dataset,
+            retriever_name="palace_only",
+            retriever=FakeRetriever(),
+            top_k=3,
+        )
+
+        self.assertTrue(report.case_reports[0].evidence_hit)
+        self.assertIn("01_api_incident_runbook:2", report.case_reports[0].returned_node_ids)
+
     def test_runner_supports_activation_trace_expectation(self):
         from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
         from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
@@ -487,3 +537,110 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
         self.assertEqual(report.dataset_id, "runbook-benchmark-v1")
         self.assertEqual(report.retriever_name, "weighted_graph")
         self.assertTrue(report.case_reports[0].hit)
+
+    def test_runner_surfaces_route_sources_for_legacy_retriever(self) -> None:
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.infrastructure.json_repository import (
+            JsonStructuredBenchmarkDatasetRepository,
+        )
+        from memory_engine.domain_pack import get_domain_pack
+        from memory_engine.ingest import ingest_document
+        from memory_engine.retrieve import WeightedGraphRetriever
+        from memory_engine.store import MemoryStore
+
+        dataset_payload = {
+            "dataset_id": "runbook-benchmark-v1",
+            "dataset_name": "Runbook benchmark",
+            "domain_pack_name": "example_runbook_pack",
+            "document_directory": "runbooks",
+            "cases": [
+                {
+                    "case_id": "rb-001",
+                    "query": "What should we do if rollback does not recover the service?",
+                    "expectation": {
+                        "evidence_node_ids": ["01_api_incident_runbook:2"],
+                        "minimum_evidence_matches": 1,
+                    },
+                }
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            runbooks_dir = root / "runbooks"
+            runbooks_dir.mkdir()
+            (runbooks_dir / "01_api_incident_runbook.md").write_text(
+                "\n".join(
+                    [
+                        "# API Incident Runbook",
+                        "",
+                        "## Mitigation",
+                        "1 If the latest deployment is implicated, roll back the release and verify latency recovery.",
+                        "2 If rollback does not recover service, restart the worker service and confirm queue drain behavior.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            dataset_path = root / "dataset.json"
+            dataset_path.write_text(json.dumps(dataset_payload), encoding="utf-8")
+
+            dataset = JsonStructuredBenchmarkDatasetRepository().load(dataset_path)
+
+            store = MemoryStore()
+            for path in runbooks_dir.glob("*.md"):
+                ingest_document(path, store, domain_pack=get_domain_pack(dataset.domain_pack_name))
+
+            runner = StructuredBenchmarkRunner()
+            report = runner.run(
+                dataset=dataset,
+                retriever_name="weighted_graph",
+                retriever=WeightedGraphRetriever(store),
+                top_k=3,
+            )
+
+        self.assertIn("legacy_path", report.case_reports[0].surfaced_route_sources)
+
+    def test_evaluate_route_hit_required_route_sources_without_shape(self) -> None:
+        from dataclasses import replace
+
+        from memory_engine.benchmarking.domain.evaluation_policy import evaluate_route_hit
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkExpectation
+        from memory_engine.memory.domain.retrieval_result import PalaceRecallResult, RecallRoute, RetrievedMemory
+        from memory_engine.schema import RetrievalResult
+
+        palace = PalaceRecallResult(
+            query="q",
+            retrieved_memories=(RetrievedMemory(memory_id="a", score=1.0, reason="seed"),),
+            routes=(
+                RecallRoute(
+                    route_id="r1",
+                    route_kind="timeline",
+                    step_memory_ids=("a",),
+                    score=1.0,
+                    route_source="route_memory",
+                ),
+            ),
+        )
+        result = RetrievalResult(query="q", paths=[], palace_result=palace)
+        expectation = StructuredBenchmarkExpectation(
+            evidence_node_ids=["a"],
+            minimum_evidence_matches=1,
+            required_route_sources=["route_memory"],
+        )
+        self.assertTrue(evaluate_route_hit(expectation, result))
+
+        bad = replace(
+            palace,
+            routes=(
+                RecallRoute(
+                    route_id="r1",
+                    route_kind="timeline",
+                    step_memory_ids=("a",),
+                    score=1.0,
+                    route_source="legacy_path",
+                ),
+            ),
+        )
+        result_bad = RetrievalResult(query="q", paths=[], palace_result=bad)
+        self.assertFalse(evaluate_route_hit(expectation, result_bad))

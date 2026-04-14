@@ -14,6 +14,7 @@ class RetrievedMemory:
     reason: str
     retrieval_role: str = "seed"
     source_path: str | None = None
+    memory_kind: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +24,7 @@ class RecallRoute:
     step_memory_ids: tuple[str, ...]
     support_memory_ids: tuple[str, ...] = ()
     score: float = 0.0
+    route_source: str = "legacy_path"
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +121,7 @@ class PalaceRecallResult:
                     step_memory_ids=step_ids,
                     support_memory_ids=support_ids,
                     score=path.final_score,
+                    route_source="legacy_path",
                 )
             )
             for step_index, step in enumerate(path.steps):

@@ -257,6 +257,7 @@ class BenchmarkFixtureTests(unittest.TestCase):
         )
         self.assertTrue(report.case_reports[0].route_hit)
         self.assertTrue(report.case_reports[0].hit)
+        self.assertIn("legacy_path", report.case_reports[0].surfaced_route_sources)
 
     def test_consolidation_gain_fixture_spreading_beats_weighted_on_route(self):
         from memory_engine.benchmarking.application.service import (

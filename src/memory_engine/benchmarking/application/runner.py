@@ -19,6 +19,7 @@ from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkDataset,
     StructuredBenchmarkReport,
 )
+from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
 from memory_engine.semantics import (
     contradiction_candidates,
     semantic_score_signals,
@@ -41,6 +42,12 @@ class StructuredBenchmarkRunner:
             started = perf_counter()
             result = retriever.search(case.query, top_k=top_k)
             latency_ms = (perf_counter() - started) * 1000
+
+            palace_view = result.palace_result or PalaceRecallResult.from_legacy_result(result)
+            surfaced_route_sources = sorted({route.route_source for route in palace_view.routes})
+            surfaced_retrieved_item_kinds = sorted(
+                {kind for item in palace_view.retrieved_memories if (kind := item.memory_kind)}
+            )
 
             returned_node_ids = collect_returned_node_ids(result)
             matched_evidence = collect_matched_evidence(case.expectation, returned_node_ids)
@@ -170,6 +177,8 @@ class StructuredBenchmarkRunner:
                     best_path_contradiction_score=best_path_contradiction_score,
                     best_answer=best_path.final_answer if best_path else "",
                     latency_ms=round(latency_ms, 3),
+                    surfaced_route_sources=surfaced_route_sources,
+                    surfaced_retrieved_item_kinds=surfaced_retrieved_item_kinds,
                 )
             )
 

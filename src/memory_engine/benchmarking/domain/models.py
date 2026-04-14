@@ -62,6 +62,7 @@ class StructuredBenchmarkExpectation(BaseModel):
     min_activation_trace_length: int | None = Field(default=None, ge=0)
     max_activation_trace_length: int | None = Field(default=None, ge=0)
     required_lifecycle_states: dict[str, str] = Field(default_factory=dict)
+    required_route_sources: list[str] = Field(default_factory=list)
 
     @field_validator("minimum_evidence_matches")
     @classmethod
@@ -134,6 +135,8 @@ class StructuredBenchmarkCaseReport(BaseModel):
     best_path_contradiction_score: float = Field(default=0.0, ge=0.0)
     best_answer: str = ""
     latency_ms: float = Field(ge=0.0)
+    surfaced_route_sources: list[str] = Field(default_factory=list)
+    surfaced_retrieved_item_kinds: list[str] = Field(default_factory=list)
 
 
 class StructuredBenchmarkReport(BaseModel):
