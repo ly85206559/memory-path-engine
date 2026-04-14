@@ -15,6 +15,7 @@ from memory_engine.embeddings import (
     cosine_similarity,
     lexical_overlap,
 )
+from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
 from memory_engine.memory_state import MemoryStatePolicy, decay_unvisited_nodes, reinforce_result_paths
 from memory_engine.replay import path_answer
 from memory_engine.schema import ActivationContext, ActivationTraceStep, RetrievalResult
@@ -47,7 +48,7 @@ class BaselineTopKRetriever:
             visited_node_ids={step.node_id for path in paths for step in path.steps},
             policy=self.memory_state_policy,
         )
-        return RetrievalResult(query=query, paths=paths)
+        return _with_palace_result(RetrievalResult(query=query, paths=paths))
 
 
 class EmbeddingTopKRetriever:
@@ -75,7 +76,7 @@ class EmbeddingTopKRetriever:
             visited_node_ids={step.node_id for path in paths for step in path.steps},
             policy=self.memory_state_policy,
         )
-        return RetrievalResult(query=query, paths=paths)
+        return _with_palace_result(RetrievalResult(query=query, paths=paths))
 
     def rank_candidates(self, query: str, top_k: int = 3) -> list[tuple]:
         query_embedding = self._embed(query)
@@ -153,7 +154,7 @@ class WeightedGraphRetriever:
             visited_node_ids={step.node_id for path in paths for step in path.steps},
             policy=self.memory_state_policy,
         )
-        return RetrievalResult(query=query, paths=paths)
+        return _with_palace_result(RetrievalResult(query=query, paths=paths))
 
     def _rank_seed_candidates(self, query: str, top_k: int) -> list[tuple]:
         combined: dict[str, tuple] = {}
@@ -322,7 +323,7 @@ class ActivationSpreadingRetriever(WeightedGraphRetriever):
             visited_node_ids={step.node_id for path in paths for step in path.steps},
             policy=self.memory_state_policy,
         )
-        return RetrievalResult(query=query, paths=paths)
+        return _with_palace_result(RetrievalResult(query=query, paths=paths))
 
     def _activate_from_seed(
         self,
@@ -524,3 +525,8 @@ class ActivationSpreadingRetriever(WeightedGraphRetriever):
             ):
                 step.activated_score = activated_score
                 return
+
+
+def _with_palace_result(result: RetrievalResult) -> RetrievalResult:
+    result.palace_result = PalaceRecallResult.from_legacy_result(result)
+    return result

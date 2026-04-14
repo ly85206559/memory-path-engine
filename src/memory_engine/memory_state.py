@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from memory_engine.memory.domain.enums import MemoryLifecycleState
+from memory_engine.memory.domain.memory_state import DomainMemoryState
+from memory_engine.memory.domain.memory_state_machine import MemoryStateMachine
 from memory_engine.schema import MemoryNode, MemoryWeight
 from memory_engine.store import MemoryStore
 
@@ -13,16 +16,25 @@ class MemoryStatePolicy:
     usage_bonus_cap: float = 0.15
     decay_rate: float = 0.05
     minimum_decay_factor: float = 0.5
+    state_machine: MemoryStateMachine = field(default_factory=MemoryStateMachine)
 
     def reinforce_node(self, node: MemoryNode) -> None:
         node.weights.usage_count += self.reinforcement_step
         node.weights.decay_factor = min(1.0, node.weights.decay_factor + 0.02)
+        self._write_domain_state(
+            node,
+            self.state_machine.reinforce(self._read_domain_state(node)),
+        )
 
     def decay_node(self, node: MemoryNode, *, steps: int = 1) -> None:
         decay_multiplier = max(0.0, 1.0 - self.decay_rate * steps)
         node.weights.decay_factor = max(
             self.minimum_decay_factor,
             node.weights.decay_factor * decay_multiplier,
+        )
+        self._write_domain_state(
+            node,
+            self.state_machine.decay(self._read_domain_state(node), elapsed_steps=steps),
         )
 
     def effective_weight_score(self, weight: MemoryWeight) -> float:
@@ -32,6 +44,32 @@ class MemoryStatePolicy:
 
     def propagation_factor(self, node: MemoryNode) -> float:
         return max(0.0, min(node.weights.decay_factor, 1.0))
+
+    def _read_domain_state(self, node: MemoryNode) -> DomainMemoryState:
+        state_value = str(
+            node.attributes.get("lifecycle_state", MemoryLifecycleState.ENCODED.value)
+        )
+        try:
+            lifecycle_state = MemoryLifecycleState(state_value)
+        except ValueError:
+            lifecycle_state = MemoryLifecycleState.ENCODED
+        reinforcement_count = (
+            int(node.attributes["reinforcement_count"])
+            if "reinforcement_count" in node.attributes
+            else 0
+        )
+        return DomainMemoryState(
+            state=lifecycle_state,
+            reinforcement_count=reinforcement_count,
+            stability_score=float(node.attributes.get("stability_score", 0.0)),
+            decay_factor=node.weights.decay_factor,
+        )
+
+    def _write_domain_state(self, node: MemoryNode, state: DomainMemoryState) -> None:
+        node.attributes["lifecycle_state"] = state.state.value
+        node.attributes["reinforcement_count"] = state.reinforcement_count
+        node.attributes["stability_score"] = round(state.stability_score, 6)
+        node.weights.decay_factor = state.decay_factor
 
 
 @dataclass(slots=True)

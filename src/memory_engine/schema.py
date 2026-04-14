@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
 
 
 @dataclass(slots=True)
@@ -101,6 +104,7 @@ class MemoryPath:
 class RetrievalResult:
     query: str
     paths: list[MemoryPath] = field(default_factory=list)
+    palace_result: PalaceRecallResult | None = None
 
     def best_path(self) -> MemoryPath:
         if not self.paths:
