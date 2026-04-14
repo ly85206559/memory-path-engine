@@ -61,6 +61,11 @@ def main() -> None:
         help="Pretty-print the full suite report JSON instead of a compact summary.",
     )
     parser.add_argument(
+        "--v1-recall-summary",
+        action="store_true",
+        help="Print per-case v1 palace metadata (spaces, routes, memory kinds) from the adapter.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=None,
@@ -93,6 +98,28 @@ def main() -> None:
 
     if args.pretty:
         print(suite.model_dump_json(indent=2))
+        return
+
+    if args.v1_recall_summary:
+        print(f"dataset: {dataset_path}")
+        print(f"samples: {len(samples)}")
+        print("v1 recall summary (from LongMemEval adapter metadata)")
+        for mode_name, mode_report in suite.modes.items():
+            for case in mode_report.case_reports:
+                meta = case.metadata
+                print(
+                    json.dumps(
+                        {
+                            "mode": mode_name,
+                            "case_id": case.case_id,
+                            "space_count": meta.get("space_count"),
+                            "route_count": meta.get("route_count"),
+                            "memory_kind_distribution": meta.get("memory_kind_distribution"),
+                            "retrieved_items_top": case.retrieved_items[:5],
+                        },
+                        ensure_ascii=False,
+                    )
+                )
         return
 
     print(f"dataset: {dataset_path}")

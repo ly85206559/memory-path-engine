@@ -15,10 +15,13 @@ from memory_engine.benchmarking.domain.models import (
     StructuredBenchmarkExpectation,
 )
 from memory_engine.benchmarking.domain.public_models import PublicBenchmarkSuiteReport
-from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
+from memory_engine.memory.application.bridge import palace_to_store
+from memory_engine.memory.domain.enums import MemoryLinkType
+from memory_engine.memory.domain.memory_types import EpisodicMemory, RouteMemory
+from memory_engine.memory.domain.palace import MemoryLink, MemoryPalace, PalaceSpace
+from memory_engine.memory.domain.value_objects import PalaceLocation, SalienceProfile
+from memory_engine.schema import EvidenceRef
 from memory_engine.store import MemoryStore
-
-_NEXT_SESSION_EDGE = "next_session"
 
 
 def validate_longmemeval_sample(sample: dict) -> None:
@@ -87,65 +90,138 @@ def session_turns_to_text(turns: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def build_longmemeval_memory_store(sample: dict, *, granularity: str = "session") -> MemoryStore:
+def build_longmemeval_memory_palace(sample: dict, *, granularity: str = "session") -> MemoryPalace:
     if granularity != "session":
         raise ValueError(f"Unsupported granularity '{granularity}'. Only 'session' is supported.")
 
-    store = MemoryStore()
     question_id = str(sample.get("question_id", "longmemeval"))
+    palace = MemoryPalace(palace_id=f"longmemeval:{question_id}")
     session_ids = [str(item) for item in sample.get("haystack_session_ids", [])]
     session_dates = sample.get("haystack_dates", [])
     sessions = sample.get("haystack_sessions", [])
+    question_type = str(sample.get("question_type", "unknown"))
 
-    if len(session_ids) != len(sessions):
-        raise ValueError(
-            "LongMemEval sample must have the same number of haystack_session_ids and haystack_sessions"
-        )
-
+    waypoint_ids: list[str] = []
+    previous_memory_id: str | None = None
     for idx, (session_id, turns) in enumerate(zip(session_ids, sessions)):
-        node_id = longmemeval_session_node_id(sample, session_id)
+        memory_id = longmemeval_session_node_id(sample, session_id)
         session_text = session_turns_to_text(turns)
-        node = MemoryNode(
-            id=node_id,
-            type="session",
-            content=session_text,
-            attributes={
-                "question_id": question_id,
-                "session_id": session_id,
-                "session_index": idx,
-                "question_type": sample.get("question_type", "unknown"),
-                "question_date": sample.get("question_date"),
-                "session_date": session_dates[idx] if idx < len(session_dates) else None,
-                "has_answer_turn": any(turn.get("has_answer") for turn in turns),
-            },
-            weights=MemoryWeight(
-                importance=0.45,
-                risk=0.1,
-                novelty=0.2,
-                confidence=0.95,
-            ),
-            source_ref=EvidenceRef(
-                source_path=f"longmemeval:{question_id}",
-                section_id=session_id,
-                metadata={
-                    "session_index": idx,
-                    "question_type": sample.get("question_type", "unknown"),
-                },
-            ),
+        space_id = f"{question_id}:space:{normalize_session_id(session_id)}"
+        location = PalaceLocation(
+            building="longmemeval",
+            floor=question_type,
+            room=normalize_session_id(session_id),
+            locus=str(idx),
         )
-        store.add_node(node)
-        if idx + 1 < len(session_ids):
-            store.add_edge(
-                MemoryEdge(
-                    from_id=node_id,
-                    to_id=longmemeval_session_node_id(sample, session_ids[idx + 1]),
-                    edge_type=_NEXT_SESSION_EDGE,
-                    weight=0.6,
+        palace.add_space(
+            PalaceSpace(
+                space_id=space_id,
+                name=f"session-{session_id}",
+                location=location,
+                tags=("longmemeval", question_type),
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id=memory_id,
+                palace_id=palace.palace_id,
+                location=location,
+                content=session_text,
+                salience=SalienceProfile(
+                    importance=0.45,
+                    risk=0.1,
+                    novelty=0.2,
+                    confidence=0.95,
+                    recency=1.0 if idx == len(session_ids) - 1 else 0.4,
+                ),
+                source=EvidenceRef(
+                    source_path=f"longmemeval:{question_id}",
+                    section_id=session_id,
+                    metadata={
+                        "session_index": idx,
+                        "question_type": question_type,
+                    },
+                ),
+                metadata={
+                    "question_id": question_id,
+                    "session_id": session_id,
+                    "session_index": idx,
+                    "question_type": question_type,
+                    "question_date": sample.get("question_date"),
+                    "session_date": session_dates[idx] if idx < len(session_dates) else None,
+                    "has_answer_turn": any(turn.get("has_answer") for turn in turns),
+                    "space_id": space_id,
+                },
+                episode_id=session_id,
+                timestamp=session_dates[idx] if idx < len(session_dates) else None,
+                participants=tuple(
+                    sorted({str(turn.get("role", "unknown")).strip() or "unknown" for turn in turns})
+                ),
+                event_type="session",
+            )
+        )
+        waypoint_ids.append(memory_id)
+        if previous_memory_id is not None:
+            palace.add_link(
+                MemoryLink(
+                    from_memory_id=previous_memory_id,
+                    to_memory_id=memory_id,
+                    link_type=MemoryLinkType.NEXT,
+                    strength=0.6,
                     confidence=0.95,
                     bidirectional=True,
                 )
             )
-    return store
+        previous_memory_id = memory_id
+
+    if waypoint_ids:
+        route_id = f"{question_id}:route:timeline"
+        route_location = PalaceLocation(
+            building="longmemeval",
+            floor=question_type,
+            room="timeline",
+            locus="route",
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id=route_id,
+                palace_id=palace.palace_id,
+                location=route_location,
+                content=" -> ".join(waypoint_ids),
+                salience=SalienceProfile(
+                    importance=0.55,
+                    risk=0.05,
+                    novelty=0.15,
+                    confidence=0.95,
+                ),
+                source=EvidenceRef(source_path=f"longmemeval:{question_id}", section_id="timeline"),
+                metadata={
+                    "question_id": question_id,
+                    "route_kind": "timeline",
+                    "space_id": f"{question_id}:space:timeline",
+                },
+                route_id=route_id,
+                start_memory_id=waypoint_ids[0],
+                ordered_waypoints=tuple(waypoint_ids),
+                route_kind="timeline",
+            )
+        )
+        for waypoint_id in waypoint_ids:
+            palace.add_link(
+                MemoryLink(
+                    from_memory_id=route_id,
+                    to_memory_id=waypoint_id,
+                    link_type=MemoryLinkType.ROUTE_TO,
+                    strength=0.4,
+                    confidence=0.9,
+                )
+            )
+    return palace
+
+
+def build_longmemeval_memory_store(sample: dict, *, granularity: str = "session") -> MemoryStore:
+    palace = build_longmemeval_memory_palace(sample, granularity=granularity)
+    return palace_to_store(palace)
 
 
 def longmemeval_gold_node_ids(sample: dict) -> list[str]:
@@ -191,7 +267,8 @@ def run_longmemeval_benchmark(
     for mode in retriever_modes:
         case_reports = []
         for sample in samples:
-            store = build_longmemeval_memory_store(sample, granularity=granularity)
+            palace = build_longmemeval_memory_palace(sample, granularity=granularity)
+            store = palace_to_store(palace)
             retriever = build_retriever(mode, store)
             started = perf_counter()
             result = retriever.search(sample["question"], top_k=top_k)
@@ -207,6 +284,18 @@ def run_longmemeval_benchmark(
                     metadata={
                         "question_type": sample.get("question_type", "unknown"),
                         "question_date": sample.get("question_date"),
+                        "memory_kind_distribution": {
+                            "episodic": sum(
+                                1 for memory in palace.memories.values() if getattr(memory, "kind", None).value == "episodic"
+                            ),
+                            "route": sum(
+                                1 for memory in palace.memories.values() if getattr(memory, "kind", None).value == "route"
+                            ),
+                        },
+                        "space_count": len(palace.spaces),
+                        "route_count": sum(
+                            1 for memory in palace.memories.values() if getattr(memory, "kind", None).value == "route"
+                        ),
                     },
                 )
             )
@@ -219,6 +308,7 @@ def run_longmemeval_benchmark(
             metadata={
                 "granularity": granularity,
                 "top_k": top_k,
+                "v1_memory_architecture": True,
             },
         )
 

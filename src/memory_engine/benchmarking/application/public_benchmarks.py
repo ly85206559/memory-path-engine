@@ -10,6 +10,18 @@ from memory_engine.schema import RetrievalResult
 
 
 def ranked_node_ids_from_result(result: RetrievalResult, *, top_k: int) -> list[str]:
+    if result.palace_result is not None and result.palace_result.retrieved_memories:
+        ranked_node_ids: list[str] = []
+        seen: set[str] = set()
+        for item in result.palace_result.retrieved_memories:
+            if item.memory_id in seen:
+                continue
+            seen.add(item.memory_id)
+            ranked_node_ids.append(item.memory_id)
+            if len(ranked_node_ids) >= top_k:
+                break
+        return ranked_node_ids
+
     ranked_paths = sorted(result.paths, key=lambda path: path.final_score, reverse=True)
     ranked_node_ids: list[str] = []
     seen: set[str] = set()

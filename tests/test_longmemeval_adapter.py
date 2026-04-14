@@ -17,6 +17,7 @@ class LongMemEvalAdapterTests(unittest.TestCase):
 
     def test_build_longmemeval_memory_store_creates_session_nodes(self):
         from memory_engine.benchmarking.adapters.longmemeval import (
+            build_longmemeval_memory_palace,
             build_longmemeval_memory_store,
             longmemeval_session_node_id,
         )
@@ -41,8 +42,10 @@ class LongMemEvalAdapterTests(unittest.TestCase):
             "answer_session_ids": ["sess-2"],
         }
 
+        palace = build_longmemeval_memory_palace(sample)
         store = build_longmemeval_memory_store(sample)
         node_ids = {node.id for node in store.nodes()}
+        self.assertEqual(len(palace.spaces), 2)
         self.assertIn(longmemeval_session_node_id(sample, "sess-1"), node_ids)
         self.assertIn(longmemeval_session_node_id(sample, "sess-2"), node_ids)
         self.assertTrue(store.neighbors(longmemeval_session_node_id(sample, "sess-1")))
@@ -67,6 +70,8 @@ class LongMemEvalAdapterTests(unittest.TestCase):
         self.assertIn("weighted_graph", suite.modes)
         self.assertGreaterEqual(suite.modes["embedding_baseline"].recall_at_5, 0.5)
         self.assertGreaterEqual(suite.modes["weighted_graph"].recall_at_5, 0.5)
+        self.assertTrue(suite.modes["embedding_baseline"].metadata["v1_memory_architecture"])
+        self.assertIn("space_count", suite.modes["embedding_baseline"].case_reports[0].metadata)
 
     def test_validate_longmemeval_sample_rejects_unknown_answer_session(self):
         from memory_engine.benchmarking.adapters.longmemeval import validate_longmemeval_sample
