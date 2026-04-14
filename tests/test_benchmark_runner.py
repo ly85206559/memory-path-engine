@@ -262,6 +262,105 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
             ["below_threshold"],
         )
 
+    def test_runner_supports_route_and_activation_snapshot_expectations(self):
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
+        from memory_engine.memory.domain.retrieval_result import (
+            ActivationSnapshot,
+            ActivationSnapshotEntry,
+            PalaceRecallResult,
+            RecallRoute,
+            RetrievedMemory,
+        )
+
+        class FakeRetriever:
+            def search(self, query: str, top_k: int = 3):
+                del query, top_k
+                palace_result = PalaceRecallResult(
+                    query="rollback recovery",
+                    retrieved_memories=(
+                        RetrievedMemory(memory_id="01_api_incident_runbook:4", score=0.8, reason="seed"),
+                        RetrievedMemory(memory_id="01_api_incident_runbook:5", score=0.9, reason="route"),
+                    ),
+                    routes=(
+                        RecallRoute(
+                            route_id="route-1",
+                            route_kind="dependency",
+                            step_memory_ids=("01_api_incident_runbook:4", "01_api_incident_runbook:5"),
+                            score=0.9,
+                        ),
+                    ),
+                    activation_snapshot=ActivationSnapshot(
+                        steps=(
+                            ActivationSnapshotEntry(
+                                memory_id="01_api_incident_runbook:4",
+                                hop=0,
+                                incoming_activation=0.82,
+                                propagated_activation=0.82,
+                                is_seed=True,
+                            ),
+                            ActivationSnapshotEntry(
+                                memory_id="01_api_incident_runbook:5",
+                                source_memory_id="01_api_incident_runbook:4",
+                                edge_type="depends_on",
+                                hop=1,
+                                incoming_activation=0.74,
+                                propagated_activation=0.74,
+                                activated_score=0.91,
+                            ),
+                        )
+                    ),
+                )
+                return palace_result.to_legacy_retrieval_result()
+
+        dataset = StructuredBenchmarkDataset.model_validate(
+            {
+                "dataset_id": "route-snapshot-benchmark-v1",
+                "dataset_name": "Route snapshot benchmark",
+                "domain_pack_name": "example_runbook_pack",
+                "document_directory": "runbooks",
+                "cases": [
+                    {
+                        "case_id": "rb-route-001",
+                        "query": "What should happen after rollback does not recover service?",
+                        "expectation": {
+                            "evidence_node_ids": ["01_api_incident_runbook:5"],
+                            "minimum_evidence_matches": 1,
+                            "route": {
+                                "match_mode": "prefix",
+                                "steps": [
+                                    {"node_id": "01_api_incident_runbook:4"},
+                                    {"node_id": "01_api_incident_runbook:5"},
+                                ],
+                            },
+                            "activation_snapshot": {
+                                "match_mode": "prefix",
+                                "steps": [
+                                    {"node_id": "01_api_incident_runbook:4", "hop": 0, "is_seed": True},
+                                    {
+                                        "node_id": "01_api_incident_runbook:5",
+                                        "edge_type": "depends_on",
+                                        "hop": 1,
+                                    },
+                                ],
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+        report = StructuredBenchmarkRunner().run(
+            dataset=dataset,
+            retriever_name="fake_palace",
+            retriever=FakeRetriever(),
+            top_k=3,
+        )
+
+        self.assertTrue(report.case_reports[0].route_hit)
+        self.assertTrue(report.case_reports[0].activation_snapshot_hit)
+        self.assertTrue(report.case_reports[0].hit)
+
     def test_runner_reports_evidence_hit_even_when_full_hit_fails(self):
         from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
         from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset

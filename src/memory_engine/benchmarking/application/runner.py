@@ -5,9 +5,13 @@ from time import perf_counter
 from memory_engine.benchmarking.domain.evaluation_policy import (
     collect_matched_evidence,
     evaluate_contradiction_hit,
+    evaluate_activation_snapshot_hit,
     evaluate_activation_trace_hit,
     collect_returned_node_ids,
+    evaluate_lifecycle_hit,
     evaluate_path_hit,
+    evaluate_route_hit,
+    evaluate_space_hit,
     evaluate_semantic_hit,
 )
 from memory_engine.benchmarking.domain.models import (
@@ -42,6 +46,7 @@ class StructuredBenchmarkRunner:
             matched_evidence = collect_matched_evidence(case.expectation, returned_node_ids)
             evidence_hit = len(matched_evidence) >= case.expectation.minimum_evidence_matches
             path_hit = evaluate_path_hit(case.expectation, result)
+            route_hit = evaluate_route_hit(case.expectation, result)
             store = getattr(retriever, "store", None)
             contradiction_pairs = (
                 contradiction_candidates(store.nodes(), store.edges())
@@ -53,6 +58,13 @@ class StructuredBenchmarkRunner:
                     store.get_node(node_id).attributes.get("semantic_role")
                     for node_id in returned_node_ids
                     if store is not None and store.get_node(node_id).attributes.get("semantic_role")
+                }
+            )
+            surfaced_space_ids = sorted(
+                {
+                    store.get_node(node_id).attributes.get("space_id")
+                    for node_id in returned_node_ids
+                    if store is not None and store.get_node(node_id).attributes.get("space_id")
                 }
             )
             best_path = result.best_path() if result.paths else None
@@ -69,8 +81,13 @@ class StructuredBenchmarkRunner:
                     if step.stopped_reason is not None
                 }
             )
+            space_hit = evaluate_space_hit(
+                case.expectation,
+                surfaced_space_ids=surfaced_space_ids,
+            )
             semantic_hit = evaluate_semantic_hit(
                 case.expectation,
+                surfaced_space_ids=surfaced_space_ids,
                 surfaced_semantic_roles=surfaced_semantic_roles,
                 path_edge_types=path_edge_types,
             )
@@ -78,6 +95,7 @@ class StructuredBenchmarkRunner:
                 case.expectation,
                 activation_trace=activation_trace,
             )
+            activation_snapshot_hit = evaluate_activation_snapshot_hit(case.expectation, result)
             surfaced_contradiction_pairs = surfaced_contradictions(
                 returned_node_ids,
                 contradiction_pairs,
@@ -105,12 +123,17 @@ class StructuredBenchmarkRunner:
                 case.expectation,
                 surfaced_contradictions=surfaced_contradiction_pairs,
             )
+            lifecycle_hit = evaluate_lifecycle_hit(case.expectation, store=store)
             hit = (
                 evidence_hit
                 and (path_hit if path_hit is not None else True)
+                and (route_hit if route_hit is not None else True)
+                and (space_hit if space_hit is not None else True)
                 and (activation_trace_hit if activation_trace_hit is not None else True)
+                and (activation_snapshot_hit if activation_snapshot_hit is not None else True)
                 and (semantic_hit if semantic_hit is not None else True)
                 and (contradiction_hit if contradiction_hit is not None else True)
+                and (lifecycle_hit if lifecycle_hit is not None else True)
             )
 
             case_reports.append(
@@ -121,9 +144,13 @@ class StructuredBenchmarkRunner:
                     evidence_hit=evidence_hit,
                     hit=hit,
                     path_hit=path_hit,
+                    route_hit=route_hit,
+                    space_hit=space_hit,
                     activation_trace_hit=activation_trace_hit,
+                    activation_snapshot_hit=activation_snapshot_hit,
                     semantic_hit=semantic_hit,
                     contradiction_hit=contradiction_hit,
+                    lifecycle_hit=lifecycle_hit,
                     expected_evidence=case.expectation.evidence_node_ids,
                     matched_evidence=matched_evidence,
                     missing_evidence=[

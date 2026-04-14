@@ -1,0 +1,18 @@
+{
+  "dataset_id": "spatial-recall-benchmark-v1",
+  "dataset_name": "Spatial recall benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/runbook_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "spatial-001",
+      "query": "What should we do if rollback does not recover the API after a deployment incident?",
+      "tags": ["spatial", "runbook", "mitigation"],
+      "expectation": {
+        "evidence_node_ids": ["01_api_incident_runbook:5"],
+        "minimum_evidence_matches": 1,
+        "required_space_ids": ["01_api_incident_runbook:mitigation"]
+      }
+    }
+  ]
+}

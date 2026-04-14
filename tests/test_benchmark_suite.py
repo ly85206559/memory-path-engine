@@ -34,6 +34,14 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
             "activation_trace_hit_rate",
             suite_report.comparison.mode_summary["activation_spreading_v1"].model_dump(),
         )
+        self.assertIn(
+            "route_hit_rate",
+            suite_report.comparison.mode_summary["activation_spreading_v1"].model_dump(),
+        )
+        self.assertIn(
+            "activation_snapshot_hit_rate",
+            suite_report.comparison.mode_summary["activation_spreading_v1"].model_dump(),
+        )
         self.assertEqual(
             suite_report.comparison.per_question[0].case_id,
             suite_report.modes["weighted_graph"].case_reports[0].case_id,
@@ -61,6 +69,14 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
         )
         self.assertIn(
             "activation_trace_hit",
+            first_question.modes["activation_spreading_v1"].model_dump(),
+        )
+        self.assertIn(
+            "route_hit",
+            first_question.modes["activation_spreading_v1"].model_dump(),
+        )
+        self.assertIn(
+            "activation_snapshot_hit",
             first_question.modes["activation_spreading_v1"].model_dump(),
         )
         self.assertIn(

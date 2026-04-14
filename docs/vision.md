@@ -157,6 +157,7 @@ The next iterations should focus on:
 2. explicit anomaly and contradiction modeling
 3. domain-pack abstractions that keep the core general
 4. better semantic backends behind stable interfaces
+5. **Memory Palace v1**: a first-class palace graph (spaces, episodic / semantic / route memories, lifecycle state) mapped onto the legacy `MemoryStore` for backward-compatible retrieval and benchmarks
 
 ## Relationship to the rest of the docs
 

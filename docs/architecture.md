@@ -170,3 +170,15 @@ The repository is beginning to separate responsibilities into clearer bounded co
 
 This split is meant to support DDD-style evolution: domain concepts stay explicit, and application services orchestrate them without collapsing everything into utility modules.
 
+## Memory Palace v1 (parallel to the legacy graph stack)
+
+v1 adds an explicit **palace domain** under `src/memory_engine/memory/`:
+
+- **Domain**: `MemoryPalace`, `PalaceSpace`, typed memories (`EpisodicMemory`, `SemanticMemory`, `RouteMemory`), `MemoryLink`, `DomainMemoryState`, and `MemoryStateMachine`.
+- **Bridge**: `palace_to_store` / `store_to_palace` map between v1 objects and the existing `MemoryStore` + `MemoryNode` / `MemoryEdge` so all current retrievers keep working.
+- **Recall layering**: `PalaceRecallResult` holds `retrieved_memories`, `routes`, and `activation_snapshot`, derived from a legacy `RetrievalResult` via `RetrievalResult.palace_result` (filled by retrievers in `retrieve.py`). Public benchmarks prefer this list when ranking session-like items.
+- **Retriever construction**: `build_legacy_retriever` in `retrieval_factory.py` is shared by the benchmark service and `RetrieveMemoryService`, avoiding import cycles with the runner.
+- **Dynamic lifecycle on nodes**: `MemoryStatePolicy` still mutates `MemoryWeight`, and also writes `lifecycle_state`, `reinforcement_count`, and `stability_score` on `MemoryNode.attributes` using the v1 state machine.
+
+Legacy contracts (`MemoryPath`, `RetrievalResult.paths`, structured benchmark reports) remain stable; v1 is additive until callers migrate to palace-first APIs.
+

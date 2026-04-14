@@ -229,3 +229,67 @@ class BenchmarkFixtureTests(unittest.TestCase):
             suite_report.comparison.mode_summary["structure_only"].avg_activated_nodes,
             suite_report.comparison.mode_summary["embedding_baseline"].avg_activated_nodes,
         )
+
+    def test_spatial_recall_fixture_requires_space_id(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/spatial_recall_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+        self.assertTrue(report.case_reports[0].space_hit)
+        self.assertTrue(report.case_reports[0].hit)
+
+    def test_route_replay_fixture_matches_palace_route_shape(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/route_replay_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="activation_spreading_v1",
+            top_k=2,
+        )
+        self.assertTrue(report.case_reports[0].route_hit)
+        self.assertTrue(report.case_reports[0].hit)
+
+    def test_consolidation_gain_fixture_spreading_beats_weighted_on_route(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/consolidation_gain_benchmark.json")
+        suite = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("weighted_graph", "activation_spreading_v1"),
+            top_k=2,
+        )
+        wg = suite.comparison.mode_summary["weighted_graph"].route_hit_rate
+        sp = suite.comparison.mode_summary["activation_spreading_v1"].route_hit_rate
+        self.assertGreater(sp, wg)
+
+    def test_state_transition_fixture_updates_lifecycle_on_dynamic_policy(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/state_transition_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+        self.assertTrue(report.case_reports[0].lifecycle_hit)
+        self.assertTrue(report.case_reports[0].hit)
+
+        static = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph_static",
+            top_k=3,
+        )
+        self.assertFalse(static.case_reports[0].lifecycle_hit)

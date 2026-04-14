@@ -1,0 +1,33 @@
+{
+  "dataset_id": "route-replay-benchmark-v1",
+  "dataset_name": "Route replay benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/graph_contract_pack/contracts",
+  "cases": [
+    {
+      "case_id": "route-001",
+      "query": "If goods are defective, what path overrides the normal 30 day payment rule?",
+      "tags": ["route", "exception", "override"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_exception_override_contract:2",
+          "01_exception_override_contract:3"
+        ],
+        "minimum_evidence_matches": 2,
+        "route": {
+          "match_mode": "prefix",
+          "steps": [
+            {
+              "node_id": "01_exception_override_contract:3"
+            },
+            {
+              "node_id": "01_exception_override_contract:2"
+            }
+          ]
+        },
+        "required_edge_types": ["depends_on"],
+        "required_semantic_roles": ["exception", "remedy"]
+      }
+    }
+  ]
+}

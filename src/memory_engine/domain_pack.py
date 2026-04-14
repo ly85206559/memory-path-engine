@@ -125,6 +125,7 @@ class RuleBasedSectionedDocumentPack:
             "domain_pack": self.name,
             "document_id": path.stem,
             "section": section_id,
+            "space_id": f"{path.stem}:{section_id}",
             "unit_number": unit_number,
             "semantic_role": infer_semantic_role(unit_body, node_type=self.node_type).value,
         }

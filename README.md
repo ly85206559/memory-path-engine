@@ -11,9 +11,11 @@ Structured memory retrieval for AI agents that returns evidence paths, not just 
 
 This repository is aimed at people exploring agent memory, graph-aware retrieval, and explainable evidence chains across more than one document shape.
 
-### System shape (v0)
+### System shape (v0 + Memory Palace v1)
 
 Bundled markdown packs are ingested into an in-memory graph (`MemoryNode` / `MemoryEdge`, with weights). Retrievers return a `MemoryPath`: a composed answer plus ordered steps you can inspect. The CLI demo exercises exactly this path end to end.
+
+**Memory Palace v1** adds a parallel domain (`memory_engine.memory`): `MemoryPalace`, typed memories, and `PalaceRecallResult` (retrieved items + routes + activation snapshot). It maps to the same `MemoryStore` via `palace_to_store`, so existing retriever modes are unchanged. See [`docs/architecture.md`](docs/architecture.md) for the compatibility picture.
 
 ```text
  examples/*_pack  ──▶  ingest  ──▶  MemoryStore (typed graph)
@@ -95,6 +97,12 @@ Run the LongMemEval tiny benchmark smoke check:
 
 ```bash
 python scripts/run_longmemeval_benchmark.py
+```
+
+Print compact v1 palace metadata (spaces, routes, memory kinds) per case:
+
+```bash
+python scripts/run_longmemeval_benchmark.py --v1-recall-summary
 ```
 
 Download the official HotpotQA dev distractor file for local benchmark runs:
@@ -236,6 +244,7 @@ The benchmark story is intentionally split into three layers:
 Current run matrix:
 
 - `benchmarks/structured_memory/*.json`: CI
+- `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle)
 - `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI
 - `benchmarks/external/hotpotqa/data/*.json`: local / nightly
 - `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local smoke

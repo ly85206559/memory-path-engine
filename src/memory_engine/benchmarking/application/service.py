@@ -17,14 +17,7 @@ from memory_engine.benchmarking.infrastructure.json_repository import (
 )
 from memory_engine.domain_pack import get_domain_pack
 from memory_engine.ingest import ingest_document
-from memory_engine.memory_state import MemoryStatePolicy, StaticMemoryStatePolicy
-from memory_engine.retrieve import (
-    ActivationSpreadingRetriever,
-    BaselineTopKRetriever,
-    EmbeddingTopKRetriever,
-    StructureAwareRetriever,
-    WeightedGraphRetriever,
-)
+from memory_engine.retrieval_factory import build_legacy_retriever
 from memory_engine.store import MemoryStore
 
 DEFAULT_RETRIEVER_MODES = (
@@ -50,37 +43,13 @@ def build_store_for_dataset(dataset: StructuredBenchmarkDataset, dataset_root: P
 
 
 def build_retriever(retriever_mode: str, store: MemoryStore):
-    memory_policies: dict[str, MemoryStatePolicy] = {
-        "lexical_baseline": StaticMemoryStatePolicy(),
-        "embedding_baseline": StaticMemoryStatePolicy(),
-        "structure_only": StaticMemoryStatePolicy(),
-        "weighted_graph": MemoryStatePolicy(),
-        "activation_spreading_v1": MemoryStatePolicy(),
-        "weighted_graph_static": StaticMemoryStatePolicy(),
-        "weighted_graph_dynamic": MemoryStatePolicy(),
-        "activation_spreading_static": StaticMemoryStatePolicy(),
-        "activation_spreading_dynamic": MemoryStatePolicy(),
-    }
-    retriever_builders = {
-        "lexical_baseline": BaselineTopKRetriever,
-        "embedding_baseline": EmbeddingTopKRetriever,
-        "structure_only": StructureAwareRetriever,
-        "weighted_graph": WeightedGraphRetriever,
-        "activation_spreading_v1": ActivationSpreadingRetriever,
-        "weighted_graph_static": WeightedGraphRetriever,
-        "weighted_graph_dynamic": WeightedGraphRetriever,
-        "activation_spreading_static": ActivationSpreadingRetriever,
-        "activation_spreading_dynamic": ActivationSpreadingRetriever,
-    }
-    try:
-        retriever_builder = retriever_builders[retriever_mode]
-        memory_state_policy = memory_policies[retriever_mode]
-    except KeyError as exc:
-        available = ", ".join(sorted(retriever_builders))
-        raise ValueError(
-            f"Unknown retriever mode '{retriever_mode}'. Available: {available}"
-        ) from exc
-    return retriever_builder(store, memory_state_policy=memory_state_policy)
+    """Construct a legacy :class:`MemoryStore` retriever (v0 graph stack).
+
+    v1 palace recall uses :class:`memory_engine.memory.application.retrieve_memory_service.RetrieveMemoryService`
+    with :func:`memory_engine.memory.application.bridge.palace_to_store` internally; this factory stays the
+    stable entry for structured benchmarks and scripts that operate on a plain store.
+    """
+    return build_legacy_retriever(retriever_mode, store)
 
 
 def build_comparison_report(
@@ -100,9 +69,13 @@ def build_comparison_report(
                 evidence_hit=case_report.evidence_hit,
                 hit=case_report.hit,
                 path_hit=case_report.path_hit,
+                route_hit=case_report.route_hit,
+                space_hit=case_report.space_hit,
                 activation_trace_hit=case_report.activation_trace_hit,
+                activation_snapshot_hit=case_report.activation_snapshot_hit,
                 semantic_hit=case_report.semantic_hit,
                 contradiction_hit=case_report.contradiction_hit,
+                lifecycle_hit=case_report.lifecycle_hit,
                 matched_evidence=case_report.matched_evidence,
                 latency_ms=case_report.latency_ms,
             )
@@ -129,8 +102,24 @@ def build_comparison_report(
                     if mode_report.questions
                     else 0.0
                 ),
+                route_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.route_hit) / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
+                space_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.space_hit) / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
                 activation_trace_hit_rate=(
                     sum(1 for report in mode_report.case_reports if report.activation_trace_hit)
+                    / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
+                activation_snapshot_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.activation_snapshot_hit)
                     / mode_report.questions
                     if mode_report.questions
                     else 0.0
@@ -143,6 +132,11 @@ def build_comparison_report(
                 contradiction_hit_rate=(
                     sum(1 for report in mode_report.case_reports if report.contradiction_hit)
                     / mode_report.questions
+                    if mode_report.questions
+                    else 0.0
+                ),
+                lifecycle_hit_rate=(
+                    sum(1 for report in mode_report.case_reports if report.lifecycle_hit) / mode_report.questions
                     if mode_report.questions
                     else 0.0
                 ),

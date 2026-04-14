@@ -49,14 +49,19 @@ class StructuredBenchmarkExpectation(BaseModel):
     evidence_node_ids: list[str] = Field(min_length=1)
     minimum_evidence_matches: int = Field(default=1, ge=1)
     path: PathShapeExpectation | None = None
+    route: PathShapeExpectation | None = None
     activation_trace: ActivationTraceShapeExpectation | None = None
+    activation_snapshot: ActivationTraceShapeExpectation | None = None
     path_scope: Literal["any_path", "best_path"] = "any_path"
+    route_scope: Literal["any_route", "best_route"] = "best_route"
     required_edge_types: list[str] = Field(default_factory=list)
+    required_space_ids: list[str] = Field(default_factory=list)
     required_semantic_roles: list[str] = Field(default_factory=list)
     required_contradiction_pairs: list[tuple[str, str]] = Field(default_factory=list)
     required_trace_stop_reasons: list[str] = Field(default_factory=list)
     min_activation_trace_length: int | None = Field(default=None, ge=0)
     max_activation_trace_length: int | None = Field(default=None, ge=0)
+    required_lifecycle_states: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("minimum_evidence_matches")
     @classmethod
@@ -107,9 +112,13 @@ class StructuredBenchmarkCaseReport(BaseModel):
     evidence_hit: bool
     hit: bool
     path_hit: bool | None = None
+    route_hit: bool | None = None
+    space_hit: bool | None = None
     activation_trace_hit: bool | None = None
+    activation_snapshot_hit: bool | None = None
     semantic_hit: bool | None = None
     contradiction_hit: bool | None = None
+    lifecycle_hit: bool | None = None
     expected_evidence: list[str]
     matched_evidence: list[str]
     missing_evidence: list[str]
@@ -146,9 +155,13 @@ class StructuredBenchmarkModeSummary(BaseModel):
     evidence_recall: float = Field(ge=0.0, le=1.0)
     avg_latency_ms: float = Field(ge=0.0)
     path_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    route_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    space_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     activation_trace_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    activation_snapshot_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     semantic_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     contradiction_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+    lifecycle_hit_rate: float = Field(default=0.0, ge=0.0, le=1.0)
     avg_activated_nodes: float = Field(default=0.0, ge=0.0)
     avg_propagation_depth: float = Field(default=0.0, ge=0.0)
     avg_activation_trace_length: float = Field(default=0.0, ge=0.0)
@@ -160,9 +173,13 @@ class StructuredBenchmarkModeCaseResult(BaseModel):
     evidence_hit: bool
     hit: bool
     path_hit: bool | None = None
+    route_hit: bool | None = None
+    space_hit: bool | None = None
     activation_trace_hit: bool | None = None
+    activation_snapshot_hit: bool | None = None
     semantic_hit: bool | None = None
     contradiction_hit: bool | None = None
+    lifecycle_hit: bool | None = None
     matched_evidence: list[str] = Field(default_factory=list)
     latency_ms: float = Field(ge=0.0)
 
