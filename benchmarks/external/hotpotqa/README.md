@@ -58,7 +58,7 @@ python scripts/run_hotpotqa_benchmark.py --summary-output "benchmarks/external/h
 
 ## CI note
 
-The main CI workflow does **not** download HotpotQA. A dedicated smoke job uses the checked-in `hotpot_tiny_fixture.json` (two synthetic items) so pull requests stay fast and deterministic.
+The main CI workflow does **not** download HotpotQA. A dedicated sanity job uses the checked-in `hotpot_tiny_fixture.json` (two synthetic items) so pull requests stay fast and deterministic.
 
 A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads both the full suite JSON and a compact summary artifact.
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from memory_engine.embeddings import lexical_overlap
+from memory_engine.embeddings import lexical_overlap, tokenize
 from memory_engine.memory.domain.palace import MemoryPalace
 from memory_engine.memory.domain.space_selection import (
     SpaceCandidate,
@@ -23,6 +23,35 @@ def _memories_in_space(palace: MemoryPalace, space_id: str) -> list[str]:
         for m in palace.memories.values()
         if str(m.metadata.get("space_id", "")) == space_id
     ]
+
+
+def _location_prior_score(palace: MemoryPalace, space_id: str, query_text: str) -> float:
+    space = palace.spaces[space_id]
+    query_tokens = set(tokenize(query_text))
+    if not query_tokens:
+        return 0.0
+
+    building_tokens = set(tokenize(space.location.building))
+    floor_tokens = set(tokenize(space.location.floor or ""))
+    room_tokens = set(tokenize(space.location.room or ""))
+    locus_tokens = set(tokenize(space.location.locus or ""))
+    tag_tokens = {token for tag in space.tags for token in tokenize(tag)}
+    name_tokens = set(tokenize(space.name))
+
+    score = 0.0
+    if building_tokens & query_tokens:
+        score += 0.35
+    if floor_tokens & query_tokens:
+        score += 0.2
+    if room_tokens & query_tokens:
+        score += 0.35
+    if locus_tokens & query_tokens:
+        score += 0.15
+    if tag_tokens & query_tokens:
+        score += 0.15
+    if name_tokens & query_tokens:
+        score += 0.2
+    return min(score, 1.0)
 
 
 def _sort_candidates(candidates: list[SpaceCandidate]) -> list[SpaceCandidate]:
@@ -51,11 +80,17 @@ class KeywordSpaceSelector:
         candidates: list[SpaceCandidate] = []
         for space_id, _space in palace.spaces.items():
             text = _space_text(palace, space_id)
-            score = lexical_overlap(selection.text, text)
+            lexical_score = lexical_overlap(selection.text, text)
+            location_score = _location_prior_score(palace, space_id, selection.text)
+            score = max(lexical_score, location_score)
             if selection.preferred_space_ids and space_id in selection.preferred_space_ids:
                 score = min(1.0, score + 0.35)
             candidates.append(
-                SpaceCandidate(space_id=space_id, score=score, reason="keyword_space_lexical"),
+                SpaceCandidate(
+                    space_id=space_id,
+                    score=score,
+                    reason="keyword_space_location_prior" if location_score > lexical_score else "keyword_space_lexical",
+                ),
             )
 
         ranked = _sort_candidates(candidates)
@@ -82,14 +117,20 @@ class MetadataSpaceSelector:
         for space_id in palace.spaces:
             contents = _memories_in_space(palace, space_id)
             blob = "\n".join(contents) if contents else ""
-            score = lexical_overlap(selection.text, blob) if blob else 0.0
+            lexical_score = lexical_overlap(selection.text, blob) if blob else 0.0
+            location_score = _location_prior_score(palace, space_id, selection.text)
+            score = max(lexical_score, location_score)
             if selection.preferred_space_ids and space_id in selection.preferred_space_ids:
                 score = min(1.0, score + 0.25)
             candidates.append(
                 SpaceCandidate(
                     space_id=space_id,
                     score=score,
-                    reason="metadata_space_memory_blob",
+                    reason=(
+                        "metadata_space_location_prior"
+                        if location_score > lexical_score
+                        else "metadata_space_memory_blob"
+                    ),
                 ),
             )
 
@@ -122,7 +163,10 @@ class HybridSpaceSelector:
             m = by_md.get(sid)
             if k and m:
                 score = max(k.score, m.score)
-                reason = "hybrid_max(keyword,metadata)"
+                if "location_prior" in k.reason or "location_prior" in m.reason:
+                    reason = "hybrid_max(location_prior)"
+                else:
+                    reason = "hybrid_max(keyword,metadata)"
             elif k:
                 score = k.score
                 reason = k.reason

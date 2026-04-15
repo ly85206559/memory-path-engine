@@ -3,23 +3,30 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from memory_engine.memory.application.bridge import palace_to_store
+from memory_engine.memory.application.activation_service import NativeActivationService
 from memory_engine.memory.application.query_models import RecallQuery
 from memory_engine.memory.application.result_ranker_service import (
     DefaultRecallResultRanker,
     RecallResultRanker,
 )
 from memory_engine.memory.application.route_planner_service import DefaultRoutePlanner
-from memory_engine.memory.application.seed_selection_service import default_hybrid_seed_selector
+from memory_engine.memory.application.seed_selection_service import (
+    EmbeddingSeedSelector,
+    HybridSeedSelector,
+    LexicalSeedSelector,
+    default_hybrid_seed_selector,
+)
 from memory_engine.memory.application.space_selection_service import (
     HybridSpaceSelector,
     KeywordSpaceSelector,
     MetadataSpaceSelector,
 )
 from memory_engine.memory.domain.palace import MemoryPalace
-from memory_engine.memory.domain.retrieval_result import ActivationSnapshot, PalaceRecallResult
+from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
 from memory_engine.memory.domain.route_planning import RoutePlanner, RoutePlanningInput
 from memory_engine.memory.domain.seed_selection import SeedSelectionInput, SeedSelector
 from memory_engine.memory.domain.space_selection import SpaceSelectionInput, SpaceSelector
+from memory_engine.memory_state import MemoryStatePolicy, StaticMemoryStatePolicy
 from memory_engine.retrieval_factory import build_legacy_retriever
 from memory_engine.schema import ActivationContext
 
@@ -37,10 +44,12 @@ class RetrieveMemoryService:
 
     space_selector: SpaceSelector = field(default_factory=_default_hybrid_space_selector)
     seed_selector: SeedSelector = field(default_factory=default_hybrid_seed_selector)
+    activation_service: NativeActivationService = field(default_factory=NativeActivationService)
     route_planner: RoutePlanner = field(default_factory=DefaultRoutePlanner)
     result_ranker: RecallResultRanker = field(default_factory=DefaultRecallResultRanker)
 
     def recall(self, palace: MemoryPalace, query: RecallQuery) -> PalaceRecallResult:
+        state_policy = self._memory_policy_for_mode(query.policy.retriever_mode)
         space_in = SpaceSelectionInput(
             text=query.text,
             preferred_space_ids=query.preferred_space_ids,
@@ -58,19 +67,37 @@ class RetrieveMemoryService:
             max_seeds=query.policy.max_seeds,
             allowed_memory_kinds=query.policy.allowed_memory_kinds,
         )
-        seeds = self.seed_selector.select_seeds(palace, seed_in)
+        seeds = self._seed_selector_for_mode(state_policy).select_seeds(palace, seed_in)
+        activation_result = self.activation_service.activate(
+            palace,
+            query_text=query.text,
+            seeds=seeds,
+            allowed_space_ids=allowed_spaces,
+            retriever_mode=query.policy.retriever_mode,
+            max_hops=query.policy.max_hops,
+            top_k=query.policy.top_k,
+        )
 
         plan_in = RoutePlanningInput(
             text=query.text,
             top_k=query.policy.top_k,
             max_hops=query.policy.max_hops,
         )
-        routes = self.route_planner.plan_routes(palace, plan_in, seeds)
+        planned_routes = self.route_planner.plan_routes(palace, plan_in, seeds)
+        explicit_routes = tuple(
+            route for route in planned_routes if route.route_source == "route_memory"
+        )
+        routes = (
+            explicit_routes + activation_result.routes
+            if explicit_routes
+            else activation_result.routes or planned_routes
+        )
 
-        bundle = self.result_ranker.rank(
+        bundle = self._result_ranker_for_mode(state_policy).rank(
             palace,
             query.text,
             seeds,
+            activation_result.retrieved_memories,
             routes,
             top_k=query.policy.top_k,
         )
@@ -89,7 +116,7 @@ class RetrieveMemoryService:
             query=query.text,
             retrieved_memories=bundle.retrieved_memories,
             routes=bundle.routes,
-            activation_snapshot=ActivationSnapshot(),
+            activation_snapshot=activation_result.activation_snapshot,
             metadata=orchestration_meta,
         )
 
@@ -97,6 +124,39 @@ class RetrieveMemoryService:
             return self._legacy_fallback(palace, query, orchestration_meta)
 
         return native
+
+    def _memory_policy_for_mode(self, retriever_mode: str) -> MemoryStatePolicy:
+        if retriever_mode in {
+            "lexical_baseline",
+            "embedding_baseline",
+            "structure_only",
+            "weighted_graph_static",
+            "activation_spreading_static",
+        }:
+            return StaticMemoryStatePolicy()
+        return MemoryStatePolicy()
+
+    def _seed_selector_for_mode(self, state_policy: MemoryStatePolicy) -> SeedSelector:
+        if isinstance(self.seed_selector, HybridSeedSelector):
+            return replace(
+                self.seed_selector,
+                embedding_selector=replace(
+                    self.seed_selector.embedding_selector,
+                    state_policy=state_policy,
+                ),
+                lexical_selector=replace(
+                    self.seed_selector.lexical_selector,
+                    state_policy=state_policy,
+                ),
+            )
+        if isinstance(self.seed_selector, (EmbeddingSeedSelector, LexicalSeedSelector)):
+            return replace(self.seed_selector, state_policy=state_policy)
+        return self.seed_selector
+
+    def _result_ranker_for_mode(self, state_policy: MemoryStatePolicy) -> RecallResultRanker:
+        if isinstance(self.result_ranker, DefaultRecallResultRanker):
+            return replace(self.result_ranker, state_policy=state_policy)
+        return self.result_ranker
 
     def _legacy_fallback(
         self,

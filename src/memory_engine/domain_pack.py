@@ -6,6 +6,7 @@ import re
 from typing import Protocol
 
 from memory_engine.embeddings import tokenize
+from memory_engine.memory.application.encoding_service import build_encoding_profile
 from memory_engine.schema import EvidenceRef, MemoryEdge, MemoryNode, MemoryWeight
 from memory_engine.semantics import SemanticRole, infer_semantic_role
 from memory_engine.store import MemoryStore
@@ -121,13 +122,19 @@ class RuleBasedSectionedDocumentPack:
         unit_number: str,
         unit_body: str,
     ) -> dict:
+        semantic_role = infer_semantic_role(unit_body, node_type=self.node_type).value
+        encoding = build_encoding_profile(unit_body, semantic_role=semantic_role)
         return {
             "domain_pack": self.name,
             "document_id": path.stem,
             "section": section_id,
             "space_id": f"{path.stem}:{section_id}",
             "unit_number": unit_number,
-            "semantic_role": infer_semantic_role(unit_body, node_type=self.node_type).value,
+            "semantic_role": semantic_role,
+            "trigger_phrases": list(encoding.trigger_profile.phrases),
+            "trigger_situations": list(encoding.trigger_profile.situations),
+            "scenario_tags": list(encoding.scenario_tags),
+            "symbolic_tags": list(encoding.symbolic_tags),
         }
 
     def _create_semantic_edges(self, store: MemoryStore, node: MemoryNode) -> None:

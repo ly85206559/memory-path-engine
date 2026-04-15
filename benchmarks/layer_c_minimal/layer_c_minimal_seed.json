@@ -1,0 +1,43 @@
+{
+  "dataset_id": "layer-c-minimal-seed-v1",
+  "dataset_name": "Layer C minimal seed dataset",
+  "description": "Starter scaffold for real-data consolidation and lifecycle cases. Expand to 20-50 annotated cases.",
+  "cases": [
+    {
+      "case_id": "lc-001",
+      "query": "What generalized rule applies after repeated rollback failures?",
+      "expected_memory_ids": [
+        "semantic:rollback_failure:generalized_rule_memory"
+      ],
+      "scenario_tags": [
+        "rollback failure"
+      ],
+      "case_type": "generalized_rule_recall",
+      "notes": "Promote this to a real case once the source incident bundle is available."
+    },
+    {
+      "case_id": "lc-002",
+      "query": "What cross-episode abstraction links repeated payment dispute incidents?",
+      "expected_memory_ids": [
+        "semantic:payment_dispute:cross_episode_abstraction"
+      ],
+      "scenario_tags": [
+        "payment dispute"
+      ],
+      "case_type": "cross_episode_abstraction",
+      "notes": "Use when at least two real dispute episodes have been annotated."
+    },
+    {
+      "case_id": "lc-003",
+      "query": "Which active memory should outrank fading alternatives for escalation handling?",
+      "expected_memory_ids": [
+        "episodic:placeholder-active-memory"
+      ],
+      "scenario_tags": [
+        "incident escalation"
+      ],
+      "case_type": "lifecycle_sensitive_ranking",
+      "notes": "Intended for state-aware recall validation on real data."
+    }
+  ]
+}

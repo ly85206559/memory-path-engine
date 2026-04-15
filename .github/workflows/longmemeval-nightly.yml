@@ -1,0 +1,62 @@
+name: longmemeval-nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_limit:
+        description: "Optional sample limit. Use 0 for the full downloaded file."
+        required: false
+        default: "0"
+      top_k:
+        description: "Retriever top_k for each mode."
+        required: false
+        default: "10"
+      modes:
+        description: "Comma-separated retriever modes."
+        required: false
+        default: "embedding_baseline,weighted_graph,activation_spreading_v1"
+  schedule:
+    - cron: "0 3 * * *"
+
+jobs:
+  longmemeval-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: python -m pip install --no-build-isolation -e .
+
+      - name: Download LongMemEval-S
+        run: python scripts/download_longmemeval.py --force
+
+      - name: Run LongMemEval nightly benchmark
+        run: >
+          python scripts/run_longmemeval_benchmark.py
+          --dataset "benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json"
+          --limit "${{ github.event.inputs.sample_limit || '0' }}"
+          --top-k "${{ github.event.inputs.top_k || '10' }}"
+          --modes "${{ github.event.inputs.modes || 'embedding_baseline,weighted_graph,activation_spreading_v1' }}"
+          --output "benchmarks/external/longmemeval/data/longmemeval-nightly-report.json"
+          --summary-output "benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json"
+
+      - name: Upload LongMemEval report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: longmemeval-nightly-report
+          path: benchmarks/external/longmemeval/data/longmemeval-nightly-report.json
+          if-no-files-found: error
+
+      - name: Upload LongMemEval summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: longmemeval-nightly-summary
+          path: benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json
+          if-no-files-found: error

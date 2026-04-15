@@ -64,6 +64,8 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
             minimum_evidence_matches=1,
             required_edge_types=["depends_on"],
             required_semantic_roles=["escalation"],
+            required_scenario_tags=["rollback failure"],
+            required_symbolic_tags=["causal"],
             required_contradiction_pairs=[("runbook:1", "runbook:2")],
             path_scope="best_path",
             path={
@@ -78,6 +80,8 @@ class StructuredBenchmarkModelTests(unittest.TestCase):
         self.assertEqual(expectation.path_scope, "best_path")
         self.assertEqual(expectation.path.steps[1].via_edge_type, "depends_on")
         self.assertEqual(expectation.required_semantic_roles, ["escalation"])
+        self.assertEqual(expectation.required_scenario_tags, ["rollback failure"])
+        self.assertEqual(expectation.required_symbolic_tags, ["causal"])
         self.assertEqual(expectation.required_contradiction_pairs, [("runbook:1", "runbook:2")])
 
     def test_expectation_accepts_optional_activation_trace_shape(self):

@@ -15,6 +15,8 @@ class RetrievedMemory:
     retrieval_role: str = "seed"
     source_path: str | None = None
     memory_kind: str | None = None
+    lifecycle_state: str | None = None
+    consolidation_kind: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

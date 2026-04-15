@@ -87,13 +87,13 @@ Run the contract comparison demo:
 python -m memory_engine.demo --scenario contract
 ```
 
-Run the HotpotQA tiny benchmark smoke check:
+Run the HotpotQA tiny benchmark sanity check:
 
 ```bash
 python scripts/run_hotpotqa_benchmark.py
 ```
 
-Run the LongMemEval tiny benchmark smoke check:
+Run the LongMemEval tiny benchmark sanity check:
 
 ```bash
 python scripts/run_longmemeval_benchmark.py
@@ -103,6 +103,12 @@ Print compact v1 palace metadata (spaces, routes, memory kinds) per case:
 
 ```bash
 python scripts/run_longmemeval_benchmark.py --v1-recall-summary
+```
+
+Generate a fixed-format Layer B report (path/route/space/lifecycle/activation snapshot):
+
+```bash
+python scripts/generate_layer_b_report.py --output "benchmarks/structured_memory/layer_b_report.json" --markdown-output "benchmarks/structured_memory/layer_b_report.md"
 ```
 
 Download the official HotpotQA dev distractor file for local benchmark runs:
@@ -245,10 +251,11 @@ Current run matrix:
 
 - `benchmarks/structured_memory/*.json`: CI
 - `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle)
-- `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI
+- `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI sanity
 - `benchmarks/external/hotpotqa/data/*.json`: local / nightly
-- `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local smoke
-- `benchmarks/external/longmemeval/data/*.json`: local / manual
+- `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local sanity
+- `benchmarks/external/longmemeval/data/*.json`: local / nightly
+- `benchmarks/layer_c_minimal/*`: starter scaffold for the first real-data Layer C set
 
 ## What is in scope for v0
 

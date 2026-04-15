@@ -47,6 +47,16 @@ Write the full suite report JSON to a file:
 python scripts/run_longmemeval_benchmark.py --output "benchmarks/external/longmemeval/data/local-report.json"
 ```
 
+Write a compact summary JSON for dashboards or nightly artifacts:
+
+```bash
+python scripts/run_longmemeval_benchmark.py --summary-output "benchmarks/external/longmemeval/data/local-summary.json"
+```
+
+## Nightly note
+
+The repository now includes `longmemeval-nightly.yml` for scheduled or manual runs against the downloaded cleaned file. It uploads both the full suite report and a compact summary artifact so the LongMemEval baseline can be tracked continuously.
+
 ## Important limitation
 
 This adapter is currently **session-only** and **retrieval-only**:

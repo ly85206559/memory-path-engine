@@ -57,6 +57,9 @@ class StructuredBenchmarkExpectation(BaseModel):
     required_edge_types: list[str] = Field(default_factory=list)
     required_space_ids: list[str] = Field(default_factory=list)
     required_semantic_roles: list[str] = Field(default_factory=list)
+    required_scenario_tags: list[str] = Field(default_factory=list)
+    required_symbolic_tags: list[str] = Field(default_factory=list)
+    required_consolidation_kinds: list[str] = Field(default_factory=list)
     required_contradiction_pairs: list[tuple[str, str]] = Field(default_factory=list)
     required_trace_stop_reasons: list[str] = Field(default_factory=list)
     min_activation_trace_length: int | None = Field(default=None, ge=0)
@@ -125,6 +128,10 @@ class StructuredBenchmarkCaseReport(BaseModel):
     missing_evidence: list[str]
     returned_node_ids: list[str]
     surfaced_semantic_roles: list[str] = Field(default_factory=list)
+    surfaced_scenario_tags: list[str] = Field(default_factory=list)
+    surfaced_symbolic_tags: list[str] = Field(default_factory=list)
+    surfaced_consolidation_kinds: list[str] = Field(default_factory=list)
+    surfaced_lifecycle_states: list[str] = Field(default_factory=list)
     surfaced_contradictions: list[tuple[str, str]] = Field(default_factory=list)
     path_edge_types: list[str] = Field(default_factory=list)
     activated_node_count: int = Field(default=0, ge=0)

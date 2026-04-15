@@ -294,3 +294,20 @@ class BenchmarkFixtureTests(unittest.TestCase):
             top_k=3,
         )
         self.assertFalse(static.case_reports[0].lifecycle_hit)
+
+    def test_encoding_recall_fixture_surfaces_scenario_and_symbolic_tags(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/encoding_recall_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+        self.assertTrue(report.case_reports[0].semantic_hit)
+        self.assertIn("rollback failure", report.case_reports[0].surfaced_scenario_tags)
+        self.assertIn("causal", report.case_reports[0].surfaced_symbolic_tags)
+        self.assertTrue(report.case_reports[1].semantic_hit)
+        self.assertIn("escalation", report.case_reports[1].surfaced_symbolic_tags)

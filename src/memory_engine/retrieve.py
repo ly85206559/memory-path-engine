@@ -108,13 +108,15 @@ class WeightedGraphRetriever:
         memory_state_policy: MemoryStatePolicy | None = None,
     ) -> None:
         self.store = store
+        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
         self.embedding_retriever = EmbeddingTopKRetriever(
             store=store,
             embedding_provider=embedding_provider,
-            memory_state_policy=memory_state_policy,
+            memory_state_policy=self.memory_state_policy,
         )
-        self.scoring_strategy = scoring_strategy or WeightedSumScoringStrategy()
-        self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
+        self.scoring_strategy = scoring_strategy or WeightedSumScoringStrategy(
+            memory_state_policy=self.memory_state_policy,
+        )
         self.contradiction_candidates = contradiction_candidates(
             self.store.nodes(),
             self.store.edges(),

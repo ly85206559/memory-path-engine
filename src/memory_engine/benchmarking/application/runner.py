@@ -48,6 +48,20 @@ class StructuredBenchmarkRunner:
             surfaced_retrieved_item_kinds = sorted(
                 {kind for item in palace_view.retrieved_memories if (kind := item.memory_kind)}
             )
+            surfaced_consolidation_kinds = sorted(
+                {
+                    kind
+                    for item in palace_view.retrieved_memories
+                    if (kind := item.consolidation_kind)
+                }
+            )
+            surfaced_lifecycle_states = sorted(
+                {
+                    state
+                    for item in palace_view.retrieved_memories
+                    if (state := item.lifecycle_state)
+                }
+            )
 
             returned_node_ids = collect_returned_node_ids(result)
             matched_evidence = collect_matched_evidence(case.expectation, returned_node_ids)
@@ -65,6 +79,28 @@ class StructuredBenchmarkRunner:
                     store.get_node(node_id).attributes.get("semantic_role")
                     for node_id in returned_node_ids
                     if store is not None and store.get_node(node_id).attributes.get("semantic_role")
+                }
+            )
+            surfaced_scenario_tags = sorted(
+                {
+                    tag
+                    for node_id in returned_node_ids
+                    for tag in (
+                        store.get_node(node_id).attributes.get("scenario_tags", [])
+                        if store is not None
+                        else []
+                    )
+                }
+            )
+            surfaced_symbolic_tags = sorted(
+                {
+                    tag
+                    for node_id in returned_node_ids
+                    for tag in (
+                        store.get_node(node_id).attributes.get("symbolic_tags", [])
+                        if store is not None
+                        else []
+                    )
                 }
             )
             surfaced_space_ids = sorted(
@@ -96,6 +132,9 @@ class StructuredBenchmarkRunner:
                 case.expectation,
                 surfaced_space_ids=surfaced_space_ids,
                 surfaced_semantic_roles=surfaced_semantic_roles,
+                surfaced_scenario_tags=surfaced_scenario_tags,
+                surfaced_symbolic_tags=surfaced_symbolic_tags,
+                surfaced_consolidation_kinds=surfaced_consolidation_kinds,
                 path_edge_types=path_edge_types,
             )
             activation_trace_hit = evaluate_activation_trace_hit(
@@ -167,6 +206,10 @@ class StructuredBenchmarkRunner:
                     ],
                     returned_node_ids=returned_node_ids,
                     surfaced_semantic_roles=surfaced_semantic_roles,
+                    surfaced_scenario_tags=surfaced_scenario_tags,
+                    surfaced_symbolic_tags=surfaced_symbolic_tags,
+                    surfaced_consolidation_kinds=surfaced_consolidation_kinds,
+                    surfaced_lifecycle_states=surfaced_lifecycle_states,
                     surfaced_contradictions=surfaced_contradiction_pairs,
                     path_edge_types=path_edge_types,
                     activated_node_count=len(returned_node_ids),

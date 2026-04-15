@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 from memory_engine.embeddings import (
     EmbeddingProvider,
@@ -8,6 +8,11 @@ from memory_engine.embeddings import (
     cosine_similarity,
     lexical_overlap,
 )
+from memory_engine.memory.application.encoding_service import (
+    build_encoding_profile,
+    trigger_match_score,
+)
+from memory_engine.memory.domain.encoding import EncodingProfile
 from memory_engine.memory.domain.enums import MemoryKind
 from memory_engine.memory.domain.memory_types import Memory, RouteMemory
 from memory_engine.memory.domain.palace import MemoryPalace
@@ -16,6 +21,7 @@ from memory_engine.memory.domain.seed_selection import (
     SeedSelectionInput,
     SeedSelector,
 )
+from memory_engine.memory_state import MemoryStatePolicy
 
 
 def _memory_space_id(memory: Memory) -> str:
@@ -41,9 +47,26 @@ def _iter_seed_memories(
     return out
 
 
+def _encoding_for_memory(memory: Memory) -> EncodingProfile:
+    if (
+        memory.encoding.trigger_profile.phrases
+        or memory.encoding.trigger_profile.situations
+        or memory.encoding.scenario_tags
+        or memory.encoding.symbolic_tags
+    ):
+        return memory.encoding
+    return build_encoding_profile(
+        memory.content,
+        semantic_role=str(memory.metadata.get("semantic_role") or ""),
+        existing_scenario_tags=tuple(memory.metadata.get("scenario_tags", ())),
+        existing_symbolic_tags=tuple(memory.metadata.get("symbolic_tags", ())),
+    )
+
+
 @dataclass(slots=True)
 class EmbeddingSeedSelector:
     embedder: EmbeddingProvider
+    state_policy: MemoryStatePolicy = field(default_factory=MemoryStatePolicy)
 
     def select_seeds(
         self,
@@ -58,12 +81,14 @@ class EmbeddingSeedSelector:
         scored: list[SeedActivation] = []
         for memory in memories:
             vec = self.embedder.embed(memory.content)
-            score = cosine_similarity(q_vec, vec)
+            trigger_score = trigger_match_score(selection.text, _encoding_for_memory(memory))
+            base_score = min(1.0, cosine_similarity(q_vec, vec) + 0.2 * trigger_score)
+            score = min(1.0, base_score * self.state_policy.recall_multiplier_for_state(memory.state))
             scored.append(
                 SeedActivation(
                     memory_id=memory.memory_id,
                     score=score,
-                    reason="embedding_cosine",
+                    reason="embedding_cosine+trigger" if trigger_score > 0.0 else "embedding_cosine",
                     space_id=_memory_space_id(memory) or None,
                 ),
             )
@@ -76,6 +101,8 @@ class EmbeddingSeedSelector:
 
 @dataclass(slots=True)
 class LexicalSeedSelector:
+    state_policy: MemoryStatePolicy = field(default_factory=MemoryStatePolicy)
+
     def select_seeds(
         self,
         palace: MemoryPalace,
@@ -87,12 +114,15 @@ class LexicalSeedSelector:
 
         scored: list[SeedActivation] = []
         for memory in memories:
-            score = lexical_overlap(selection.text, memory.content)
+            lexical_score = lexical_overlap(selection.text, memory.content)
+            trigger_score = trigger_match_score(selection.text, _encoding_for_memory(memory))
+            base_score = min(1.0, lexical_score + 0.35 * trigger_score)
+            score = min(1.0, base_score * self.state_policy.recall_multiplier_for_state(memory.state))
             scored.append(
                 SeedActivation(
                     memory_id=memory.memory_id,
                     score=score,
-                    reason="lexical_overlap",
+                    reason="trigger_match" if trigger_score > lexical_score else "lexical_overlap",
                     space_id=_memory_space_id(memory) or None,
                 ),
             )
@@ -123,7 +153,7 @@ class HybridSeedSelector:
             l = lex.get(mid)
             if e and l:
                 score = 0.6 * e.score + 0.4 * l.score
-                reason = "hybrid_embed_lex"
+                reason = "hybrid_embed_lex_trigger" if "trigger" in e.reason or "trigger" in l.reason else "hybrid_embed_lex"
                 space_id = e.space_id or l.space_id
             elif e:
                 score = e.score
@@ -148,9 +178,15 @@ class HybridSeedSelector:
         return tuple(positive[: max(1, selection.max_seeds)])
 
 
-def default_hybrid_seed_selector() -> HybridSeedSelector:
+def default_hybrid_seed_selector(
+    *, state_policy: MemoryStatePolicy | None = None
+) -> HybridSeedSelector:
     embedder = HashingEmbeddingProvider()
+    resolved_state_policy = state_policy or MemoryStatePolicy()
     return HybridSeedSelector(
-        embedding_selector=EmbeddingSeedSelector(embedder=embedder),
-        lexical_selector=LexicalSeedSelector(),
+        embedding_selector=EmbeddingSeedSelector(
+            embedder=embedder,
+            state_policy=resolved_state_policy,
+        ),
+        lexical_selector=LexicalSeedSelector(state_policy=resolved_state_policy),
     )

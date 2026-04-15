@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from memory_engine.memory.domain.enums import MemoryKind, MemoryLifecycleState, MemoryLinkType
+from memory_engine.memory.domain.encoding import EncodingProfile, TriggerProfile
 from memory_engine.memory.domain.memory_state import DomainMemoryState
 from memory_engine.memory.domain.memory_types import EpisodicMemory, Memory, RouteMemory, SemanticMemory
 from memory_engine.memory.domain.palace import MemoryLink, MemoryPalace, PalaceSpace
@@ -22,6 +23,10 @@ def memory_to_node(memory: Memory) -> MemoryNode:
             "lifecycle_state": memory.state.state.value,
             "reinforcement_count": memory.state.reinforcement_count,
             "stability_score": memory.state.stability_score,
+            "trigger_phrases": list(memory.encoding.trigger_profile.phrases),
+            "trigger_situations": list(memory.encoding.trigger_profile.situations),
+            "scenario_tags": list(memory.encoding.scenario_tags),
+            "symbolic_tags": list(memory.encoding.symbolic_tags),
         },
         weights=MemoryWeight(
             importance=memory.salience.importance,
@@ -89,6 +94,14 @@ def store_to_palace(store: MemoryStore, *, palace_id: str = "legacy-palace") -> 
             ),
             source=node.source_ref,
             state=state,
+            encoding=EncodingProfile(
+                trigger_profile=TriggerProfile(
+                    phrases=tuple(metadata.get("trigger_phrases", ())),
+                    situations=tuple(metadata.get("trigger_situations", ())),
+                ),
+                scenario_tags=tuple(metadata.get("scenario_tags", ())),
+                symbolic_tags=tuple(metadata.get("symbolic_tags", ())),
+            ),
             metadata=metadata,
         )
         palace.add_memory(memory)

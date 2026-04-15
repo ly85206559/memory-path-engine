@@ -76,3 +76,13 @@ class SpaceSelectionTests(unittest.TestCase):
         out = sel.select_spaces(self.palace, inp)
         self.assertEqual({candidate.space_id for candidate in out}, {"ops", "meet"})
         self.assertTrue(all(candidate.reason == "fallback_all_spaces" for candidate in out))
+
+    def test_location_prior_matches_building_and_room_tokens(self) -> None:
+        sel = HybridSpaceSelector(
+            keyword_selector=KeywordSpaceSelector(),
+            metadata_selector=MetadataSpaceSelector(),
+        )
+        inp = SpaceSelectionInput(text="hq meeting follow-up", max_spaces=1)
+        out = sel.select_spaces(self.palace, inp)
+        self.assertEqual(out[0].space_id, "meet")
+        self.assertIn("location_prior", out[0].reason)

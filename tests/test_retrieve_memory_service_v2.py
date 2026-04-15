@@ -2,6 +2,8 @@ import unittest
 
 from memory_engine.memory.application.query_models import RecallPolicy, RecallQuery
 from memory_engine.memory.application.retrieve_memory_service import RetrieveMemoryService
+from memory_engine.memory.domain.enums import MemoryLifecycleState
+from memory_engine.memory.domain.memory_state import DomainMemoryState
 from memory_engine.memory.domain.memory_types import EpisodicMemory, RouteMemory
 from memory_engine.memory.domain.palace import MemoryLink, MemoryPalace, PalaceSpace
 from memory_engine.memory.domain.enums import MemoryLinkType
@@ -58,6 +60,7 @@ class RetrieveMemoryServiceV2Tests(unittest.TestCase):
         self.assertTrue(result.routes)
         self.assertEqual(result.routes[0].route_source, "route_memory")
         self.assertIn("mem-1", [m.memory_id for m in result.retrieved_memories])
+        self.assertTrue(result.activation_snapshot.steps)
 
     def test_legacy_fallback_when_native_produces_no_memories(self) -> None:
         palace = MemoryPalace(palace_id="empty-ish")
@@ -75,3 +78,112 @@ class RetrieveMemoryServiceV2Tests(unittest.TestCase):
             ),
         )
         self.assertIn("fallback_reason", result.metadata)
+
+
+    def test_native_activation_builds_dependency_route_and_snapshot(self) -> None:
+        palace = MemoryPalace(palace_id="p2")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops Center", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="seed",
+                palace_id="p2",
+                location=loc,
+                content="Rollback failure blocks recovery.",
+                salience=SalienceProfile(0.9, 0.3, 0.4, 0.95),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="dep",
+                palace_id="p2",
+                location=loc,
+                content="Queue drain depends on worker restart.",
+                salience=SalienceProfile(0.8, 0.2, 0.3, 0.92),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_link(
+            MemoryLink(
+                from_memory_id="seed",
+                to_memory_id="dep",
+                link_type=MemoryLinkType.DEPENDS_ON,
+                strength=1.8,
+            )
+        )
+
+        result = RetrieveMemoryService().recall(
+            palace,
+            RecallQuery(
+                palace_id="p2",
+                text="what dependency is needed after rollback failure",
+                policy=RecallPolicy(top_k=3, max_hops=2, retriever_mode="activation_spreading_v1"),
+            ),
+        )
+
+        self.assertTrue(result.activation_snapshot.steps)
+        self.assertTrue(any(route.route_kind == "dependency" for route in result.routes))
+        self.assertTrue(any(route.route_source == "native_activation" for route in result.routes))
+        self.assertIn("dep", [memory.memory_id for memory in result.retrieved_memories])
+
+    def test_static_mode_does_not_apply_lifecycle_bias_in_palace_recall(self) -> None:
+        palace = MemoryPalace(palace_id="p3")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops Center", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="fading-first",
+                palace_id="p3",
+                location=loc,
+                content="Recovery verification checklist",
+                salience=SalienceProfile(0.8, 0.2, 0.3, 0.9),
+                metadata={"space_id": "ops"},
+                state=DomainMemoryState(
+                    state=MemoryLifecycleState.FADING,
+                    reinforcement_count=2,
+                    stability_score=0.2,
+                    decay_factor=0.75,
+                ),
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="active-second",
+                palace_id="p3",
+                location=loc,
+                content="Recovery verification checklist",
+                salience=SalienceProfile(0.8, 0.2, 0.3, 0.9),
+                metadata={"space_id": "ops"},
+                state=DomainMemoryState(
+                    state=MemoryLifecycleState.ACTIVE,
+                    reinforcement_count=2,
+                    stability_score=0.4,
+                    decay_factor=1.0,
+                ),
+            )
+        )
+
+        service = RetrieveMemoryService()
+        static_result = service.recall(
+            palace,
+            RecallQuery(
+                palace_id="p3",
+                text="recovery verification checklist",
+                policy=RecallPolicy(top_k=2, max_hops=0, retriever_mode="activation_spreading_static"),
+            ),
+        )
+        dynamic_result = service.recall(
+            palace,
+            RecallQuery(
+                palace_id="p3",
+                text="recovery verification checklist",
+                policy=RecallPolicy(top_k=2, max_hops=0, retriever_mode="activation_spreading_v1"),
+            ),
+        )
+
+        static_scores = {item.memory_id: item.score for item in static_result.retrieved_memories}
+        dynamic_scores = {item.memory_id: item.score for item in dynamic_result.retrieved_memories}
+
+        self.assertEqual(static_scores["fading-first"], static_scores["active-second"])
+        self.assertGreater(dynamic_scores["active-second"], dynamic_scores["fading-first"])

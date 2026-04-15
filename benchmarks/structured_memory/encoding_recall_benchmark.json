@@ -1,0 +1,30 @@
+{
+  "dataset_id": "encoding-recall-benchmark-v1",
+  "dataset_name": "Encoding recall benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/runbook_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "enc-001",
+      "query": "What should we do when rollback failure prevents recovery?",
+      "tags": ["encoding", "scenario", "rollback"],
+      "expectation": {
+        "evidence_node_ids": ["01_api_incident_runbook:5"],
+        "minimum_evidence_matches": 1,
+        "required_scenario_tags": ["rollback failure"],
+        "required_symbolic_tags": ["causal"]
+      }
+    },
+    {
+      "case_id": "enc-002",
+      "query": "When should we escalate after rollback failure?",
+      "tags": ["encoding", "symbolic", "escalation"],
+      "expectation": {
+        "evidence_node_ids": ["01_api_incident_runbook:6"],
+        "minimum_evidence_matches": 1,
+        "required_scenario_tags": ["rollback failure"],
+        "required_symbolic_tags": ["escalation", "causal"]
+      }
+    }
+  ]
+}

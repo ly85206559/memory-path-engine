@@ -117,6 +117,9 @@ def evaluate_semantic_hit(
     *,
     surfaced_space_ids: list[str],
     surfaced_semantic_roles: list[str],
+    surfaced_scenario_tags: list[str],
+    surfaced_symbolic_tags: list[str],
+    surfaced_consolidation_kinds: list[str],
     path_edge_types: list[str],
 ) -> bool | None:
     checks = []
@@ -125,6 +128,18 @@ def evaluate_semantic_hit(
     if expectation.required_semantic_roles:
         checks.append(
             all(role in surfaced_semantic_roles for role in expectation.required_semantic_roles)
+        )
+    if expectation.required_scenario_tags:
+        checks.append(
+            all(tag in surfaced_scenario_tags for tag in expectation.required_scenario_tags)
+        )
+    if expectation.required_symbolic_tags:
+        checks.append(
+            all(tag in surfaced_symbolic_tags for tag in expectation.required_symbolic_tags)
+        )
+    if expectation.required_consolidation_kinds:
+        checks.append(
+            all(kind in surfaced_consolidation_kinds for kind in expectation.required_consolidation_kinds)
         )
     if expectation.required_edge_types:
         checks.append(

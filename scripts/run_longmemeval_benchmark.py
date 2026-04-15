@@ -22,6 +22,24 @@ def _parse_modes(value: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
+def build_summary_payload(suite, *, dataset_path: Path, sample_count: int, granularity: str) -> dict:
+    return {
+        "dataset": str(dataset_path),
+        "samples": sample_count,
+        "granularity": granularity,
+        "modes": {
+            mode_name: {
+                "questions": report.questions,
+                "recall_at_5": report.recall_at_5,
+                "recall_at_10": report.recall_at_10,
+                "ndcg_at_10": report.ndcg_at_10,
+                "avg_latency_ms": report.avg_latency_ms,
+            }
+            for mode_name, report in suite.modes.items()
+        },
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run the LongMemEval benchmark adapter on a local JSON file."
@@ -71,6 +89,12 @@ def main() -> None:
         default=None,
         help="Optional path to write the full suite report JSON.",
     )
+    parser.add_argument(
+        "--summary-output",
+        type=Path,
+        default=None,
+        help="Optional path to write a compact nightly-friendly summary JSON.",
+    )
     args = parser.parse_args()
 
     dataset_path = args.dataset
@@ -95,6 +119,22 @@ def main() -> None:
             output_path = (repo_root() / output_path).resolve()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(suite.model_dump_json(indent=2), encoding="utf-8")
+
+    summary_payload = build_summary_payload(
+        suite,
+        dataset_path=dataset_path,
+        sample_count=len(samples),
+        granularity=args.granularity,
+    )
+    if args.summary_output is not None:
+        summary_output_path = args.summary_output
+        if not summary_output_path.is_absolute():
+            summary_output_path = (repo_root() / summary_output_path).resolve()
+        summary_output_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_output_path.write_text(
+            json.dumps(summary_payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     if args.pretty:
         print(suite.model_dump_json(indent=2))
@@ -127,20 +167,8 @@ def main() -> None:
     print(f"granularity: {args.granularity}")
     print(f"modes: {', '.join(suite.modes)}")
     print()
-    for mode_name, report in suite.modes.items():
-        print(
-            json.dumps(
-                {
-                    "mode": mode_name,
-                    "questions": report.questions,
-                    "recall_at_5": report.recall_at_5,
-                    "recall_at_10": report.recall_at_10,
-                    "ndcg_at_10": report.ndcg_at_10,
-                    "avg_latency_ms": report.avg_latency_ms,
-                },
-                ensure_ascii=False,
-            )
-        )
+    for mode_name, mode_summary in summary_payload["modes"].items():
+        print(json.dumps({"mode": mode_name, **mode_summary}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

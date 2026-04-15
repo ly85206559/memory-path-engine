@@ -1,5 +1,8 @@
 import unittest
 
+from memory_engine.memory.domain.memory_state import DomainMemoryState
+from memory_engine.memory.domain.enums import MemoryLifecycleState
+from memory_engine.memory.domain.encoding import EncodingProfile, TriggerProfile
 from memory_engine.memory.application.seed_selection_service import (
     LexicalSeedSelector,
     default_hybrid_seed_selector,
@@ -78,3 +81,48 @@ class SeedSelectionTests(unittest.TestCase):
         )
         out = sel.select_seeds(self.palace, inp)
         self.assertEqual(out, ())
+
+    def test_trigger_matching_boosts_seed_ranking(self) -> None:
+        self.palace.memories["mem-a"].encoding = EncodingProfile(
+            trigger_profile=TriggerProfile(
+                phrases=("payment dispute",),
+                situations=("during payment dispute",),
+            ),
+            scenario_tags=("payment dispute",),
+            symbolic_tags=("conflict",),
+        )
+        sel = default_hybrid_seed_selector()
+        inp = SeedSelectionInput(
+            text="how to resolve a payment dispute",
+            allowed_space_ids=(),
+            max_seeds=2,
+        )
+        out = sel.select_seeds(self.palace, inp)
+        self.assertEqual(out[0].memory_id, "mem-a")
+        self.assertIn("trigger", out[0].reason)
+
+    def test_state_aware_seed_ranking_prefers_active_over_fading(self) -> None:
+        self.palace.memories["mem-a"].content = "Recovery verification checklist"
+        self.palace.memories["mem-b"].content = "Recovery verification checklist"
+        self.palace.memories["mem-a"].state = DomainMemoryState(
+            state=MemoryLifecycleState.ACTIVE,
+            reinforcement_count=2,
+            stability_score=0.4,
+            decay_factor=1.0,
+        )
+        self.palace.memories["mem-b"].state = DomainMemoryState(
+            state=MemoryLifecycleState.FADING,
+            reinforcement_count=2,
+            stability_score=0.2,
+            decay_factor=0.75,
+        )
+        sel = LexicalSeedSelector()
+        out = sel.select_seeds(
+            self.palace,
+            SeedSelectionInput(
+                text="recovery verification checklist",
+                allowed_space_ids=(),
+                max_seeds=2,
+            ),
+        )
+        self.assertEqual(out[0].memory_id, "mem-a")

@@ -76,6 +76,7 @@ class WeightedSumScoringStrategy:
             + exception_score * context.exception_weight * weighted_bonus_gate
             + contradiction_score * context.contradiction_weight * weighted_bonus_gate
         )
+        total_score *= self.memory_state_policy.recall_multiplier(node)
         return ScoreBreakdown(
             semantic_score=semantic_score,
             structural_score=structural_score,

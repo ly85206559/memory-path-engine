@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from memory_engine.memory.domain.encoding import EncodingProfile
 from memory_engine.memory.domain.enums import MemoryKind
 from memory_engine.memory.domain.memory_state import DomainMemoryState
 from memory_engine.memory.domain.value_objects import PalaceLocation, SalienceProfile
@@ -19,6 +20,7 @@ class Memory:
     salience: SalienceProfile
     source: EvidenceRef | None = None
     state: DomainMemoryState = field(default_factory=DomainMemoryState)
+    encoding: EncodingProfile = field(default_factory=EncodingProfile)
     metadata: dict[str, Any] = field(default_factory=dict)
 
 

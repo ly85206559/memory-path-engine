@@ -42,6 +42,27 @@ class MemoryStatePolicy:
         score = (weight.bounded_score() + usage_bonus) * weight.decay_factor
         return max(0.0, min(score, 1.0))
 
+    def recall_multiplier(self, node: MemoryNode) -> float:
+        return self.recall_multiplier_for_state(self._read_domain_state(node))
+
+    def recall_multiplier_for_state(self, state: DomainMemoryState) -> float:
+        base = {
+            MemoryLifecycleState.ENCODED: 0.95,
+            MemoryLifecycleState.ACTIVE: 1.2,
+            MemoryLifecycleState.STABILIZING: 1.08,
+            MemoryLifecycleState.CONSOLIDATED: 1.12,
+            MemoryLifecycleState.FADING: 0.65,
+            MemoryLifecycleState.ARCHIVED: 0.3,
+        }[state.state]
+        stability_bonus = 0.0
+        if state.state in {
+            MemoryLifecycleState.ACTIVE,
+            MemoryLifecycleState.STABILIZING,
+            MemoryLifecycleState.CONSOLIDATED,
+        }:
+            stability_bonus = min(0.1, state.stability_score * 0.12)
+        return max(0.2, min(base + stability_bonus, 1.35))
+
     def propagation_factor(self, node: MemoryNode) -> float:
         return max(0.0, min(node.weights.decay_factor, 1.0))
 
@@ -85,6 +106,14 @@ class StaticMemoryStatePolicy(MemoryStatePolicy):
 
     def propagation_factor(self, node: MemoryNode) -> float:
         del node
+        return 1.0
+
+    def recall_multiplier(self, node: MemoryNode) -> float:
+        del node
+        return 1.0
+
+    def recall_multiplier_for_state(self, state: DomainMemoryState) -> float:
+        del state
         return 1.0
 
 

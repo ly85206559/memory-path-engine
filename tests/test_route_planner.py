@@ -147,3 +147,126 @@ class RoutePlannerTests(unittest.TestCase):
         )
         self.assertEqual(routes[0].route_source, "legacy_path")
         self.assertEqual(routes[0].step_memory_ids, ("a", "b"))
+
+    def test_route_kind_bonus_prefers_dependency_route(self) -> None:
+        palace = MemoryPalace(palace_id="p1")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="seed",
+                palace_id="p1",
+                location=loc,
+                content="Service recovery depends on queue drain.",
+                salience=SalienceProfile(0.8, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id="route-dep",
+                palace_id="p1",
+                location=loc,
+                content="Queue drain depends on worker restart.",
+                salience=SalienceProfile(0.5, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+                route_id="route-dep",
+                start_memory_id="seed",
+                ordered_waypoints=("seed",),
+                route_kind="dependency",
+            )
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id="route-time",
+                palace_id="p1",
+                location=loc,
+                content="First restart, then validate metrics.",
+                salience=SalienceProfile(0.5, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+                route_id="route-time",
+                start_memory_id="seed",
+                ordered_waypoints=("seed",),
+                route_kind="timeline",
+            )
+        )
+        routes = DefaultRoutePlanner().plan_routes(
+            palace,
+            RoutePlanningInput(text="what dependency causes queue drain recovery", top_k=2, max_hops=2),
+            (SeedActivation(memory_id="seed", score=0.9, reason="seed", space_id="ops"),),
+        )
+        self.assertEqual(routes[0].route_kind, "dependency")
+
+    def test_route_kind_bonus_prefers_semantic_summary_route(self) -> None:
+        palace = MemoryPalace(palace_id="p1")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="seed",
+                palace_id="p1",
+                location=loc,
+                content="Repeated incident pattern.",
+                salience=SalienceProfile(0.8, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id="route-summary",
+                palace_id="p1",
+                location=loc,
+                content="Abstract summary of the repeated recovery pattern.",
+                salience=SalienceProfile(0.5, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+                route_id="route-summary",
+                start_memory_id="seed",
+                ordered_waypoints=("seed",),
+                route_kind="semantic-summary",
+            )
+        )
+        routes = DefaultRoutePlanner().plan_routes(
+            palace,
+            RoutePlanningInput(text="give me the abstract summary pattern", top_k=1, max_hops=2),
+            (SeedActivation(memory_id="seed", score=0.9, reason="seed", space_id="ops"),),
+        )
+        self.assertEqual(routes[0].route_kind, "semantic-summary")
+
+    def test_legacy_fallback_route_kind_can_be_inferred_from_query(self) -> None:
+        palace = MemoryPalace(palace_id="p1")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="a",
+                palace_id="p1",
+                location=loc,
+                content="Base rule",
+                salience=SalienceProfile(0.8, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="b",
+                palace_id="p1",
+                location=loc,
+                content="Exception override",
+                salience=SalienceProfile(0.7, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_link(
+            MemoryLink(
+                from_memory_id="a",
+                to_memory_id="b",
+                link_type=MemoryLinkType.EXCEPTION_TO,
+                strength=1.5,
+            )
+        )
+        routes = DefaultRoutePlanner().plan_routes(
+            palace,
+            RoutePlanningInput(text="what exception overrides the base rule", top_k=1, max_hops=1),
+            (SeedActivation(memory_id="a", score=1.0, reason="seed", space_id="ops"),),
+        )
+        self.assertEqual(routes[0].route_kind, "exception")

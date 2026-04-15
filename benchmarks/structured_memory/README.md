@@ -55,6 +55,14 @@ Current expectation fields:
 - `min_activation_trace_length`
 - `max_activation_trace_length`
 
+Layer B reports should now also surface fixed aggregates for:
+
+- `path_hit_rate`
+- `route_hit_rate`
+- `space_hit_rate`
+- `lifecycle_hit_rate`
+- `activation_snapshot_hit_rate`
+
 ## Current fixtures
 
 - `example_contract_benchmark.json`
@@ -68,6 +76,12 @@ Current expectation fields:
 - `structure_ablation_benchmark.json`
 
 These fixtures are intentionally small. They are meant to support TDD and architectural iteration before larger benchmark suites are introduced.
+
+To generate a fixed-format Layer B report across the current palace-oriented fixtures:
+
+```bash
+python scripts/generate_layer_b_report.py --output "benchmarks/structured_memory/layer_b_report.json" --markdown-output "benchmarks/structured_memory/layer_b_report.md"
+```
 
 ## Dynamic Memory Priming
 

@@ -644,3 +644,61 @@ class StructuredBenchmarkRunnerTests(unittest.TestCase):
         )
         result_bad = RetrievalResult(query="q", paths=[], palace_result=bad)
         self.assertFalse(evaluate_route_hit(expectation, result_bad))
+
+    def test_runner_surfaces_consolidation_kind_and_lifecycle_state(self) -> None:
+        from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkDataset
+        from memory_engine.memory.domain.retrieval_result import PalaceRecallResult, RetrievedMemory
+        from memory_engine.schema import RetrievalResult
+
+        class FakeRetriever:
+            def search(self, query: str, top_k: int = 3) -> RetrievalResult:
+                del query, top_k
+                palace_result = PalaceRecallResult(
+                    query="q",
+                    retrieved_memories=(
+                        RetrievedMemory(
+                            memory_id="semantic:rollback_failure:generalized_rule_memory",
+                            score=0.95,
+                            reason="rule",
+                            memory_kind="semantic",
+                            lifecycle_state="consolidated",
+                            consolidation_kind="generalized_rule_memory",
+                        ),
+                    ),
+                )
+                return RetrievalResult(query="q", paths=[], palace_result=palace_result)
+
+        dataset = StructuredBenchmarkDataset.model_validate(
+            {
+                "dataset_id": "consolidation-hook-benchmark-v1",
+                "dataset_name": "Consolidation hook benchmark",
+                "domain_pack_name": "example_runbook_pack",
+                "document_directory": "runbooks",
+                "cases": [
+                    {
+                        "case_id": "c-hook-001",
+                        "query": "What generalized rule applies to rollback failure?",
+                        "expectation": {
+                            "evidence_node_ids": ["semantic:rollback_failure:generalized_rule_memory"],
+                            "minimum_evidence_matches": 1,
+                            "required_consolidation_kinds": ["generalized_rule_memory"],
+                        },
+                    }
+                ],
+            }
+        )
+
+        report = StructuredBenchmarkRunner().run(
+            dataset=dataset,
+            retriever_name="fake_palace",
+            retriever=FakeRetriever(),
+            top_k=3,
+        )
+
+        self.assertTrue(report.case_reports[0].semantic_hit)
+        self.assertIn(
+            "generalized_rule_memory",
+            report.case_reports[0].surfaced_consolidation_kinds,
+        )
+        self.assertIn("consolidated", report.case_reports[0].surfaced_lifecycle_states)
