@@ -1,0 +1,37 @@
+{
+  "dataset_id": "activation-snapshot-benchmark-v1",
+  "dataset_name": "Activation snapshot benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "../../examples/runbook_pack/runbooks",
+  "cases": [
+    {
+      "case_id": "snapshot-001",
+      "query": "If rollback does not recover service and slow queries continue, who should we escalate to?",
+      "tags": ["snapshot", "multi-hop", "runbook"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_api_incident_runbook:5",
+          "01_api_incident_runbook:6"
+        ],
+        "minimum_evidence_matches": 2,
+        "activation_snapshot": {
+          "match_mode": "subsequence",
+          "steps": [
+            {
+              "node_id": "01_api_incident_runbook:6",
+              "hop": 0,
+              "is_seed": true
+            },
+            {
+              "node_id": "01_api_incident_runbook:5",
+              "edge_type": "depends_on",
+              "hop": 1
+            }
+          ]
+        },
+        "required_edge_types": ["depends_on"],
+        "required_semantic_roles": ["escalation"]
+      }
+    }
+  ]
+}

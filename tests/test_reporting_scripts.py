@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from scripts.generate_layer_b_report import render_markdown_report
+from scripts.generate_layer_b_report import DEFAULT_FIXTURES, render_markdown_report
 from scripts.run_longmemeval_benchmark import build_summary_payload
 
 
@@ -13,10 +13,17 @@ class ReportingScriptsTests(unittest.TestCase):
             "overall": {
                 "weighted_graph": {
                     "path_hit_rate": 0.5,
+                    "path_hit_cases": 2,
                     "route_hit_rate": 0.75,
+                    "route_hit_cases": 4,
                     "space_hit_rate": 1.0,
+                    "space_hit_cases": 1,
                     "lifecycle_hit_rate": 0.25,
+                    "lifecycle_hit_cases": 1,
+                    "activation_trace_hit_rate": 0.5,
+                    "activation_trace_hit_cases": 2,
                     "activation_snapshot_hit_rate": 0.5,
+                    "activation_snapshot_hit_cases": 2,
                 }
             },
             "per_fixture": [
@@ -25,10 +32,17 @@ class ReportingScriptsTests(unittest.TestCase):
                     "modes": {
                         "weighted_graph": {
                             "path_hit_rate": 0.5,
+                            "path_hit_cases": 2,
                             "route_hit_rate": 0.75,
+                            "route_hit_cases": 4,
                             "space_hit_rate": 1.0,
+                            "space_hit_cases": 1,
                             "lifecycle_hit_rate": 0.25,
+                            "lifecycle_hit_cases": 1,
+                            "activation_trace_hit_rate": 0.5,
+                            "activation_trace_hit_cases": 2,
                             "activation_snapshot_hit_rate": 0.5,
+                            "activation_snapshot_hit_cases": 2,
                         }
                     },
                 }
@@ -41,7 +55,17 @@ class ReportingScriptsTests(unittest.TestCase):
         self.assertIn("route_hit_rate", markdown)
         self.assertIn("space_hit_rate", markdown)
         self.assertIn("lifecycle_hit_rate", markdown)
+        self.assertIn("activation_trace_hit_rate", markdown)
         self.assertIn("activation_snapshot_hit_rate", markdown)
+        self.assertIn("path_cases", markdown)
+        self.assertIn("trace_cases", markdown)
+        self.assertIn("snapshot_cases", markdown)
+
+    def test_default_layer_b_fixtures_include_path_and_trace_coverage(self) -> None:
+        self.assertIn("exception_override_benchmark.json", DEFAULT_FIXTURES)
+        self.assertIn("exception_override_path_benchmark.json", DEFAULT_FIXTURES)
+        self.assertIn("multi_hop_chain_benchmark.json", DEFAULT_FIXTURES)
+        self.assertIn("activation_snapshot_benchmark.json", DEFAULT_FIXTURES)
 
     def test_build_longmemeval_summary_payload_compacts_mode_metrics(self) -> None:
         class _ModeReport:

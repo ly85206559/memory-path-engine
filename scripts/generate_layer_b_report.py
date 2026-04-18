@@ -12,6 +12,10 @@ DEFAULT_FIXTURES = (
     "state_transition_benchmark.json",
     "encoding_recall_benchmark.json",
     "consolidation_gain_benchmark.json",
+    "exception_override_benchmark.json",
+    "exception_override_path_benchmark.json",
+    "multi_hop_chain_benchmark.json",
+    "activation_snapshot_benchmark.json",
 )
 
 
@@ -22,13 +26,20 @@ def repo_root() -> Path:
 def build_layer_b_report(*, dataset_names: tuple[str, ...], retriever_modes: tuple[str, ...]) -> dict:
     service = StructuredBenchmarkEvaluationService()
     report_rows: list[dict] = []
-    aggregate: dict[str, dict[str, list[float]]] = {
+    aggregate: dict[str, dict[str, float]] = {
         mode: {
-            "path_hit_rate": [],
-            "route_hit_rate": [],
-            "space_hit_rate": [],
-            "lifecycle_hit_rate": [],
-            "activation_snapshot_hit_rate": [],
+            "path_hit_hits": 0.0,
+            "path_hit_cases": 0.0,
+            "route_hit_hits": 0.0,
+            "route_hit_cases": 0.0,
+            "space_hit_hits": 0.0,
+            "space_hit_cases": 0.0,
+            "lifecycle_hit_hits": 0.0,
+            "lifecycle_hit_cases": 0.0,
+            "activation_trace_hit_hits": 0.0,
+            "activation_trace_hit_cases": 0.0,
+            "activation_snapshot_hit_hits": 0.0,
+            "activation_snapshot_hit_cases": 0.0,
         }
         for mode in retriever_modes
     }
@@ -48,20 +59,97 @@ def build_layer_b_report(*, dataset_names: tuple[str, ...], retriever_modes: tup
         for mode_name, mode_summary in suite.comparison.mode_summary.items():
             mode_metrics = {
                 "path_hit_rate": mode_summary.path_hit_rate,
+                "path_hit_cases": mode_summary.path_hit_cases,
                 "route_hit_rate": mode_summary.route_hit_rate,
+                "route_hit_cases": mode_summary.route_hit_cases,
                 "space_hit_rate": mode_summary.space_hit_rate,
+                "space_hit_cases": mode_summary.space_hit_cases,
                 "lifecycle_hit_rate": mode_summary.lifecycle_hit_rate,
+                "lifecycle_hit_cases": mode_summary.lifecycle_hit_cases,
+                "activation_trace_hit_rate": mode_summary.activation_trace_hit_rate,
+                "activation_trace_hit_cases": mode_summary.activation_trace_hit_cases,
                 "activation_snapshot_hit_rate": mode_summary.activation_snapshot_hit_rate,
+                "activation_snapshot_hit_cases": mode_summary.activation_snapshot_hit_cases,
             }
             row["modes"][mode_name] = mode_metrics
-            for metric_name, metric_value in mode_metrics.items():
-                aggregate[mode_name][metric_name].append(metric_value)
+            aggregate[mode_name]["path_hit_hits"] += (
+                mode_summary.path_hit_rate * mode_summary.path_hit_cases
+            )
+            aggregate[mode_name]["path_hit_cases"] += mode_summary.path_hit_cases
+            aggregate[mode_name]["route_hit_hits"] += (
+                mode_summary.route_hit_rate * mode_summary.route_hit_cases
+            )
+            aggregate[mode_name]["route_hit_cases"] += mode_summary.route_hit_cases
+            aggregate[mode_name]["space_hit_hits"] += (
+                mode_summary.space_hit_rate * mode_summary.space_hit_cases
+            )
+            aggregate[mode_name]["space_hit_cases"] += mode_summary.space_hit_cases
+            aggregate[mode_name]["lifecycle_hit_hits"] += (
+                mode_summary.lifecycle_hit_rate * mode_summary.lifecycle_hit_cases
+            )
+            aggregate[mode_name]["lifecycle_hit_cases"] += mode_summary.lifecycle_hit_cases
+            aggregate[mode_name]["activation_trace_hit_hits"] += (
+                mode_summary.activation_trace_hit_rate
+                * mode_summary.activation_trace_hit_cases
+            )
+            aggregate[mode_name]["activation_trace_hit_cases"] += (
+                mode_summary.activation_trace_hit_cases
+            )
+            aggregate[mode_name]["activation_snapshot_hit_hits"] += (
+                mode_summary.activation_snapshot_hit_rate
+                * mode_summary.activation_snapshot_hit_cases
+            )
+            aggregate[mode_name]["activation_snapshot_hit_cases"] += (
+                mode_summary.activation_snapshot_hit_cases
+            )
         report_rows.append(row)
 
     overall = {
         mode_name: {
-            metric_name: round(sum(values) / len(values), 6) if values else 0.0
-            for metric_name, values in metric_groups.items()
+            "path_hit_rate": round(
+                metric_groups["path_hit_hits"] / metric_groups["path_hit_cases"],
+                6,
+            )
+            if metric_groups["path_hit_cases"]
+            else 0.0,
+            "path_hit_cases": int(metric_groups["path_hit_cases"]),
+            "route_hit_rate": round(
+                metric_groups["route_hit_hits"] / metric_groups["route_hit_cases"],
+                6,
+            )
+            if metric_groups["route_hit_cases"]
+            else 0.0,
+            "route_hit_cases": int(metric_groups["route_hit_cases"]),
+            "space_hit_rate": round(
+                metric_groups["space_hit_hits"] / metric_groups["space_hit_cases"],
+                6,
+            )
+            if metric_groups["space_hit_cases"]
+            else 0.0,
+            "space_hit_cases": int(metric_groups["space_hit_cases"]),
+            "lifecycle_hit_rate": round(
+                metric_groups["lifecycle_hit_hits"] / metric_groups["lifecycle_hit_cases"],
+                6,
+            )
+            if metric_groups["lifecycle_hit_cases"]
+            else 0.0,
+            "lifecycle_hit_cases": int(metric_groups["lifecycle_hit_cases"]),
+            "activation_trace_hit_rate": round(
+                metric_groups["activation_trace_hit_hits"]
+                / metric_groups["activation_trace_hit_cases"],
+                6,
+            )
+            if metric_groups["activation_trace_hit_cases"]
+            else 0.0,
+            "activation_trace_hit_cases": int(metric_groups["activation_trace_hit_cases"]),
+            "activation_snapshot_hit_rate": round(
+                metric_groups["activation_snapshot_hit_hits"]
+                / metric_groups["activation_snapshot_hit_cases"],
+                6,
+            )
+            if metric_groups["activation_snapshot_hit_cases"]
+            else 0.0,
+            "activation_snapshot_hit_cases": int(metric_groups["activation_snapshot_hit_cases"]),
         }
         for mode_name, metric_groups in aggregate.items()
     }
@@ -82,14 +170,17 @@ def render_markdown_report(report: dict) -> str:
         "",
         "## Overall",
         "",
-        "| Mode | path_hit_rate | route_hit_rate | space_hit_rate | lifecycle_hit_rate | activation_snapshot_hit_rate |",
-        "| --- | ---: | ---: | ---: | ---: | ---: |",
+        "| Mode | path_hit_rate | path_cases | route_hit_rate | route_cases | space_hit_rate | space_cases | lifecycle_hit_rate | lifecycle_cases | activation_trace_hit_rate | trace_cases | activation_snapshot_hit_rate | snapshot_cases |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for mode_name, metrics in report["overall"].items():
         lines.append(
-            f"| {mode_name} | {metrics['path_hit_rate']:.3f} | {metrics['route_hit_rate']:.3f} | "
-            f"{metrics['space_hit_rate']:.3f} | {metrics['lifecycle_hit_rate']:.3f} | "
-            f"{metrics['activation_snapshot_hit_rate']:.3f} |"
+            f"| {mode_name} | {metrics['path_hit_rate']:.3f} | {metrics['path_hit_cases']} | "
+            f"{metrics['route_hit_rate']:.3f} | {metrics['route_hit_cases']} | "
+            f"{metrics['space_hit_rate']:.3f} | {metrics['space_hit_cases']} | "
+            f"{metrics['lifecycle_hit_rate']:.3f} | {metrics['lifecycle_hit_cases']} | "
+            f"{metrics['activation_trace_hit_rate']:.3f} | {metrics['activation_trace_hit_cases']} | "
+            f"{metrics['activation_snapshot_hit_rate']:.3f} | {metrics['activation_snapshot_hit_cases']} |"
         )
 
     lines.extend(["", "## Per Fixture", ""])
@@ -97,14 +188,17 @@ def render_markdown_report(report: dict) -> str:
         lines.append(f"### {fixture['datasets']}")
         lines.append("")
         lines.append(
-            "| Mode | path_hit_rate | route_hit_rate | space_hit_rate | lifecycle_hit_rate | activation_snapshot_hit_rate |"
+            "| Mode | path_hit_rate | path_cases | route_hit_rate | route_cases | space_hit_rate | space_cases | lifecycle_hit_rate | lifecycle_cases | activation_trace_hit_rate | trace_cases | activation_snapshot_hit_rate | snapshot_cases |"
         )
-        lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
+        lines.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |")
         for mode_name, metrics in fixture["modes"].items():
             lines.append(
-                f"| {mode_name} | {metrics['path_hit_rate']:.3f} | {metrics['route_hit_rate']:.3f} | "
-                f"{metrics['space_hit_rate']:.3f} | {metrics['lifecycle_hit_rate']:.3f} | "
-                f"{metrics['activation_snapshot_hit_rate']:.3f} |"
+                f"| {mode_name} | {metrics['path_hit_rate']:.3f} | {metrics['path_hit_cases']} | "
+                f"{metrics['route_hit_rate']:.3f} | {metrics['route_hit_cases']} | "
+                f"{metrics['space_hit_rate']:.3f} | {metrics['space_hit_cases']} | "
+                f"{metrics['lifecycle_hit_rate']:.3f} | {metrics['lifecycle_hit_cases']} | "
+                f"{metrics['activation_trace_hit_rate']:.3f} | {metrics['activation_trace_hit_cases']} | "
+                f"{metrics['activation_snapshot_hit_rate']:.3f} | {metrics['activation_snapshot_hit_cases']} |"
             )
         lines.append("")
     return "\n".join(lines).strip() + "\n"

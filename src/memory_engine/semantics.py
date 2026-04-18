@@ -108,6 +108,16 @@ def semantic_score_signals(
     )
 
 
+def query_role_alignment_score(query: str, node: MemoryNode) -> float:
+    lowered = query.lower()
+    role_name = node.attributes.get("semantic_role")
+    if role_name == SemanticRole.ESCALATION.value and any(
+        token in lowered for token in ("escalate", "escalation", "page", "who should")
+    ):
+        return 1.0
+    return 0.0
+
+
 def contradiction_bonus(
     *,
     node_id: str,

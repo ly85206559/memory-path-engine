@@ -102,15 +102,67 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
 
         self.assertEqual(
             suite_report.comparison.mode_summary["weighted_graph"].activation_trace_hit_rate,
-            0.0,
+            1.0,
         )
         self.assertEqual(
             suite_report.comparison.mode_summary["activation_spreading_v1"].activation_trace_hit_rate,
             1.0,
         )
         first_question = suite_report.comparison.per_question[0]
-        self.assertFalse(first_question.modes["weighted_graph"].activation_trace_hit)
+        self.assertTrue(first_question.modes["weighted_graph"].activation_trace_hit)
         self.assertTrue(first_question.modes["activation_spreading_v1"].activation_trace_hit)
+        self.assertEqual(
+            suite_report.comparison.mode_summary["weighted_graph"].activation_trace_hit_cases,
+            1,
+        )
+        self.assertEqual(
+            suite_report.comparison.mode_summary["activation_spreading_v1"].activation_trace_hit_cases,
+            1,
+        )
+
+    def test_optional_metric_hit_rate_uses_only_applicable_cases(self):
+        from memory_engine.benchmarking.application.service import build_comparison_report
+        from memory_engine.benchmarking.domain.models import StructuredBenchmarkCaseReport, StructuredBenchmarkReport
+
+        report = StructuredBenchmarkReport(
+            dataset_id="d1",
+            retriever_name="fake",
+            questions=2,
+            evidence_hit_rate=1.0,
+            evidence_recall=1.0,
+            avg_latency_ms=1.0,
+            case_reports=[
+                StructuredBenchmarkCaseReport(
+                    case_id="c1",
+                    query="q1",
+                    evidence_hit=True,
+                    hit=True,
+                    path_hit=True,
+                    expected_evidence=["a"],
+                    matched_evidence=["a"],
+                    missing_evidence=[],
+                    returned_node_ids=["a"],
+                    latency_ms=1.0,
+                ),
+                StructuredBenchmarkCaseReport(
+                    case_id="c2",
+                    query="q2",
+                    evidence_hit=True,
+                    hit=True,
+                    path_hit=None,
+                    expected_evidence=["b"],
+                    matched_evidence=["b"],
+                    missing_evidence=[],
+                    returned_node_ids=["b"],
+                    latency_ms=1.0,
+                ),
+            ],
+        )
+
+        comparison = build_comparison_report({"fake": report})
+
+        self.assertEqual(comparison.mode_summary["fake"].path_hit_rate, 1.0)
+        self.assertEqual(comparison.mode_summary["fake"].path_hit_cases, 1)
 
     def test_suite_supports_dynamic_memory_experiment_modes(self):
         from memory_engine.benchmarking.application.service import (
@@ -219,13 +271,13 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
         )
 
         first_question = suite_report.comparison.per_question[0]
-        self.assertFalse(first_question.modes["weighted_graph"].hit)
+        self.assertTrue(first_question.modes["weighted_graph"].hit)
         self.assertTrue(first_question.modes["activation_spreading_v1"].hit)
-        self.assertTrue(
-            suite_report.comparison.mode_summary["activation_spreading_v1"].contradiction_hit_rate
-            >= suite_report.comparison.mode_summary["weighted_graph"].contradiction_hit_rate
+        self.assertEqual(
+            suite_report.comparison.mode_summary["activation_spreading_v1"].contradiction_hit_rate,
+            suite_report.comparison.mode_summary["weighted_graph"].contradiction_hit_rate,
         )
-        self.assertGreater(
+        self.assertEqual(
             suite_report.comparison.mode_summary["activation_spreading_v1"].path_hit_rate,
             suite_report.comparison.mode_summary["weighted_graph"].path_hit_rate,
         )

@@ -6,7 +6,7 @@ from typing import Protocol
 from memory_engine.anomaly import AnomalyPolicy, ThresholdAnomalyPolicy
 from memory_engine.memory_state import MemoryStatePolicy
 from memory_engine.schema import ActivationContext, MemoryNode
-from memory_engine.semantics import semantic_score_signals
+from memory_engine.semantics import query_role_alignment_score, semantic_score_signals
 
 
 @dataclass(slots=True)
@@ -18,6 +18,7 @@ class ScoreBreakdown:
     exception_score: float
     contradiction_score: float
     total_score: float
+    role_alignment_score: float = 0.0
 
 
 class ScoringStrategy(Protocol):
@@ -60,13 +61,13 @@ class WeightedSumScoringStrategy:
         depth: int,
         source_node_id: str | None = None,
     ) -> ScoreBreakdown:
-        del query
         structural_score = max(0.0, 1.0 - depth * self.depth_penalty)
         anomaly_score = 1.0 if self._is_anomalous(node) else 0.0
         importance_score = self.memory_state_policy.effective_weight_score(node.weights)
         semantic_signals = semantic_score_signals(node, source_node_id=source_node_id)
         exception_score = semantic_signals.exception_score
         contradiction_score = semantic_signals.contradiction_score
+        role_alignment_score = query_role_alignment_score(query, node)
         weighted_bonus_gate = semantic_score
         total_score = (
             semantic_score * context.semantic_weight
@@ -75,6 +76,7 @@ class WeightedSumScoringStrategy:
             + importance_score * context.importance_weight * weighted_bonus_gate
             + exception_score * context.exception_weight * weighted_bonus_gate
             + contradiction_score * context.contradiction_weight * weighted_bonus_gate
+            + role_alignment_score * 0.12 * weighted_bonus_gate
         )
         total_score *= self.memory_state_policy.recall_multiplier(node)
         return ScoreBreakdown(
@@ -84,6 +86,7 @@ class WeightedSumScoringStrategy:
             importance_score=importance_score,
             exception_score=exception_score,
             contradiction_score=contradiction_score,
+            role_alignment_score=role_alignment_score,
             total_score=total_score,
         )
 
@@ -118,5 +121,6 @@ class StructureOnlyScoringStrategy:
             importance_score=0.0,
             exception_score=0.0,
             contradiction_score=0.0,
+            role_alignment_score=0.0,
             total_score=total_score,
         )

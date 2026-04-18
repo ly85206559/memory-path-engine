@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from memory_engine.retrieve import (
     ActivationSpreadingRetriever,
@@ -146,6 +147,22 @@ class RetrieveTests(unittest.TestCase):
         node_ids = [step.node_id for step in result.best_path().steps]
         self.assertIn("contract:3", node_ids)
         self.assertTrue(result.best_path().supporting_evidence)
+
+    def test_weighted_graph_reranks_best_path_for_override_queries(self):
+        from memory_engine.benchmarking.application.service import build_store_for_dataset
+        from memory_engine.benchmarking.infrastructure.json_repository import (
+            JsonStructuredBenchmarkDatasetRepository,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/route_replay_benchmark.json")
+        dataset = JsonStructuredBenchmarkDatasetRepository().load(dataset_path)
+        store = build_store_for_dataset(dataset, dataset_path.parent)
+        result = WeightedGraphRetriever(store).search(dataset.cases[0].query, top_k=3)
+
+        self.assertEqual(
+            [step.node_id for step in result.best_path().steps],
+            ["01_exception_override_contract:3", "01_exception_override_contract:2"],
+        )
 
     def test_weighted_graph_retriever_accepts_custom_scoring_strategy(self):
         provider = FakeEmbeddingProvider(

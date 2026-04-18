@@ -97,49 +97,40 @@ def build_comparison_report(
                 evidence_hit_rate=mode_report.evidence_hit_rate,
                 evidence_recall=mode_report.evidence_recall,
                 avg_latency_ms=mode_report.avg_latency_ms,
-                path_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.path_hit) / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                route_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.route_hit) / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                space_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.space_hit) / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                activation_trace_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.activation_trace_hit)
-                    / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                activation_snapshot_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.activation_snapshot_hit)
-                    / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                semantic_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.semantic_hit) / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                contradiction_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.contradiction_hit)
-                    / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
-                lifecycle_hit_rate=(
-                    sum(1 for report in mode_report.case_reports if report.lifecycle_hit) / mode_report.questions
-                    if mode_report.questions
-                    else 0.0
-                ),
+                path_hit_rate=_optional_hit_rate(mode_report.case_reports, "path_hit")[0],
+                path_hit_cases=_optional_hit_rate(mode_report.case_reports, "path_hit")[1],
+                route_hit_rate=_optional_hit_rate(mode_report.case_reports, "route_hit")[0],
+                route_hit_cases=_optional_hit_rate(mode_report.case_reports, "route_hit")[1],
+                space_hit_rate=_optional_hit_rate(mode_report.case_reports, "space_hit")[0],
+                space_hit_cases=_optional_hit_rate(mode_report.case_reports, "space_hit")[1],
+                activation_trace_hit_rate=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "activation_trace_hit",
+                )[0],
+                activation_trace_hit_cases=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "activation_trace_hit",
+                )[1],
+                activation_snapshot_hit_rate=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "activation_snapshot_hit",
+                )[0],
+                activation_snapshot_hit_cases=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "activation_snapshot_hit",
+                )[1],
+                semantic_hit_rate=_optional_hit_rate(mode_report.case_reports, "semantic_hit")[0],
+                semantic_hit_cases=_optional_hit_rate(mode_report.case_reports, "semantic_hit")[1],
+                contradiction_hit_rate=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "contradiction_hit",
+                )[0],
+                contradiction_hit_cases=_optional_hit_rate(
+                    mode_report.case_reports,
+                    "contradiction_hit",
+                )[1],
+                lifecycle_hit_rate=_optional_hit_rate(mode_report.case_reports, "lifecycle_hit")[0],
+                lifecycle_hit_cases=_optional_hit_rate(mode_report.case_reports, "lifecycle_hit")[1],
                 avg_activated_nodes=(
                     round(
                         sum(report.activated_node_count for report in mode_report.case_reports)
@@ -171,6 +162,17 @@ def build_comparison_report(
             for mode_name, mode_report in mode_reports.items()
         },
     )
+
+
+def _optional_hit_rate(case_reports, field_name: str) -> tuple[float, int]:
+    applicable = [
+        getattr(report, field_name)
+        for report in case_reports
+        if getattr(report, field_name) is not None
+    ]
+    if not applicable:
+        return 0.0, 0
+    return sum(1 for value in applicable if value) / len(applicable), len(applicable)
 
 
 class StructuredBenchmarkEvaluationService:

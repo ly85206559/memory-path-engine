@@ -61,6 +61,7 @@ Layer B reports should now also surface fixed aggregates for:
 - `route_hit_rate`
 - `space_hit_rate`
 - `lifecycle_hit_rate`
+- `activation_trace_hit_rate`
 - `activation_snapshot_hit_rate`
 
 ## Current fixtures
@@ -77,11 +78,23 @@ Layer B reports should now also surface fixed aggregates for:
 
 These fixtures are intentionally small. They are meant to support TDD and architectural iteration before larger benchmark suites are introduced.
 
-To generate a fixed-format Layer B report across the current palace-oriented fixtures:
+To generate a fixed-format Layer B report across the default palace-oriented fixtures:
 
 ```bash
 python scripts/generate_layer_b_report.py --output "benchmarks/structured_memory/layer_b_report.json" --markdown-output "benchmarks/structured_memory/layer_b_report.md"
 ```
+
+The default Layer B fixture set now includes route, path, and trace-aware cases:
+
+- `spatial_recall_benchmark.json`
+- `route_replay_benchmark.json`
+- `state_transition_benchmark.json`
+- `encoding_recall_benchmark.json`
+- `consolidation_gain_benchmark.json`
+- `exception_override_benchmark.json`
+- `exception_override_path_benchmark.json`
+- `multi_hop_chain_benchmark.json`
+- `activation_snapshot_benchmark.json`
 
 ## Dynamic Memory Priming
 

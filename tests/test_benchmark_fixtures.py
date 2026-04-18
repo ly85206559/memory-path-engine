@@ -10,7 +10,7 @@ class BenchmarkFixtureTests(unittest.TestCase):
 
         repository = JsonStructuredBenchmarkDatasetRepository()
         fixtures_dir = Path("benchmarks/structured_memory")
-        dataset_paths = sorted(fixtures_dir.glob("*.json"))
+        dataset_paths = sorted(fixtures_dir.glob("*_benchmark.json"))
 
         self.assertTrue(dataset_paths)
         for dataset_path in dataset_paths:
@@ -153,7 +153,7 @@ class BenchmarkFixtureTests(unittest.TestCase):
         self.assertEqual(static_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])
         self.assertEqual(dynamic_probe.matched_evidence, ["dynamic_exception_priming_contract:7"])
 
-    def test_exception_override_path_fixture_requires_spreading_for_full_hit(self):
+    def test_exception_override_path_fixture_supports_weighted_graph_route_replay(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,
         )
@@ -169,10 +169,10 @@ class BenchmarkFixtureTests(unittest.TestCase):
         spreading_case = suite_report.modes["activation_spreading_v1"].case_reports[0]
 
         self.assertTrue(weighted_case.evidence_hit)
-        self.assertFalse(weighted_case.path_hit)
-        self.assertFalse(weighted_case.semantic_hit)
+        self.assertTrue(weighted_case.path_hit)
+        self.assertTrue(weighted_case.semantic_hit)
         self.assertTrue(weighted_case.contradiction_hit)
-        self.assertFalse(weighted_case.hit)
+        self.assertTrue(weighted_case.hit)
         self.assertTrue(spreading_case.path_hit)
         self.assertTrue(spreading_case.semantic_hit)
         self.assertTrue(spreading_case.contradiction_hit)
@@ -259,7 +259,27 @@ class BenchmarkFixtureTests(unittest.TestCase):
         self.assertTrue(report.case_reports[0].hit)
         self.assertIn("legacy_path", report.case_reports[0].surfaced_route_sources)
 
-    def test_consolidation_gain_fixture_spreading_beats_weighted_on_route(self):
+    def test_activation_snapshot_fixture_surfaces_snapshot_hit(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/activation_snapshot_benchmark.json")
+        suite = StructuredBenchmarkEvaluationService().run_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("weighted_graph", "activation_spreading_v1"),
+            top_k=3,
+        )
+        self.assertEqual(
+            suite.comparison.mode_summary["weighted_graph"].activation_snapshot_hit_rate,
+            1.0,
+        )
+        self.assertEqual(
+            suite.comparison.mode_summary["activation_spreading_v1"].activation_snapshot_hit_rate,
+            1.0,
+        )
+
+    def test_consolidation_gain_fixture_weighted_matches_route_replay(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,
         )
@@ -272,7 +292,8 @@ class BenchmarkFixtureTests(unittest.TestCase):
         )
         wg = suite.comparison.mode_summary["weighted_graph"].route_hit_rate
         sp = suite.comparison.mode_summary["activation_spreading_v1"].route_hit_rate
-        self.assertGreater(sp, wg)
+        self.assertEqual(wg, 1.0)
+        self.assertEqual(sp, 1.0)
 
     def test_state_transition_fixture_updates_lifecycle_on_dynamic_policy(self):
         from memory_engine.benchmarking.application.service import (
