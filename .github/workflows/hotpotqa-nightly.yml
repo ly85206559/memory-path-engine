@@ -48,14 +48,14 @@ jobs:
           --summary-output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-summary.json"
 
       - name: Upload HotpotQA report artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hotpotqa-nightly-report
           path: benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json
           if-no-files-found: error
 
       - name: Upload HotpotQA summary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hotpotqa-nightly-summary
           path: benchmarks/external/hotpotqa/data/hotpotqa-nightly-summary.json
