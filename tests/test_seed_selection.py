@@ -126,3 +126,43 @@ class SeedSelectionTests(unittest.TestCase):
             ),
         )
         self.assertEqual(out[0].memory_id, "mem-a")
+
+    def test_semantic_role_alignment_boosts_escalation_seed(self) -> None:
+        self.palace.memories["mem-a"].content = "Notify the responsible contact immediately."
+        self.palace.memories["mem-b"].content = "Notify the responsible contact immediately."
+        self.palace.memories["mem-a"].metadata["semantic_role"] = "action"
+        self.palace.memories["mem-b"].metadata["semantic_role"] = "escalation"
+        sel = LexicalSeedSelector()
+        out = sel.select_seeds(
+            self.palace,
+            SeedSelectionInput(
+                text="who should we escalate to immediately",
+                allowed_space_ids=(),
+                max_seeds=2,
+            ),
+        )
+        self.assertEqual(out[0].memory_id, "mem-b")
+        self.assertIn("intent", out[0].reason)
+
+    def test_hybrid_seed_selector_surfaces_intent_reason_for_scenario_match(self) -> None:
+        self.palace.memories["mem-b"].encoding = EncodingProfile(
+            trigger_profile=TriggerProfile(
+                phrases=("rollback failure",),
+                situations=("when a dependency chain is involved",),
+            ),
+            scenario_tags=("rollback failure",),
+            symbolic_tags=("causal", "escalation"),
+        )
+        self.palace.memories["mem-b"].metadata["semantic_role"] = "escalation"
+        self.palace.memories["mem-b"].content = "Escalate to the on-call lead if rollback does not recover service."
+        sel = default_hybrid_seed_selector()
+        out = sel.select_seeds(
+            self.palace,
+            SeedSelectionInput(
+                text="rollback failure escalation who should we page",
+                allowed_space_ids=(),
+                max_seeds=2,
+            ),
+        )
+        self.assertEqual(out[0].memory_id, "mem-b")
+        self.assertIn("intent", out[0].reason)

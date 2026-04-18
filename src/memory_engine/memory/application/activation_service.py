@@ -291,12 +291,20 @@ class NativeActivationService:
             if activated.via_edge_type is not None
         )
         route_kind = self._route_kind_from_edges(edge_types)
+        explanation = self._route_explanation(
+            seed_id=seed.memory_id,
+            terminal_id=terminal.node_id,
+            route_kind=route_kind,
+            edge_types=edge_types,
+            hop_count=max(0, len(ordered_path) - 1),
+        )
         route = RecallRoute(
             route_id=f"native-path-{seed.memory_id}",
             route_kind=route_kind,
             step_memory_ids=tuple(item.node_id for item in ordered_path),
             score=terminal.score,
             route_source="native_activation",
+            explanation=explanation,
         )
 
         retrieved_memories = tuple(
@@ -424,6 +432,25 @@ class NativeActivationService:
         if "next" in edge_set:
             return "timeline"
         return "graph_expansion"
+
+    def _route_explanation(
+        self,
+        *,
+        seed_id: str,
+        terminal_id: str,
+        route_kind: str,
+        edge_types: tuple[str, ...],
+        hop_count: int,
+    ) -> str:
+        if edge_types:
+            edge_summary = " -> ".join(edge_types)
+            return (
+                f"expanded from seed {seed_id} to {terminal_id} across {hop_count} hops"
+                f" using {edge_summary} edges ({route_kind})"
+            )
+        if seed_id == terminal_id:
+            return f"seed {seed_id} remained the strongest recalled node"
+        return f"expanded from seed {seed_id} to {terminal_id} ({route_kind})"
 
 
 @dataclass(frozen=True, slots=True)

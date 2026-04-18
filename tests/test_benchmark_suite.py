@@ -88,6 +88,32 @@ class StructuredBenchmarkSuiteTests(unittest.TestCase):
             first_question.modes["activation_spreading_v1"].model_dump(),
         )
 
+    def test_evaluation_service_runs_palace_native_suite_from_dataset_file(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/example_runbook_benchmark.json")
+
+        suite_report = StructuredBenchmarkEvaluationService().run_palace_suite_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_modes=("weighted_graph", "activation_spreading_v1"),
+            top_k=3,
+        )
+
+        self.assertEqual(suite_report.dataset_id, "example-runbook-benchmark-v1")
+        self.assertIn("palace_weighted_graph", suite_report.modes)
+        self.assertIn("palace_activation_spreading_v1", suite_report.modes)
+        self.assertIn("palace_weighted_graph", suite_report.comparison.mode_summary)
+        self.assertTrue(suite_report.modes["palace_weighted_graph"].case_reports[0].hit)
+        self.assertIn(
+            "native_activation",
+            suite_report.modes["palace_weighted_graph"].case_reports[0].surfaced_route_sources,
+        )
+        self.assertTrue(
+            suite_report.modes["palace_weighted_graph"].case_reports[0].surfaced_retrieved_item_kinds
+        )
+
     def test_suite_reports_activation_trace_hit_rate_for_trace_aware_fixture(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,

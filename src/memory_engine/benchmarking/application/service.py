@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from memory_engine.benchmarking.application.runner import StructuredBenchmarkRunner
@@ -17,6 +18,9 @@ from memory_engine.benchmarking.infrastructure.json_repository import (
 )
 from memory_engine.domain_pack import get_domain_pack
 from memory_engine.ingest import ingest_document
+from memory_engine.memory.application.bridge import palace_to_store, store_to_palace
+from memory_engine.memory.application.query_models import RecallPolicy, RecallQuery
+from memory_engine.memory.application.retrieve_memory_service import RetrieveMemoryService
 from memory_engine.retrieval_factory import build_legacy_retriever
 from memory_engine.store import MemoryStore
 
@@ -33,6 +37,41 @@ DEFAULT_RETRIEVER_MODES = (
 )
 
 
+@dataclass(slots=True)
+class PalaceRecallBenchmarkAdapter:
+    """Adapt palace-native recall to the benchmark runner's retriever contract."""
+
+    palace: object
+    retriever_mode: str
+    service: RetrieveMemoryService
+    max_hops: int = 3
+    max_spaces: int = 3
+    max_seeds: int = 5
+    allow_legacy_fallback: bool = False
+    store: MemoryStore = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.store = palace_to_store(self.palace)
+
+    def search(self, query: str, top_k: int = 3):
+        palace_result = self.service.recall(
+            self.palace,
+            RecallQuery(
+                palace_id=self.palace.palace_id,
+                text=query,
+                policy=RecallPolicy(
+                    retriever_mode=self.retriever_mode,
+                    top_k=top_k,
+                    max_hops=self.max_hops,
+                    max_spaces=self.max_spaces,
+                    max_seeds=self.max_seeds,
+                    allow_legacy_fallback=self.allow_legacy_fallback,
+                ),
+            ),
+        )
+        return palace_result.to_legacy_retrieval_result()
+
+
 def build_store_for_dataset(dataset: StructuredBenchmarkDataset, dataset_root: Path) -> MemoryStore:
     store = MemoryStore()
     documents_dir = dataset_root / dataset.document_directory
@@ -40,6 +79,13 @@ def build_store_for_dataset(dataset: StructuredBenchmarkDataset, dataset_root: P
     for path in sorted(documents_dir.glob("*.md")):
         ingest_document(path, store, domain_pack=domain_pack)
     return store
+
+
+def build_palace_for_dataset(dataset: StructuredBenchmarkDataset, dataset_root: Path):
+    return store_to_palace(
+        build_store_for_dataset(dataset, dataset_root),
+        palace_id=dataset.dataset_id,
+    )
 
 
 def build_retriever(retriever_mode: str, store: MemoryStore):
@@ -50,6 +96,27 @@ def build_retriever(retriever_mode: str, store: MemoryStore):
     stable entry for structured benchmarks and scripts that operate on a plain store.
     """
     return build_legacy_retriever(retriever_mode, store)
+
+
+def build_palace_retriever(
+    retriever_mode: str,
+    palace,
+    *,
+    service: RetrieveMemoryService | None = None,
+    max_hops: int = 3,
+    max_spaces: int = 3,
+    max_seeds: int = 5,
+    allow_legacy_fallback: bool = False,
+):
+    return PalaceRecallBenchmarkAdapter(
+        palace=palace,
+        retriever_mode=retriever_mode,
+        service=service or RetrieveMemoryService(),
+        max_hops=max_hops,
+        max_spaces=max_spaces,
+        max_seeds=max_seeds,
+        allow_legacy_fallback=allow_legacy_fallback,
+    )
 
 
 def build_comparison_report(
@@ -216,6 +283,57 @@ class StructuredBenchmarkEvaluationService:
             top_k=top_k,
         )
 
+    def run_palace_from_dataset_path(
+        self,
+        *,
+        dataset_path: Path,
+        retriever_mode: str,
+        top_k: int = 3,
+        max_hops: int = 3,
+        max_spaces: int = 3,
+        max_seeds: int = 5,
+        allow_legacy_fallback: bool = False,
+    ):
+        dataset = self.dataset_repository.load(dataset_path)
+        return self.run_palace(
+            dataset=dataset,
+            dataset_root=dataset_path.parent,
+            retriever_mode=retriever_mode,
+            top_k=top_k,
+            max_hops=max_hops,
+            max_spaces=max_spaces,
+            max_seeds=max_seeds,
+            allow_legacy_fallback=allow_legacy_fallback,
+        )
+
+    def run_palace(
+        self,
+        *,
+        dataset: StructuredBenchmarkDataset,
+        dataset_root: Path,
+        retriever_mode: str,
+        top_k: int = 3,
+        max_hops: int = 3,
+        max_spaces: int = 3,
+        max_seeds: int = 5,
+        allow_legacy_fallback: bool = False,
+    ):
+        palace = build_palace_for_dataset(dataset, dataset_root)
+        retriever = build_palace_retriever(
+            retriever_mode,
+            palace,
+            max_hops=max_hops,
+            max_spaces=max_spaces,
+            max_seeds=max_seeds,
+            allow_legacy_fallback=allow_legacy_fallback,
+        )
+        return self.runner.run(
+            dataset=dataset,
+            retriever_name=f"palace_{retriever_mode}",
+            retriever=retriever,
+            top_k=top_k,
+        )
+
     def run_suite_from_dataset_path(
         self,
         *,
@@ -246,6 +364,64 @@ class StructuredBenchmarkEvaluationService:
                 retriever=build_retriever(
                     retriever_mode,
                     build_store_for_dataset(dataset, dataset_root),
+                ),
+                top_k=top_k,
+            )
+            for retriever_mode in retriever_modes
+        }
+        return StructuredBenchmarkSuiteReport(
+            dataset_id=dataset.dataset_id,
+            modes=mode_reports,
+            comparison=build_comparison_report(mode_reports),
+        )
+
+    def run_palace_suite_from_dataset_path(
+        self,
+        *,
+        dataset_path: Path,
+        retriever_modes: tuple[str, ...] = DEFAULT_RETRIEVER_MODES,
+        top_k: int = 3,
+        max_hops: int = 3,
+        max_spaces: int = 3,
+        max_seeds: int = 5,
+        allow_legacy_fallback: bool = False,
+    ) -> StructuredBenchmarkSuiteReport:
+        dataset = self.dataset_repository.load(dataset_path)
+        return self.run_palace_suite(
+            dataset=dataset,
+            dataset_root=dataset_path.parent,
+            retriever_modes=retriever_modes,
+            top_k=top_k,
+            max_hops=max_hops,
+            max_spaces=max_spaces,
+            max_seeds=max_seeds,
+            allow_legacy_fallback=allow_legacy_fallback,
+        )
+
+    def run_palace_suite(
+        self,
+        *,
+        dataset: StructuredBenchmarkDataset,
+        dataset_root: Path,
+        retriever_modes: tuple[str, ...] = DEFAULT_RETRIEVER_MODES,
+        top_k: int = 3,
+        max_hops: int = 3,
+        max_spaces: int = 3,
+        max_seeds: int = 5,
+        allow_legacy_fallback: bool = False,
+    ) -> StructuredBenchmarkSuiteReport:
+        palace = build_palace_for_dataset(dataset, dataset_root)
+        mode_reports = {
+            f"palace_{retriever_mode}": self.runner.run(
+                dataset=dataset,
+                retriever_name=f"palace_{retriever_mode}",
+                retriever=build_palace_retriever(
+                    retriever_mode,
+                    palace,
+                    max_hops=max_hops,
+                    max_spaces=max_spaces,
+                    max_seeds=max_seeds,
+                    allow_legacy_fallback=allow_legacy_fallback,
                 ),
                 top_k=top_k,
             )

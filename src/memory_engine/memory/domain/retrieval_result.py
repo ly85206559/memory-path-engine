@@ -27,6 +27,7 @@ class RecallRoute:
     support_memory_ids: tuple[str, ...] = ()
     score: float = 0.0
     route_source: str = "legacy_path"
+    explanation: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +125,7 @@ class PalaceRecallResult:
                     support_memory_ids=support_ids,
                     score=path.final_score,
                     route_source="legacy_path",
+                    explanation="converted from legacy retrieval path",
                 )
             )
             for step_index, step in enumerate(path.steps):

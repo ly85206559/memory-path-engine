@@ -59,6 +59,53 @@ def _preferred_edge_types(route_kind: str | None) -> tuple[str, ...]:
     return mapping.get(route_kind or "", ())
 
 
+def _legacy_graph_route(
+    palace: MemoryPalace,
+    planning: RoutePlanningInput,
+    seeds: tuple[SeedActivation, ...],
+) -> RecallRoute | None:
+    if not seeds:
+        return None
+
+    query_kind = _query_route_kind(planning.text)
+    start = seeds[0].memory_id
+    path: list[str] = [start]
+    current = start
+    preferred_edge_types = _preferred_edge_types(query_kind)
+    for _ in range(max(0, planning.max_hops)):
+        outbound = palace.outbound_links(current)
+        if not outbound:
+            break
+        ranked = sorted(
+            outbound,
+            key=lambda ln: (
+                -(1 if ln.link_type.value in preferred_edge_types else 0),
+                -ln.strength,
+                ln.to_memory_id,
+            ),
+        )
+        best = ranked[0]
+        nxt = best.to_memory_id
+        if nxt in path:
+            break
+        path.append(nxt)
+        current = nxt
+
+    route_kind = query_kind or "graph_expansion"
+    explanation = (
+        f"seed-driven graph expansion from {start}"
+        + (f" biased toward {route_kind} edges" if query_kind else "")
+    )
+    return RecallRoute(
+        route_id=f"legacy-path-{start}",
+        route_kind=route_kind,
+        step_memory_ids=tuple(path),
+        score=seeds[0].score,
+        route_source="legacy_path",
+        explanation=explanation,
+    )
+
+
 @dataclass(slots=True)
 class DefaultRoutePlanner:
     """Prefer persisted RouteMemory; otherwise expand along MemoryLink edges (legacy graph path)."""
@@ -88,6 +135,14 @@ class DefaultRoutePlanner:
             if score <= 0.0:
                 continue
             rid = memory.route_id or memory.memory_id
+            explanation_parts = []
+            if seed_ids & waypoint_set:
+                explanation_parts.append("matches current seeds")
+            if lex > 0.0:
+                explanation_parts.append("matches query content")
+            if kind_bonus > 0.0:
+                explanation_parts.append("matches query route intent")
+            explanation = ", ".join(explanation_parts) if explanation_parts else "persisted route memory match"
             scored.append(
                 RecallRoute(
                     route_id=rid,
@@ -95,48 +150,29 @@ class DefaultRoutePlanner:
                     step_memory_ids=steps,
                     score=min(1.0, score),
                     route_source="route_memory",
+                    explanation=explanation,
                 ),
             )
 
         scored.sort(key=lambda r: r.score, reverse=True)
+        legacy_route = _legacy_graph_route(palace, planning, seeds)
         if scored:
+            if (
+                legacy_route is not None
+                and len(legacy_route.step_memory_ids) > 1
+                and all(route.step_memory_ids != legacy_route.step_memory_ids for route in scored)
+            ):
+                scored.append(legacy_route)
+            scored.sort(
+                key=lambda route: (
+                    route.score,
+                    1 if route.route_source == "route_memory" else 0,
+                    len(route.step_memory_ids),
+                ),
+                reverse=True,
+            )
             return tuple(scored[: max(1, planning.top_k)])
 
-        if not seeds:
+        if legacy_route is None:
             return ()
-
-        # Legacy graph expansion: walk strongest outbound edge per hop from the top seed.
-        start = seeds[0].memory_id
-        path: list[str] = [start]
-        current = start
-        preferred_edge_types = _preferred_edge_types(query_kind)
-        for _ in range(max(0, planning.max_hops)):
-            outbound = palace.outbound_links(current)
-            if not outbound:
-                break
-            ranked = sorted(
-                outbound,
-                key=lambda ln: (
-                    -(1 if ln.link_type.value in preferred_edge_types else 0),
-                    -ln.strength,
-                    ln.to_memory_id,
-                ),
-            )
-            best = ranked[0]
-            nxt = best.to_memory_id
-            if nxt in path:
-                break
-            path.append(nxt)
-            current = nxt
-
-        route_kind = query_kind or "graph_expansion"
-
-        return (
-            RecallRoute(
-                route_id=f"legacy-path-{start}",
-                route_kind=route_kind,
-                step_memory_ids=tuple(path),
-                score=seeds[0].score,
-                route_source="legacy_path",
-            ),
-        )
+        return (legacy_route,)

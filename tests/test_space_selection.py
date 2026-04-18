@@ -70,12 +70,28 @@ class SpaceSelectionTests(unittest.TestCase):
         out = sel.select_spaces(self.palace, inp)
         self.assertEqual(out[0].space_id, "meet")
 
-    def test_zero_hit_fallback_returns_all_spaces_not_truncated(self) -> None:
+    def test_zero_hit_fallback_limits_scope_to_requested_max_spaces(self) -> None:
         sel = KeywordSpaceSelector()
         inp = SpaceSelectionInput(text="totally unrelated query", max_spaces=1)
         out = sel.select_spaces(self.palace, inp)
-        self.assertEqual({candidate.space_id for candidate in out}, {"ops", "meet"})
-        self.assertTrue(all(candidate.reason == "fallback_all_spaces" for candidate in out))
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0].space_id, "ops")
+        self.assertEqual(out[0].reason, "fallback_low_confidence_scope")
+
+    def test_zero_hit_fallback_prefers_explicit_space_ids(self) -> None:
+        sel = HybridSpaceSelector(
+            keyword_selector=KeywordSpaceSelector(),
+            metadata_selector=MetadataSpaceSelector(),
+        )
+        inp = SpaceSelectionInput(
+            text="totally unrelated query",
+            preferred_space_ids=("meet",),
+            max_spaces=1,
+        )
+        out = sel.select_spaces(self.palace, inp)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0].space_id, "meet")
+        self.assertEqual(out[0].reason, "fallback_preferred_spaces")
 
     def test_location_prior_matches_building_and_room_tokens(self) -> None:
         sel = HybridSpaceSelector(

@@ -48,6 +48,7 @@ class RoutePlannerTests(unittest.TestCase):
         self.assertTrue(routes)
         self.assertEqual(routes[0].route_source, "route_memory")
         self.assertEqual(routes[0].step_memory_ids, ("mem-1",))
+        self.assertTrue(routes[0].explanation)
 
     def test_legacy_graph_expansion_when_no_route_memory(self) -> None:
         palace = MemoryPalace(palace_id="p1")
@@ -91,6 +92,7 @@ class RoutePlannerTests(unittest.TestCase):
         self.assertEqual(len(routes), 1)
         self.assertEqual(routes[0].route_source, "legacy_path")
         self.assertEqual(routes[0].step_memory_ids, ("a", "b"))
+        self.assertIn("seed-driven graph expansion", routes[0].explanation)
 
     def test_irrelevant_route_memory_does_not_block_legacy_fallback_path(self) -> None:
         palace = MemoryPalace(palace_id="p1")
@@ -196,6 +198,60 @@ class RoutePlannerTests(unittest.TestCase):
             (SeedActivation(memory_id="seed", score=0.9, reason="seed", space_id="ops"),),
         )
         self.assertEqual(routes[0].route_kind, "dependency")
+
+    def test_route_memory_can_coexist_with_non_duplicate_legacy_path(self) -> None:
+        palace = MemoryPalace(palace_id="p1")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="seed",
+                palace_id="p1",
+                location=loc,
+                content="Rollback failure blocks recovery.",
+                salience=SalienceProfile(0.8, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="dep",
+                palace_id="p1",
+                location=loc,
+                content="Queue drain depends on worker restart.",
+                salience=SalienceProfile(0.7, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id="route-1",
+                palace_id="p1",
+                location=loc,
+                content="Persisted rollback recovery route.",
+                salience=SalienceProfile(0.5, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+                route_id="route-1",
+                start_memory_id="seed",
+                ordered_waypoints=("seed",),
+                route_kind="timeline",
+            )
+        )
+        palace.add_link(
+            MemoryLink(
+                from_memory_id="seed",
+                to_memory_id="dep",
+                link_type=MemoryLinkType.DEPENDS_ON,
+                strength=2.0,
+            )
+        )
+        routes = DefaultRoutePlanner().plan_routes(
+            palace,
+            RoutePlanningInput(text="rollback recovery dependency", top_k=2, max_hops=2),
+            (SeedActivation(memory_id="seed", score=0.9, reason="seed", space_id="ops"),),
+        )
+        self.assertEqual({route.route_source for route in routes}, {"route_memory", "legacy_path"})
+        self.assertIn(("seed", "dep"), [route.step_memory_ids for route in routes])
 
     def test_route_kind_bonus_prefers_semantic_summary_route(self) -> None:
         palace = MemoryPalace(palace_id="p1")

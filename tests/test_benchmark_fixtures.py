@@ -59,6 +59,23 @@ class BenchmarkFixtureTests(unittest.TestCase):
         )
         self.assertGreaterEqual(report.evidence_recall, 0.5)
 
+    def test_runbook_benchmark_fixture_runs_with_palace_recall(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/example_runbook_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_palace_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+
+        self.assertEqual(report.dataset_id, "example-runbook-benchmark-v1")
+        self.assertEqual(report.retriever_name, "palace_weighted_graph")
+        self.assertGreaterEqual(report.evidence_recall, 0.5)
+        self.assertIn("native_activation", report.case_reports[0].surfaced_route_sources)
+
     def test_exception_override_fixture_runs_with_activation_spreading(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,

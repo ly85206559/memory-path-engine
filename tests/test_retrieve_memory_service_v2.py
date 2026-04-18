@@ -126,6 +126,7 @@ class RetrieveMemoryServiceV2Tests(unittest.TestCase):
         self.assertTrue(any(route.route_kind == "dependency" for route in result.routes))
         self.assertTrue(any(route.route_source == "native_activation" for route in result.routes))
         self.assertIn("dep", [memory.memory_id for memory in result.retrieved_memories])
+        self.assertTrue(all(route.explanation for route in result.routes))
 
     def test_static_mode_does_not_apply_lifecycle_bias_in_palace_recall(self) -> None:
         palace = MemoryPalace(palace_id="p3")
@@ -187,3 +188,104 @@ class RetrieveMemoryServiceV2Tests(unittest.TestCase):
 
         self.assertEqual(static_scores["fading-first"], static_scores["active-second"])
         self.assertGreater(dynamic_scores["active-second"], dynamic_scores["fading-first"])
+
+    def test_low_confidence_space_fallback_stays_bounded(self) -> None:
+        palace = MemoryPalace(palace_id="p4")
+        ops_loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        lab_loc = PalaceLocation(building="annex", floor="2", room="lab", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops Center", location=ops_loc))
+        palace.add_space(PalaceSpace(space_id="lab", name="Lab", location=lab_loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="ops-memory",
+                palace_id="p4",
+                location=ops_loc,
+                content="Rollback failure requires worker restart.",
+                salience=SalienceProfile(0.8, 0.2, 0.3, 0.9),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="lab-memory",
+                palace_id="p4",
+                location=lab_loc,
+                content="Experiment notes for unrelated lab setup.",
+                salience=SalienceProfile(0.6, 0.1, 0.2, 0.8),
+                metadata={"space_id": "lab"},
+            )
+        )
+
+        result = RetrieveMemoryService().recall(
+            palace,
+            RecallQuery(
+                palace_id="p4",
+                text="zxqv mntr plko",
+                policy=RecallPolicy(top_k=3, max_spaces=1, max_seeds=3),
+            ),
+        )
+
+        self.assertEqual(result.metadata["selected_space_ids"], ["ops"])
+        self.assertEqual(result.metadata["space_candidates"][0]["reason"], "fallback_low_confidence_scope")
+
+    def test_route_merge_prefers_route_memory_over_duplicate_native_path(self) -> None:
+        palace = MemoryPalace(palace_id="p5")
+        loc = PalaceLocation(building="hq", floor="1", room="ops", locus="1")
+        palace.add_space(PalaceSpace(space_id="ops", name="Ops Center", location=loc))
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="seed",
+                palace_id="p5",
+                location=loc,
+                content="Rollback failure blocks recovery.",
+                salience=SalienceProfile(0.9, 0.3, 0.4, 0.95),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            EpisodicMemory(
+                memory_id="dep",
+                palace_id="p5",
+                location=loc,
+                content="Queue drain depends on worker restart.",
+                salience=SalienceProfile(0.8, 0.2, 0.3, 0.92),
+                metadata={"space_id": "ops"},
+            )
+        )
+        palace.add_memory(
+            RouteMemory(
+                memory_id="route-dep",
+                palace_id="p5",
+                location=loc,
+                content="Persisted dependency route",
+                salience=SalienceProfile(0.5, 0.1, 0.2, 0.9),
+                metadata={"space_id": "ops"},
+                route_id="route-dep",
+                start_memory_id="seed",
+                ordered_waypoints=("dep",),
+                route_kind="dependency",
+            )
+        )
+        palace.add_link(
+            MemoryLink(
+                from_memory_id="seed",
+                to_memory_id="dep",
+                link_type=MemoryLinkType.DEPENDS_ON,
+                strength=1.8,
+            )
+        )
+
+        result = RetrieveMemoryService().recall(
+            palace,
+            RecallQuery(
+                palace_id="p5",
+                text="what dependency is needed after rollback failure",
+                policy=RecallPolicy(top_k=3, max_hops=2, retriever_mode="activation_spreading_v1"),
+            ),
+        )
+
+        matching_routes = [
+            route for route in result.routes if route.step_memory_ids == ("seed", "dep")
+        ]
+        self.assertEqual(len(matching_routes), 1)
+        self.assertEqual(matching_routes[0].route_source, "route_memory")

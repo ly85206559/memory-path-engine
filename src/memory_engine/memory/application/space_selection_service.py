@@ -58,10 +58,28 @@ def _sort_candidates(candidates: list[SpaceCandidate]) -> list[SpaceCandidate]:
     return sorted(candidates, key=lambda c: (-c.score, c.space_id))
 
 
-def _fallback_all_spaces(candidates: list[SpaceCandidate]) -> tuple[SpaceCandidate, ...]:
+def _fallback_scope_subset(
+    palace: MemoryPalace,
+    selection: SpaceSelectionInput,
+) -> tuple[SpaceCandidate, ...]:
+    fallback_ids: list[str] = []
+    seen: set[str] = set()
+
+    for space_id in selection.preferred_space_ids:
+        if space_id in palace.spaces and space_id not in seen:
+            fallback_ids.append(space_id)
+            seen.add(space_id)
+
+    for space_id in palace.spaces:
+        if space_id not in seen:
+            fallback_ids.append(space_id)
+            seen.add(space_id)
+
+    limited_ids = fallback_ids[: max(1, selection.max_spaces)]
+    reason = "fallback_preferred_spaces" if selection.preferred_space_ids else "fallback_low_confidence_scope"
     return tuple(
-        SpaceCandidate(space_id=c.space_id, score=0.01, reason="fallback_all_spaces")
-        for c in _sort_candidates(candidates)
+        SpaceCandidate(space_id=space_id, score=0.01, reason=reason)
+        for space_id in limited_ids
     )
 
 
@@ -78,11 +96,14 @@ class KeywordSpaceSelector:
             return ()
 
         candidates: list[SpaceCandidate] = []
+        has_signal = False
         for space_id, _space in palace.spaces.items():
             text = _space_text(palace, space_id)
             lexical_score = lexical_overlap(selection.text, text)
             location_score = _location_prior_score(palace, space_id, selection.text)
-            score = max(lexical_score, location_score)
+            signal_score = max(lexical_score, location_score)
+            has_signal = has_signal or signal_score > 0.0
+            score = signal_score
             if selection.preferred_space_ids and space_id in selection.preferred_space_ids:
                 score = min(1.0, score + 0.35)
             candidates.append(
@@ -96,8 +117,8 @@ class KeywordSpaceSelector:
         ranked = _sort_candidates(candidates)
         top = ranked[: max(1, selection.max_spaces)]
 
-        if ranked and all(c.score <= 0.0 for c in ranked):
-            return _fallback_all_spaces(ranked)
+        if ranked and not has_signal:
+            return _fallback_scope_subset(palace, selection)
         return tuple(top)
 
 
@@ -114,12 +135,15 @@ class MetadataSpaceSelector:
             return ()
 
         candidates: list[SpaceCandidate] = []
+        has_signal = False
         for space_id in palace.spaces:
             contents = _memories_in_space(palace, space_id)
             blob = "\n".join(contents) if contents else ""
             lexical_score = lexical_overlap(selection.text, blob) if blob else 0.0
             location_score = _location_prior_score(palace, space_id, selection.text)
-            score = max(lexical_score, location_score)
+            signal_score = max(lexical_score, location_score)
+            has_signal = has_signal or signal_score > 0.0
+            score = signal_score
             if selection.preferred_space_ids and space_id in selection.preferred_space_ids:
                 score = min(1.0, score + 0.25)
             candidates.append(
@@ -137,8 +161,8 @@ class MetadataSpaceSelector:
         ranked = _sort_candidates(candidates)
         top = ranked[: max(1, selection.max_spaces)]
 
-        if ranked and all(c.score <= 0.0 for c in ranked):
-            return _fallback_all_spaces(ranked)
+        if ranked and not has_signal:
+            return _fallback_scope_subset(palace, selection)
         return tuple(top)
 
 
@@ -163,7 +187,9 @@ class HybridSpaceSelector:
             m = by_md.get(sid)
             if k and m:
                 score = max(k.score, m.score)
-                if "location_prior" in k.reason or "location_prior" in m.reason:
+                if k.reason.startswith("fallback_") and m.reason.startswith("fallback_"):
+                    reason = k.reason
+                elif "location_prior" in k.reason or "location_prior" in m.reason:
                     reason = "hybrid_max(location_prior)"
                 else:
                     reason = "hybrid_max(keyword,metadata)"
@@ -178,5 +204,5 @@ class HybridSpaceSelector:
         ranked = _sort_candidates(fused)
         top = ranked[: max(1, selection.max_spaces)]
         if ranked and all(c.score <= 0.0 for c in ranked):
-            return _fallback_all_spaces(ranked)
+            return _fallback_scope_subset(palace, selection)
         return tuple(top)

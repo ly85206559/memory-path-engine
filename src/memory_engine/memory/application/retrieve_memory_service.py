@@ -22,7 +22,7 @@ from memory_engine.memory.application.space_selection_service import (
     MetadataSpaceSelector,
 )
 from memory_engine.memory.domain.palace import MemoryPalace
-from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
+from memory_engine.memory.domain.retrieval_result import PalaceRecallResult, RecallRoute
 from memory_engine.memory.domain.route_planning import RoutePlanner, RoutePlanningInput
 from memory_engine.memory.domain.seed_selection import SeedSelectionInput, SeedSelector
 from memory_engine.memory.domain.space_selection import SpaceSelectionInput, SpaceSelector
@@ -87,10 +87,11 @@ class RetrieveMemoryService:
         explicit_routes = tuple(
             route for route in planned_routes if route.route_source == "route_memory"
         )
-        routes = (
-            explicit_routes + activation_result.routes
-            if explicit_routes
-            else activation_result.routes or planned_routes
+        routes = self._merge_routes(
+            explicit_routes=explicit_routes,
+            activation_routes=activation_result.routes,
+            planned_routes=planned_routes,
+            top_k=query.policy.top_k,
         )
 
         bundle = self._result_ranker_for_mode(state_policy).rank(
@@ -124,6 +125,61 @@ class RetrieveMemoryService:
             return self._legacy_fallback(palace, query, orchestration_meta)
 
         return native
+
+    def _merge_routes(
+        self,
+        *,
+        explicit_routes: tuple[RecallRoute, ...],
+        activation_routes: tuple[RecallRoute, ...],
+        planned_routes: tuple[RecallRoute, ...],
+        top_k: int,
+    ) -> tuple[RecallRoute, ...]:
+        candidates = [
+            *explicit_routes,
+            *activation_routes,
+            *(
+                route
+                for route in planned_routes
+                if route.route_source != "route_memory"
+            ),
+        ]
+        if not candidates:
+            return ()
+
+        by_shape: dict[tuple[tuple[str, ...], str], RecallRoute] = {}
+        for route in candidates:
+            key = (route.step_memory_ids, route.route_kind)
+            existing = by_shape.get(key)
+            if existing is None:
+                by_shape[key] = route
+                continue
+            if self._route_priority(route) > self._route_priority(existing):
+                by_shape[key] = route
+            elif (
+                self._route_priority(route) == self._route_priority(existing)
+                and route.score > existing.score
+            ):
+                by_shape[key] = route
+
+        ordered = sorted(
+            by_shape.values(),
+            key=lambda route: (
+                self._route_priority(route),
+                route.score,
+                len(route.step_memory_ids),
+            ),
+            reverse=True,
+        )
+        return tuple(ordered[: max(1, top_k)])
+
+    def _route_priority(self, route: RecallRoute) -> int:
+        if route.route_source == "route_memory":
+            return 3
+        if route.route_source == "native_activation":
+            return 2
+        if route.route_source == "legacy_path":
+            return 1
+        return 0
 
     def _memory_policy_for_mode(self, retriever_mode: str) -> MemoryStatePolicy:
         if retriever_mode in {
