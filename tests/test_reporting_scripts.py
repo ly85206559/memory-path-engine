@@ -64,6 +64,7 @@ class ReportingScriptsTests(unittest.TestCase):
     def test_default_layer_b_fixtures_include_path_and_trace_coverage(self) -> None:
         self.assertIn("exception_override_benchmark.json", DEFAULT_FIXTURES)
         self.assertIn("exception_override_path_benchmark.json", DEFAULT_FIXTURES)
+        self.assertIn("contradiction_tension_benchmark.json", DEFAULT_FIXTURES)
         self.assertIn("multi_hop_chain_benchmark.json", DEFAULT_FIXTURES)
         self.assertIn("activation_snapshot_benchmark.json", DEFAULT_FIXTURES)
 

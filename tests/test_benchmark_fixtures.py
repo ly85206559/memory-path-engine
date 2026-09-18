@@ -100,6 +100,27 @@ class BenchmarkFixtureTests(unittest.TestCase):
             ["below_threshold"],
         )
 
+    def test_contradiction_tension_fixture_surfaces_contradicts_paths(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/contradiction_tension_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+
+        self.assertEqual(report.dataset_id, "contradiction-tension-benchmark-v1")
+        self.assertEqual(report.evidence_hit_rate, 1.0)
+        self.assertEqual(report.case_reports[0].path_hit, True)
+        self.assertTrue(all(case.contradiction_hit for case in report.case_reports))
+        self.assertTrue(
+            any("contradicts" in (case.path_edge_types or []) for case in report.case_reports)
+        )
+        self.assertTrue(report.case_reports[0].surfaced_contradictions)
+
     def test_multi_hop_chain_fixture_runs_with_activation_spreading(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,

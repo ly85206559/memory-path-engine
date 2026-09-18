@@ -48,6 +48,36 @@ class SemanticTests(unittest.TestCase):
         self.assertEqual(len(candidates), 1)
         self.assertIsInstance(candidates[0], ContradictionCandidate)
 
+    def test_contradicts_edges_produce_contradiction_candidates(self):
+        nodes = [
+            MemoryNode(
+                id="clause:1",
+                type="clause",
+                content="Buyer must pay all invoices within 30 days.",
+            ),
+            MemoryNode(
+                id="clause:2",
+                type="clause",
+                content="Buyer must pay all invoices within 15 days.",
+            ),
+        ]
+        edges = [
+            MemoryEdge(
+                from_id="clause:2",
+                to_id="clause:1",
+                edge_type="contradicts",
+                weight=0.85,
+            )
+        ]
+
+        candidates = contradiction_candidates(nodes, edges)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(
+            {candidates[0].left_node_id, candidates[0].right_node_id},
+            {"clause:1", "clause:2"},
+        )
+
     def test_contradiction_bonus_prefers_candidate_pairs(self):
         candidates = [
             ContradictionCandidate(

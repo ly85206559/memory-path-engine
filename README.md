@@ -250,7 +250,7 @@ The benchmark story is intentionally split into three layers:
 Current run matrix:
 
 - `benchmarks/structured_memory/*.json`: CI
-- `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle)
+- `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`, `contradiction_tension_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle) and explicit contradiction / rule-tension pairs
 - `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI sanity
 - `benchmarks/external/hotpotqa/data/*.json`: local / nightly
 - `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local sanity
@@ -276,10 +276,10 @@ Current run matrix:
 
 ## Planned next steps
 
-- add explicit anomaly detectors and contradiction edges
 - expand the evaluation runner with ablation reports and latency summaries
 - extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
+- grow Layer C private golden sets from the `benchmarks/layer_c_minimal` scaffold
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

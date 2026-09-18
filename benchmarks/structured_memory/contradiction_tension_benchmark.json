@@ -1,0 +1,70 @@
+{
+  "dataset_id": "contradiction-tension-benchmark-v1",
+  "dataset_name": "Contradiction tension benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/graph_contract_pack/conflict_contracts",
+  "cases": [
+    {
+      "case_id": "contradiction-001",
+      "query": "The Agreement says thirty days but the Order Form says fifteen days. Which payment terms govern?",
+      "tags": ["contradiction", "tension", "payment", "order_form"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_payment_term_conflict_contract:2",
+          "02_payment_term_conflict_contract:4"
+        ],
+        "minimum_evidence_matches": 2,
+        "path_scope": "best_path",
+        "path": {
+          "match_mode": "subsequence",
+          "steps": [
+            {
+              "node_id": "02_payment_term_conflict_contract:2"
+            },
+            {
+              "node_id": "02_payment_term_conflict_contract:4",
+              "via_edge_type": "contradicts"
+            }
+          ]
+        },
+        "required_edge_types": ["contradicts"],
+        "required_contradiction_pairs": [
+          ["02_payment_term_conflict_contract:1", "02_payment_term_conflict_contract:4"],
+          ["02_payment_term_conflict_contract:2", "02_payment_term_conflict_contract:4"]
+        ]
+      }
+    },
+    {
+      "case_id": "contradiction-002",
+      "query": "Which clauses conflict on Buyer invoice payment timing between the Agreement and Order Form?",
+      "tags": ["contradiction", "tension", "multi_hop"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_payment_term_conflict_contract:1",
+          "02_payment_term_conflict_contract:4"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": ["contradicts"],
+        "required_contradiction_pairs": [
+          ["02_payment_term_conflict_contract:1", "02_payment_term_conflict_contract:4"]
+        ]
+      }
+    },
+    {
+      "case_id": "contradiction-003",
+      "query": "Does the Order Form payment of invoices conflict with Agreement payment of invoices?",
+      "tags": ["contradiction", "lexical_conflict"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_payment_term_conflict_contract:2",
+          "02_payment_term_conflict_contract:4"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": ["contradicts"],
+        "required_contradiction_pairs": [
+          ["02_payment_term_conflict_contract:2", "02_payment_term_conflict_contract:4"]
+        ]
+      }
+    }
+  ]
+}

@@ -154,10 +154,10 @@ This project is moving toward:
 The next iterations should focus on:
 
 1. stronger evaluation and ablation tooling
-2. explicit anomaly and contradiction modeling
-3. domain-pack abstractions that keep the core general
-4. better semantic backends behind stable interfaces
-5. **Memory Palace v1**: a first-class palace graph (spaces, episodic / semantic / route memories, lifecycle state) mapped onto the legacy `MemoryStore` for backward-compatible retrieval and benchmarks
+2. domain-pack abstractions that keep the core general
+3. better semantic backends behind stable interfaces
+4. Layer C private golden sets that reuse the same structured case contract
+5. **Memory Palace v1**: continue palace-first APIs while keeping the legacy `MemoryStore` bridge stable
 
 ## Relationship to the rest of the docs
 

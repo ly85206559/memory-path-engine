@@ -73,6 +73,7 @@ Layer B reports should now also surface fixed aggregates for:
 - `dynamic_memory_priming_benchmark.json`
 - `exception_override_benchmark.json`
 - `exception_override_path_benchmark.json`
+- `contradiction_tension_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 - `structure_ablation_benchmark.json`
 
@@ -93,6 +94,7 @@ The default Layer B fixture set now includes route, path, and trace-aware cases:
 - `consolidation_gain_benchmark.json`
 - `exception_override_benchmark.json`
 - `exception_override_path_benchmark.json`
+- `contradiction_tension_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 - `activation_snapshot_benchmark.json`
 

@@ -165,6 +165,14 @@ class RuleBasedSectionedDocumentPack:
         if rule.edge_type == "exception_to":
             node.attributes["exception_target"] = existing.id
             node.attributes["exception_target_role"] = existing.attributes.get("semantic_role")
+        if rule.edge_type == "contradicts":
+            node.attributes["contradicts_target"] = existing.id
+            existing_targets = set(existing.attributes.get("contradiction_targets", []))
+            existing_targets.add(node.id)
+            existing.attributes["contradiction_targets"] = sorted(existing_targets)
+            node_targets = set(node.attributes.get("contradiction_targets", []))
+            node_targets.add(existing.id)
+            node.attributes["contradiction_targets"] = sorted(node_targets)
         if (
             rule.edge_type == "depends_on"
             and node.attributes.get("semantic_role") == SemanticRole.CONDITION.value
@@ -211,6 +219,12 @@ class ExampleContractPack(RuleBasedSectionedDocumentPack):
         return (
             EdgeRule("depends_on", ("subject to", "conditioned on", "if")),
             EdgeRule("exception_to", ("except", "unless", "notwithstanding"), bidirectional=True),
+            EdgeRule(
+                "contradicts",
+                ("conflict", "conflicts", "contradict", "contrary to", "inconsistent"),
+                bidirectional=True,
+                weight=0.85,
+            ),
             EdgeRule("causes", ("shall pay", "liable", "terminate", "damages")),
         )
 
@@ -220,12 +234,19 @@ class ExampleContractPack(RuleBasedSectionedDocumentPack):
             0.9
             if any(
                 word in lowered
-                for word in ["terminate", "damages", "indemnify", "breach", "penalty"]
+                for word in ["terminate", "damages", "indemnify", "breach", "penalty", "conflict"]
             )
             else 0.3
         )
         importance = 0.8 if any(word in lowered for word in ["shall", "must", "liable", "exclusive"]) else 0.4
-        novelty = 0.85 if any(word in lowered for word in ["except", "unless", "notwithstanding"]) else 0.25
+        novelty = (
+            0.85
+            if any(
+                word in lowered
+                for word in ["except", "unless", "notwithstanding", "conflict", "contradict"]
+            )
+            else 0.25
+        )
         confidence = 0.95
         return MemoryWeight(
             importance=importance,
@@ -265,6 +286,12 @@ class ExampleRunbookPack(RuleBasedSectionedDocumentPack):
         return (
             EdgeRule("depends_on", ("if", "when", "after", "once")),
             EdgeRule("exception_to", ("unless", "except"), bidirectional=True),
+            EdgeRule(
+                "contradicts",
+                ("conflict", "conflicts", "contradict", "contrary to"),
+                bidirectional=True,
+                weight=0.8,
+            ),
             EdgeRule("causes", ("notify", "restart", "roll back", "escalate", "page")),
         )
 

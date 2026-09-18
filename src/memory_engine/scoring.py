@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from memory_engine.anomaly import AnomalyPolicy, ThresholdAnomalyPolicy
+from memory_engine.anomaly import AnomalyPolicy, default_anomaly_policy
 from memory_engine.memory_state import MemoryStatePolicy
 from memory_engine.schema import ActivationContext, MemoryNode
 from memory_engine.semantics import query_role_alignment_score, semantic_score_signals
@@ -45,7 +45,7 @@ class WeightedSumScoringStrategy:
     ) -> None:
         self.anomaly_threshold = anomaly_threshold
         self.depth_penalty = depth_penalty
-        self.anomaly_policy = anomaly_policy or ThresholdAnomalyPolicy(
+        self.anomaly_policy = anomaly_policy or default_anomaly_policy(
             risk_threshold=anomaly_threshold,
             novelty_threshold=anomaly_threshold,
         )
