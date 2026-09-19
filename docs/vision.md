@@ -155,7 +155,7 @@ The next iterations should focus on:
 
 1. better semantic backends behind stable interfaces
 2. expand private Layer C golden sets beyond the public stand-ins
-3. optional Stage 3 brain-like mechanisms as a separate milestone
+3. deepen Stage 6 brain-like mechanisms already exposed via `memory_engine.api` (`project_dual_views`, forgetting policies, `PathReasoner`)
 4. **Memory Palace v1**: continue palace-first APIs via `memory_engine.api` while keeping the legacy `MemoryStore` bridge stable
 
 ## Relationship to the rest of the docs

@@ -31,3 +31,15 @@ Add a new pack by subclassing `RuleBasedSectionedDocumentPack` (or implementing 
 
 Legacy `MemoryPath` / `RetrievalResult` remain stable. Palace APIs are additive.
 New application code should start at `memory_engine.api` so track choice stays explicit and testable.
+
+## Stage 6 brain-like mechanisms
+
+Optional helpers on the same dual-track surface:
+
+| Capability | Entry point | Notes |
+| --- | --- | --- |
+| Dual episodic / semantic views | `project_dual_views(store)` | Linked `recalls` / `summarizes` edges from one source node |
+| Online reinforce / forget | `apply_online_memory_step(..., policy="mild"\|"aggressive")` | Named policies for falsifiable decay curves |
+| query → path → answer | `reason_from_recall` / `recall_and_reason` | Deterministic hop citations; not an LLM caller |
+
+These stay additive: existing Layer B fixtures and retriever modes do not require them.

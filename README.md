@@ -289,15 +289,15 @@ Current run matrix:
 - production infrastructure
 - MCP integration
 - multi-modal memory encoding
-- online reinforcement and forgetting policies
 - large-scale benchmarks
 - full UI
+- LLM-backed answer synthesis (Stage 6 path reasoning stays deterministic)
 
 ## Planned next steps
 
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
 - expand private Layer C golden sets beyond the public stand-ins in `benchmarks/layer_c_minimal`
-- optional Stage 3 brain-like mechanisms (multi-representation, online forgetting) as a separate milestone
+- deepen Stage 6 mechanisms (richer multi-rep bridging, more forgetting ablations)
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 
