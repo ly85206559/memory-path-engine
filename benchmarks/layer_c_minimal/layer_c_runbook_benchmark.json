@@ -1,0 +1,42 @@
+{
+  "dataset_id": "layer-c-minimal-runbook-benchmark-v1",
+  "dataset_name": "Layer C minimal runbook transferable benchmark",
+  "domain_pack_name": "example_runbook_pack",
+  "document_directory": "./documents/runbooks",
+  "cases": [
+    {
+      "case_id": "lc-rollback-escalation-001",
+      "query": "If rollback does not recover the API and slow queries continue, who should we escalate to?",
+      "tags": ["layer_c", "multi_hop", "escalation", "realism"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_noisy_incident_playbook:3"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": ["escalation"]
+      }
+    },
+    {
+      "case_id": "lc-generalized-rule-002",
+      "query": "What generalized rule applies after repeated rollback failures across consecutive releases?",
+      "tags": ["layer_c", "generalized_rule_recall", "realism"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_noisy_incident_playbook:6"
+        ],
+        "minimum_evidence_matches": 1
+      }
+    },
+    {
+      "case_id": "lc-cross-episode-003",
+      "query": "If payment dispute tickets and incident tickets both reference the same batch job, how should postmortem clustering treat that shared failure mode?",
+      "tags": ["layer_c", "cross_episode_abstraction", "realism"],
+      "expectation": {
+        "evidence_node_ids": [
+          "02_noisy_incident_playbook:7"
+        ],
+        "minimum_evidence_matches": 1
+      }
+    }
+  ]
+}

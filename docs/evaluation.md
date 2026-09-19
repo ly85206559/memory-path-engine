@@ -175,3 +175,15 @@ The public benchmark adapters now split into two tracks:
 
 - `HotpotQA`: evidence retrieval sanity on multi-document QA (`evidence_hit_rate`, `evidence_recall`, per-type breakdowns)
 - `LongMemEval`: session-level retrieval-only memory recall (`R@5`, `R@10`, `NDCG@10`)
+
+Both public adapters emit `metric_scope=external_positioning` in compact summaries. Generate a combined Layer A report with:
+
+```bash
+python scripts/generate_layer_a_report.py --slice-profile tiny
+```
+
+Layer C transferable stand-ins live under `benchmarks/layer_c_minimal` and reuse the structured Layer B runner contract:
+
+```bash
+python scripts/run_layer_c_benchmark.py
+```

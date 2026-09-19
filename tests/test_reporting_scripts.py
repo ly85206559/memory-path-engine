@@ -166,5 +166,7 @@ class ReportingScriptsTests(unittest.TestCase):
 
         self.assertEqual(summary["samples"], 12)
         self.assertEqual(summary["granularity"], "session")
+        self.assertEqual(summary["metric_layer"], "A")
+        self.assertEqual(summary["metric_scope"], "external_positioning")
         self.assertIn("weighted_graph", summary["modes"])
         self.assertEqual(summary["modes"]["weighted_graph"]["recall_at_10"], 0.75)

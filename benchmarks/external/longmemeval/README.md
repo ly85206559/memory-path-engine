@@ -57,6 +57,8 @@ python scripts/run_longmemeval_benchmark.py --summary-output "benchmarks/externa
 
 The repository now includes `longmemeval-nightly.yml` for scheduled or manual runs against the downloaded cleaned file. It uploads both the full suite report and a compact summary artifact so the LongMemEval baseline can be tracked continuously.
 
+Nightly defaults to a **medium** slice (`50` samples). Use `slice_profile=full` for the complete file. Summaries include `metric_scope=external_positioning` and an explicit disclaimer that path/semantic/contradiction claims belong to Layer B / Layer C.
+
 ## Important limitation
 
 This adapter is currently **session-only** and **retrieval-only**:

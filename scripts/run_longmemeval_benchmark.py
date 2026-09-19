@@ -8,6 +8,7 @@ from memory_engine.benchmarking.adapters.longmemeval import (
     load_longmemeval_json,
     run_longmemeval_benchmark,
 )
+from memory_engine.benchmarking.application.layer_a_report import annotate_external_summary
 
 
 def repo_root() -> Path:
@@ -23,7 +24,7 @@ def _parse_modes(value: str) -> tuple[str, ...]:
 
 
 def build_summary_payload(suite, *, dataset_path: Path, sample_count: int, granularity: str) -> dict:
-    return {
+    payload = {
         "dataset": str(dataset_path),
         "samples": sample_count,
         "granularity": granularity,
@@ -38,6 +39,7 @@ def build_summary_payload(suite, *, dataset_path: Path, sample_count: int, granu
             for mode_name, report in suite.modes.items()
         },
     }
+    return annotate_external_summary(payload, dataset_kind="longmemeval")
 
 
 def main() -> None:
@@ -165,6 +167,7 @@ def main() -> None:
     print(f"dataset: {dataset_path}")
     print(f"samples: {len(samples)}")
     print(f"granularity: {args.granularity}")
+    print(f"metric_scope: {summary_payload['metric_scope']}")
     print(f"modes: {', '.join(suite.modes)}")
     print()
     for mode_name, mode_summary in summary_payload["modes"].items():

@@ -62,6 +62,14 @@ The main CI workflow does **not** download HotpotQA. A dedicated sanity job uses
 
 A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads both the full suite JSON and a compact summary artifact.
 
+Nightly defaults to a **medium** slice (`64` samples). Use `slice_profile=full` (or `sample_limit=0`) for the complete downloaded file. Summary artifacts are labeled `metric_scope=external_positioning` so they are not confused with Layer B architecture metrics.
+
+For a combined HotpotQA + LongMemEval positioning report:
+
+```bash
+python scripts/generate_layer_a_report.py --slice-profile tiny
+```
+
 ## Important limitation
 
 Do **not** merge all dev questions into one `MemoryStore`. Each HotpotQA distractor question must keep an isolated graph. Use `run_hotpotqa_benchmark`, which builds a fresh store per sample.

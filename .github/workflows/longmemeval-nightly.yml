@@ -3,10 +3,18 @@ name: longmemeval-nightly
 on:
   workflow_dispatch:
     inputs:
-      sample_limit:
-        description: "Optional sample limit. Use 0 for the full downloaded file."
+      slice_profile:
+        description: "Slice profile: medium (50 samples) or full (0 = all)."
         required: false
-        default: "0"
+        default: "medium"
+        type: choice
+        options:
+          - medium
+          - full
+      sample_limit:
+        description: "Optional explicit sample limit. Overrides slice_profile when set. Use 0 for full file."
+        required: false
+        default: ""
       top_k:
         description: "Retriever top_k for each mode."
         required: false
@@ -39,15 +47,50 @@ jobs:
       - name: Download LongMemEval-S
         run: python scripts/download_longmemeval.py --force
 
+      - name: Resolve sample limit
+        id: limit
+        run: |
+          if [ -n "${{ github.event.inputs.sample_limit }}" ]; then
+            echo "value=${{ github.event.inputs.sample_limit }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.inputs.slice_profile || 'medium' }}" = "full" ]; then
+            echo "value=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=50" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run LongMemEval nightly benchmark
         run: >
           python scripts/run_longmemeval_benchmark.py
           --dataset "benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json"
-          --limit "${{ github.event.inputs.sample_limit || '0' }}"
+          --limit "${{ steps.limit.outputs.value }}"
           --top-k "${{ github.event.inputs.top_k || '10' }}"
           --modes "${{ github.event.inputs.modes || 'embedding_baseline,weighted_graph,activation_spreading_v1' }}"
           --output "benchmarks/external/longmemeval/data/longmemeval-nightly-report.json"
           --summary-output "benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json"
+
+      - name: Write Layer A positioning note
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from memory_engine.benchmarking.application.layer_a_report import LAYER_A_DISCLAIMER
+          summary_path = Path("benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json")
+          payload = json.loads(summary_path.read_text(encoding="utf-8"))
+          note = {
+              "metric_layer": payload.get("metric_layer", "A"),
+              "metric_scope": payload.get("metric_scope", "external_positioning"),
+              "disclaimer": payload.get("disclaimer", LAYER_A_DISCLAIMER),
+              "architecture_metrics_location": payload.get(
+                  "architecture_metrics_location",
+                  "benchmarks/structured_memory (Layer B)",
+              ),
+              "summary": payload,
+          }
+          Path("benchmarks/external/longmemeval/data/longmemeval-nightly-positioning.json").write_text(
+              json.dumps(note, ensure_ascii=False, indent=2),
+              encoding="utf-8",
+          )
+          PY
 
       - name: Upload LongMemEval report artifact
         uses: actions/upload-artifact@v7
@@ -60,5 +103,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: longmemeval-nightly-summary
-          path: benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json
+          path: |
+            benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json
+            benchmarks/external/longmemeval/data/longmemeval-nightly-positioning.json
           if-no-files-found: error
