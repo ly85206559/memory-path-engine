@@ -1,0 +1,48 @@
+{
+  "dataset_id": "research-claim-chain-benchmark-v1",
+  "dataset_name": "Research claim chain benchmark",
+  "domain_pack_name": "example_research_pack",
+  "document_directory": "../../examples/research_pack/notes",
+  "cases": [
+    {
+      "case_id": "research-001",
+      "query": "When do flat embedding retrieval results conflict with the claim that structured retrieval should beat top-k on multi-hop questions?",
+      "tags": ["research", "contradiction", "multi_hop"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_memory_graph_claims:1",
+          "01_memory_graph_claims:3"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": ["contradicts"],
+        "required_contradiction_pairs": [
+          ["01_memory_graph_claims:1", "01_memory_graph_claims:3"]
+        ]
+      }
+    },
+    {
+      "case_id": "research-002",
+      "query": "Unless path replay is causally used in scoring, what happens to explainability gains from evidence paths?",
+      "tags": ["research", "exception", "explainability"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_memory_graph_claims:2",
+          "01_memory_graph_claims:4"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_semantic_roles": ["exception"]
+      }
+    },
+    {
+      "case_id": "research-003",
+      "query": "After validating claim 1 on Layer B fixtures, what evaluation extension should follow?",
+      "tags": ["research", "follow_up"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_memory_graph_claims:5"
+        ],
+        "minimum_evidence_matches": 1
+      }
+    }
+  ]
+}

@@ -81,10 +81,10 @@ Terminal-style capture of real stdout (refresh with `python scripts/generate_run
 
 ![Runbook demo terminal output](docs/assets/runbook-demo-terminal.svg)
 
-Run the contract comparison demo:
+Run the research-notes demo:
 
 ```bash
-python -m memory_engine.demo --scenario contract
+python -m memory_engine.demo --scenario research
 ```
 
 Run the HotpotQA tiny benchmark sanity check:
@@ -225,6 +225,7 @@ If the retrieval and replay ideas cannot survive across these document types, th
 
 - [`docs/vision.md`](docs/vision.md): why this project exists and where it is heading
 - [`docs/architecture.md`](docs/architecture.md): how the current system is structured
+- [`docs/api-tracks.md`](docs/api-tracks.md): legacy vs palace recall entry points
 - [`docs/evaluation.md`](docs/evaluation.md): how retrieval modes are compared
 - [`docs/benchmark-strategy.md`](docs/benchmark-strategy.md): how public, repo-owned, and private benchmarks should be used
 - [`docs/private-contract-dataset-guide.md`](docs/private-contract-dataset-guide.md): how to build and annotate a private contract golden set
@@ -294,9 +295,9 @@ Current run matrix:
 
 ## Planned next steps
 
-- extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
 - expand private Layer C golden sets beyond the public stand-ins in `benchmarks/layer_c_minimal`
+- optional Stage 3 brain-like mechanisms (multi-representation, online forgetting) as a separate milestone
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

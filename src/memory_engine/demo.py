@@ -162,13 +162,38 @@ def run_contract_demo() -> str:
     )
 
 
+def run_research_demo() -> str:
+    query = (
+        "When do flat embedding retrieval results conflict with the claim that "
+        "structured retrieval should beat top-k on multi-hop questions?"
+    )
+    result = WeightedGraphRetriever(build_research_store()).search(query, top_k=3)
+    return "\n".join(
+        [
+            _header_banner("research"),
+            _query_block(query),
+            format_weighted_path(result.best_path()),
+            _blank(),
+            _rule("="),
+        ]
+    )
+
+
+def build_research_store() -> MemoryStore:
+    store = MemoryStore()
+    notes_dir = repo_root() / "examples" / "research_pack" / "notes"
+    for path in notes_dir.glob("*.md"):
+        ingest_document(path, store, domain_pack="example_research_pack")
+    return store
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run a repository demo for Memory Path Engine."
     )
     parser.add_argument(
         "--scenario",
-        choices=("runbook", "contract"),
+        choices=("runbook", "contract", "research"),
         default="runbook",
         help="Which bundled demo scenario to run.",
     )
@@ -176,6 +201,9 @@ def main() -> None:
 
     if args.scenario == "contract":
         print(run_contract_demo())
+        return
+    if args.scenario == "research":
+        print(run_research_demo())
         return
 
     print(run_runbook_demo())

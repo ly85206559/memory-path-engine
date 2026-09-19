@@ -136,12 +136,12 @@ Current example packs:
 
 - `example_contract_pack` (with `contract_pack` kept as a backward-compatible alias)
 - `example_runbook_pack`
+- `example_research_pack` (with `research_pack` kept as a backward-compatible alias)
 
 Future candidates:
 
 - `code_pack`
-- `research_pack`
-- `support_pack`
+- `support_pack` / `policy_pack`
 
 ## Baselines
 
@@ -189,4 +189,6 @@ v1 adds an explicit **palace domain** under `src/memory_engine/memory/`:
 - **Dynamic lifecycle on nodes**: `MemoryStatePolicy` still mutates `MemoryWeight`, and also writes `lifecycle_state`, `reinforcement_count`, and `stability_score` on `MemoryNode.attributes` using the v1 state machine.
 
 Legacy contracts (`MemoryPath`, `RetrievalResult.paths`, structured benchmark reports) remain stable; v1 is additive until callers migrate to palace-first APIs.
+
+For a practical dual-track mental model and the preferred entry points (`recall_from_store`, `recall_from_palace`, `recall_from_documents`), see [`api-tracks.md`](api-tracks.md).
 
