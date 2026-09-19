@@ -2,8 +2,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from memory_engine.api import recall_from_documents, recall_from_store
 from memory_engine.domain_pack import (
     ExampleContractPack,
+    ExampleResearchPack,
     ExampleRunbookPack,
     HotpotQASentencePack,
     LongMemEvalSessionPack,
@@ -25,6 +27,11 @@ class DomainPackTests(unittest.TestCase):
     def test_example_runbook_pack_is_registered(self):
         domain_pack = get_domain_pack("example_runbook_pack")
         self.assertIsInstance(domain_pack, ExampleRunbookPack)
+
+    def test_example_research_pack_is_registered(self):
+        domain_pack = get_domain_pack("example_research_pack")
+        self.assertIsInstance(domain_pack, ExampleResearchPack)
+        self.assertIsInstance(get_domain_pack("research_pack"), ExampleResearchPack)
 
     def test_hotpotqa_sentence_pack_is_registered(self):
         domain_pack = get_domain_pack("hotpotqa_sentence_pack")
@@ -79,6 +86,26 @@ class DomainPackTests(unittest.TestCase):
             self.assertIn("demo_runbook:2", nodes)
             self.assertEqual(nodes["demo_runbook:1"].type, "step")
 
+    def test_research_pack_ingests_note_nodes_and_contradicts_edges(self):
+        note_text = "\n".join(
+            [
+                "# Demo Notes",
+                "",
+                "## Claims",
+                "1 Structured retrieval should beat flat top-k on multi-hop questions.",
+                "2 Flat embedding retrieval conflicts with claim 1 on exception traversal.",
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "demo_notes.md"
+            path.write_text(note_text, encoding="utf-8")
+            store = MemoryStore()
+            ingest_document(path, store, domain_pack="example_research_pack")
+            nodes = {node.id: node for node in store.nodes()}
+            self.assertEqual(nodes["demo_notes:1"].type, "note")
+            contradict_edges = [edge for edge in store.edges() if edge.edge_type == "contradicts"]
+            self.assertTrue(contradict_edges)
+
     def test_contract_pack_adds_semantic_role_and_exception_target(self):
         contract_text = "\n".join(
             [
@@ -103,3 +130,37 @@ class DomainPackTests(unittest.TestCase):
                 nodes["demo_exception_contract:2"].attributes["exception_target"],
                 "demo_exception_contract:1",
             )
+
+    def test_unified_recall_from_documents_supports_legacy_and_palace_tracks(self):
+        legacy = recall_from_documents(
+            Path("examples/research_pack/notes"),
+            "When do flat embedding retrieval results conflict with structured retrieval claims?",
+            domain_pack="example_research_pack",
+            track="legacy",
+            top_k=3,
+        )
+        palace = recall_from_documents(
+            Path("examples/research_pack/notes"),
+            "When do flat embedding retrieval results conflict with structured retrieval claims?",
+            domain_pack="example_research_pack",
+            track="palace",
+            top_k=3,
+        )
+        self.assertEqual(legacy.track, "legacy")
+        self.assertEqual(palace.track, "palace")
+        self.assertTrue(legacy.legacy and legacy.legacy.paths)
+        self.assertTrue(palace.palace and palace.palace.retrieved_memories)
+        self.assertTrue(legacy.best_answer)
+
+    def test_research_claim_chain_benchmark_passes_weighted_graph(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=Path("benchmarks/structured_memory/research_claim_chain_benchmark.json"),
+            retriever_mode="weighted_graph",
+            top_k=3,
+        )
+        self.assertEqual(report.evidence_hit_rate, 1.0)
+        self.assertTrue(all(case.hit for case in report.case_reports))

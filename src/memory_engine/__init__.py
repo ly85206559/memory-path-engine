@@ -1,3 +1,10 @@
+from memory_engine.api import (
+    UnifiedRecallResult,
+    ingest_paths,
+    recall_from_documents,
+    recall_from_palace,
+    recall_from_store,
+)
 from memory_engine.activation import (
     ActivatedNode,
     ActivationSignal,
@@ -56,6 +63,7 @@ from memory_engine.anomaly import (
 )
 from memory_engine.domain_pack import (
     ExampleContractPack,
+    ExampleResearchPack,
     ExampleRunbookPack,
     DomainPack,
     EdgeRule,
@@ -141,6 +149,11 @@ __all__ = [
     "DefaultPropagationPolicy",
     "DomainPack",
     "EdgeRule",
+    "UnifiedRecallResult",
+    "ingest_paths",
+    "recall_from_documents",
+    "recall_from_palace",
+    "recall_from_store",
     "JsonStructuredBenchmarkDatasetRepository",
     "load_legacy_questions_dataset",
     "load_longmemeval_json",
@@ -154,6 +167,7 @@ __all__ = [
     "EmbeddingProvider",
     "EmbeddingTopKRetriever",
     "ExampleContractPack",
+    "ExampleResearchPack",
     "ExampleRunbookPack",
     "LongMemEvalSessionPack",
     "EvidenceRef",

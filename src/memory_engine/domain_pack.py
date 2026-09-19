@@ -323,6 +323,78 @@ _example_contract_pack = ExampleContractPack()
 _example_runbook_pack = ExampleRunbookPack()
 
 
+class ExampleResearchPack(RuleBasedSectionedDocumentPack):
+    """
+    Reference pack for research notes, lab logs, and claim/evidence notebooks.
+
+    It keeps the core retrieval stack domain-agnostic while modeling citation-like
+    and contradiction relationships common in research writing.
+    """
+
+    name = "example_research_pack"
+    node_type = "note"
+
+    def _build_attributes(
+        self,
+        path: Path,
+        section_id: str,
+        unit_number: str,
+        unit_body: str,
+    ) -> dict:
+        attributes = super()._build_attributes(path, section_id, unit_number, unit_body)
+        attributes["note_number"] = unit_number
+        attributes["contains_claim"] = any(
+            keyword in unit_body.lower()
+            for keyword in ("claim", "hypothesis", "should", "improves", "beats")
+        )
+        return attributes
+
+    def _edge_rules(self) -> tuple[EdgeRule, ...]:
+        return (
+            EdgeRule("depends_on", ("after", "based on", "follows from", "subject to")),
+            EdgeRule(
+                "contradicts",
+                ("conflict", "conflicts", "contradict", "contrary to", "counterpoint"),
+                bidirectional=True,
+                weight=0.85,
+            ),
+            EdgeRule(
+                "exception_to",
+                ("unless", "except when", "except if", "notwithstanding"),
+                bidirectional=True,
+            ),
+            EdgeRule("causes", ("therefore", "implies", "leads to", "results in")),
+            EdgeRule("cites", ("see claim", "see note", "extends", "supports"), weight=0.65),
+        )
+
+    def _infer_weight(self, text: str) -> MemoryWeight:
+        lowered = text.lower()
+        risk = (
+            0.85
+            if any(word in lowered for word in ("conflict", "contradict", "failure", "cosmetic"))
+            else 0.3
+        )
+        importance = (
+            0.85
+            if any(word in lowered for word in ("claim", "hypothesis", "must", "should", "validate"))
+            else 0.45
+        )
+        novelty = (
+            0.8
+            if any(word in lowered for word in ("unless", "except", "counterpoint", "novel"))
+            else 0.25
+        )
+        return MemoryWeight(
+            importance=importance,
+            risk=risk,
+            novelty=novelty,
+            confidence=0.9,
+        )
+
+
+_example_research_pack = ExampleResearchPack()
+
+
 class HotpotQASentencePack:
     """
     Placeholder pack for HotpotQA adapter datasets.
@@ -359,10 +431,12 @@ _longmemeval_session_pack = LongMemEvalSessionPack()
 _DOMAIN_PACKS: dict[str, DomainPack] = {
     "example_contract_pack": _example_contract_pack,
     "example_runbook_pack": _example_runbook_pack,
+    "example_research_pack": _example_research_pack,
     "hotpotqa_sentence_pack": _hotpotqa_sentence_pack,
     "longmemeval_session_pack": _longmemeval_session_pack,
     # Backward-compatible alias for the existing example dataset and helpers.
     "contract_pack": _example_contract_pack,
+    "research_pack": _example_research_pack,
 }
 
 

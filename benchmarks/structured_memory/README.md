@@ -76,6 +76,7 @@ Layer B reports should now also surface fixed aggregates for:
 - `contradiction_tension_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 - `structure_ablation_benchmark.json`
+- `research_claim_chain_benchmark.json`
 
 These fixtures are intentionally small. They are meant to support TDD and architectural iteration before larger benchmark suites are introduced.
 
