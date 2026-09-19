@@ -112,6 +112,14 @@ Where:
 - `anomaly_score` rewards nodes marked as risky, conflicting, unusual, or exception-bearing
 - `importance_score` rewards nodes that matter more even if they are not lexically dominant
 
+Anomaly scoring is produced by a composable `AnomalyPolicy`. The default policy combines:
+
+- weight thresholds (risk / novelty)
+- lexical conflict and exception markers
+- contradiction / exception attributes written during ingest
+
+Domain packs can emit explicit `contradicts` edges in addition to `exception_to`. Retrieval and activation treat both as first-class tension signals when building contradiction candidates and path bonuses.
+
 ## Domain-pack strategy
 
 The core should stay domain-agnostic. Domain packs should provide:

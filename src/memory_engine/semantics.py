@@ -64,21 +64,47 @@ def semantic_activation_bonus(node: MemoryNode) -> float:
 
 def contradiction_candidates(nodes: list[MemoryNode], edges: list[MemoryEdge]) -> list[ContradictionCandidate]:
     candidates: list[ContradictionCandidate] = []
+    seen_pairs: set[tuple[str, str]] = set()
     node_map = {node.id: node for node in nodes}
+
+    def _append_candidate(left_id: str, right_id: str, explanation: str) -> None:
+        pair_key = tuple(sorted((left_id, right_id)))
+        if pair_key in seen_pairs:
+            return
+        seen_pairs.add(pair_key)
+        candidates.append(
+            ContradictionCandidate(
+                left_node_id=left_id,
+                right_node_id=right_id,
+                explanation=explanation,
+            )
+        )
+
     for edge in edges:
-        if edge.edge_type != "exception_to":
-            continue
         source = node_map.get(edge.from_id)
         target = node_map.get(edge.to_id)
         if source is None or target is None:
             continue
+        if edge.edge_type == "contradicts":
+            _append_candidate(
+                source.id,
+                target.id,
+                explanation="explicit contradicts edge marks rule tension",
+            )
+            continue
+        if edge.edge_type != "exception_to":
+            continue
         if source.attributes.get("semantic_role") == SemanticRole.EXCEPTION.value:
-            candidates.append(
-                ContradictionCandidate(
-                    left_node_id=target.id,
-                    right_node_id=source.id,
-                    explanation="exception link may override the general rule",
-                )
+            _append_candidate(
+                target.id,
+                source.id,
+                explanation="exception link may override the general rule",
+            )
+        elif target.attributes.get("semantic_role") == SemanticRole.EXCEPTION.value:
+            _append_candidate(
+                source.id,
+                target.id,
+                explanation="exception link may override the general rule",
             )
     return candidates
 

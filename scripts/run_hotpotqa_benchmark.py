@@ -9,6 +9,7 @@ from memory_engine.benchmarking.adapters.hotpotqa import (
     run_hotpotqa_benchmark,
     summarize_hotpotqa_suite,
 )
+from memory_engine.benchmarking.application.layer_a_report import annotate_external_summary
 
 
 def repo_root() -> Path:
@@ -21,6 +22,27 @@ def _default_dataset_path() -> Path:
 
 def _parse_modes(value: str) -> tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
+
+
+def build_hotpot_summary_payload(samples, suite, summary, *, dataset_path: Path) -> dict:
+    payload = {
+        "dataset": str(dataset_path),
+        "samples": len(samples),
+        "modes": {
+            mode_name: {
+                "questions": report.questions,
+                "evidence_hit_rate": report.evidence_hit_rate,
+                "evidence_recall": report.evidence_recall,
+                "avg_latency_ms": report.avg_latency_ms,
+                "breakdown_by_type": {
+                    case_type: bucket.model_dump()
+                    for case_type, bucket in summary.modes[mode_name].breakdown_by_type.items()
+                },
+            }
+            for mode_name, report in suite.modes.items()
+        },
+    }
+    return annotate_external_summary(payload, dataset_kind="hotpotqa")
 
 
 def main() -> None:
@@ -84,6 +106,12 @@ def main() -> None:
         dataset_id=f"hotpotqa::{dataset_path.stem}",
     )
     summary = summarize_hotpotqa_suite(samples, suite)
+    summary_payload = build_hotpot_summary_payload(
+        samples,
+        suite,
+        summary,
+        dataset_path=dataset_path,
+    )
 
     if args.output is not None:
         output_path = args.output
@@ -98,7 +126,7 @@ def main() -> None:
             summary_output_path = (repo_root() / summary_output_path).resolve()
         summary_output_path.parent.mkdir(parents=True, exist_ok=True)
         summary_output_path.write_text(
-            summary.model_dump_json(indent=2),
+            json.dumps(summary_payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
@@ -108,6 +136,7 @@ def main() -> None:
 
     print(f"dataset: {dataset_path}")
     print(f"samples: {len(samples)}")
+    print(f"metric_scope: {summary_payload['metric_scope']}")
     print(f"modes: {', '.join(suite.modes)}")
     print()
     for mode_name, report in suite.modes.items():

@@ -1,0 +1,46 @@
+{
+  "dataset_id": "layer-c-minimal-benchmark-v1",
+  "dataset_name": "Layer C minimal transferable benchmark",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "./documents/contracts",
+  "cases": [
+    {
+      "case_id": "lc-payment-override-001",
+      "query": "May Customer withhold disputed invoice amounts for defective Deliverables until Seller cures the defect?",
+      "tags": ["layer_c", "exception", "payment", "realism"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_noisy_services_agreement:2"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": ["exception"],
+        "required_edge_types": ["exception_to"]
+      }
+    },
+    {
+      "case_id": "lc-payment-conflict-002",
+      "query": "Does Schedule A payment of invoices conflict with Agreement payment of invoices, and which timing controls?",
+      "tags": ["layer_c", "contradiction", "payment", "realism"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_noisy_services_agreement:4"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_contradiction_pairs": [
+          ["01_noisy_services_agreement:3", "01_noisy_services_agreement:4"]
+        ]
+      }
+    },
+    {
+      "case_id": "lc-termination-chain-003",
+      "query": "When Customer terminates under clause 5, what refund timing applies for prepaid unused fees?",
+      "tags": ["layer_c", "multi_hop", "termination"],
+      "expectation": {
+        "evidence_node_ids": [
+          "01_noisy_services_agreement:6"
+        ],
+        "minimum_evidence_matches": 1
+      }
+    }
+  ]
+}

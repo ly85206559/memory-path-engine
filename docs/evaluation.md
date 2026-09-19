@@ -110,6 +110,20 @@ The primary repository-owned fixture for this comparison is `benchmarks/structur
 
 If these ablations produce no meaningful change, the core design assumptions need to be revisited.
 
+Generate a fixed-format ablation matrix and latency summary with:
+
+```bash
+python scripts/generate_ablation_report.py \
+  --output "benchmarks/structured_memory/ablation_report.json" \
+  --markdown-output "benchmarks/structured_memory/ablation_report.md"
+```
+
+The report compares `lexical_baseline`, `embedding_baseline`, `structure_only`, `weighted_graph`, and `activation_spreading_v1` across the default ablation fixtures and records:
+
+- per-mode `avg` / `median` / `p95` latency
+- family deltas for no-structure, no-weight, and no-path-expansion
+- whether each family moves the primary metric in the expected direction
+
 ## What success looks like
 
 - graph-aware retrieval wins on multi-hop structured-document questions in the example benchmark
@@ -161,3 +175,15 @@ The public benchmark adapters now split into two tracks:
 
 - `HotpotQA`: evidence retrieval sanity on multi-document QA (`evidence_hit_rate`, `evidence_recall`, per-type breakdowns)
 - `LongMemEval`: session-level retrieval-only memory recall (`R@5`, `R@10`, `NDCG@10`)
+
+Both public adapters emit `metric_scope=external_positioning` in compact summaries. Generate a combined Layer A report with:
+
+```bash
+python scripts/generate_layer_a_report.py --slice-profile tiny
+```
+
+Layer C transferable stand-ins live under `benchmarks/layer_c_minimal` and reuse the structured Layer B runner contract:
+
+```bash
+python scripts/run_layer_c_benchmark.py
+```

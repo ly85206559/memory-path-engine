@@ -32,3 +32,31 @@ jobs:
         run: python -m pip install --no-build-isolation -e .
       - name: HotpotQA tiny sanity
         run: python scripts/run_hotpotqa_benchmark.py
+
+  layer-a-positioning:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+      - name: Install
+        run: python -m pip install --no-build-isolation -e .
+      - name: Layer A tiny positioning report
+        run: python scripts/generate_layer_a_report.py --slice-profile tiny
+
+  layer-c-transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "pyproject.toml"
+      - name: Install
+        run: python -m pip install --no-build-isolation -e .
+      - name: Layer C transferable stand-ins
+        run: python scripts/run_layer_c_benchmark.py --modes weighted_graph,activation_spreading_v1

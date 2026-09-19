@@ -111,6 +111,24 @@ Generate a fixed-format Layer B report (path/route/space/lifecycle/activation sn
 python scripts/generate_layer_b_report.py --output "benchmarks/structured_memory/layer_b_report.json" --markdown-output "benchmarks/structured_memory/layer_b_report.md"
 ```
 
+Generate a fixed-format ablation matrix and latency summary (no-structure / no-weight / no-path-expansion):
+
+```bash
+python scripts/generate_ablation_report.py --output "benchmarks/structured_memory/ablation_report.json" --markdown-output "benchmarks/structured_memory/ablation_report.md"
+```
+
+Generate a Layer A positioning report (external metrics only; keeps architecture claims in Layer B):
+
+```bash
+python scripts/generate_layer_a_report.py --slice-profile tiny --markdown-output "benchmarks/external/layer_a_report.md"
+```
+
+Run Layer C transferable stand-in benchmarks:
+
+```bash
+python scripts/run_layer_c_benchmark.py --markdown-output "benchmarks/layer_c_minimal/layer_c_report.md"
+```
+
 Download the official HotpotQA dev distractor file for local benchmark runs:
 
 ```bash
@@ -250,12 +268,12 @@ The benchmark story is intentionally split into three layers:
 Current run matrix:
 
 - `benchmarks/structured_memory/*.json`: CI
-- `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle)
+- `benchmarks/structured_memory/spatial_recall_benchmark.json`, `route_replay_benchmark.json`, `consolidation_gain_benchmark.json`, `state_transition_benchmark.json`, `contradiction_tension_benchmark.json`: Layer B checks for palace-oriented expectations (space, route shape, diffusion gain, lifecycle) and explicit contradiction / rule-tension pairs
 - `benchmarks/external/hotpotqa/hotpot_tiny_fixture.json`: CI sanity
-- `benchmarks/external/hotpotqa/data/*.json`: local / nightly
+- `benchmarks/external/hotpotqa/data/*.json`: local / nightly (`medium` default 64 samples, `full` optional)
 - `benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`: local sanity
-- `benchmarks/external/longmemeval/data/*.json`: local / nightly
-- `benchmarks/layer_c_minimal/*`: starter scaffold for the first real-data Layer C set
+- `benchmarks/external/longmemeval/data/*.json`: local / nightly (`medium` default 50 samples, `full` optional)
+- `benchmarks/layer_c_minimal/*`: runnable Layer C transfer stand-ins + private annotation templates
 
 ## What is in scope for v0
 
@@ -276,10 +294,9 @@ Current run matrix:
 
 ## Planned next steps
 
-- add explicit anomaly detectors and contradiction edges
-- expand the evaluation runner with ablation reports and latency summaries
 - extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
+- expand private Layer C golden sets beyond the public stand-ins in `benchmarks/layer_c_minimal`
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

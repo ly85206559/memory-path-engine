@@ -128,7 +128,7 @@ class DefaultPropagationPolicy:
         contradiction_candidates: list[ContradictionCandidate] | None = None,
     ) -> float:
         adjusted_activation = propagated_activation
-        if edge.edge_type == "exception_to":
+        if edge.edge_type in {"exception_to", "contradicts"}:
             adjusted_activation += 0.12
         adjusted_activation += semantic_activation_bonus(destination_node)
         adjusted_activation += contradiction_bonus(

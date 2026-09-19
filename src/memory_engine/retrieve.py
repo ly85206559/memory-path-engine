@@ -321,6 +321,15 @@ class WeightedGraphRetriever:
             return 2
         if edge_type == "exception_to":
             return 2 if any(token in lowered for token in ("override", "exception", "unless", "except")) else 1
+        if edge_type == "contradicts":
+            return (
+                2
+                if any(
+                    token in lowered
+                    for token in ("conflict", "contradict", "which governs", "order form", "tension")
+                )
+                else 1
+            )
         if edge_type == "next_unit":
             return 1 if any(token in lowered for token in ("next", "after", "comes after")) else 0
         return 0

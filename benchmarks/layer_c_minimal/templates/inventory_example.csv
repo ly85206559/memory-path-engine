@@ -1,0 +1,3 @@
+doc_id,file_name,file_path,contract_type,template_family,language,has_appendix,has_sow_or_order_form,risk_level,exception_density,termination_complexity,selected_for_pilot,selection_reason
+01_noisy_services_agreement,01_noisy_services_agreement.md,documents/contracts/01_noisy_services_agreement.md,services,non_standard,en,yes,yes,medium,high,medium,yes,public stand-in for private MSA pilots
+02_noisy_incident_playbook,02_noisy_incident_playbook.md,documents/runbooks/02_noisy_incident_playbook.md,runbook,non_standard,en,no,no,high,medium,low,yes,public stand-in for private SOP pilots

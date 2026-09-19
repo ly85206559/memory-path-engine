@@ -45,7 +45,15 @@ from memory_engine.benchmarking import (
     summarize_hotpotqa_suite,
     validate_longmemeval_sample,
 )
-from memory_engine.anomaly import AnomalyKind, AnomalySignal, ThresholdAnomalyPolicy
+from memory_engine.anomaly import (
+    AnomalyKind,
+    AnomalySignal,
+    CompositeAnomalyPolicy,
+    ContradictionAttributeAnomalyPolicy,
+    LexicalConflictAnomalyPolicy,
+    ThresholdAnomalyPolicy,
+    default_anomaly_policy,
+)
 from memory_engine.domain_pack import (
     ExampleContractPack,
     ExampleRunbookPack,
@@ -138,7 +146,11 @@ __all__ = [
     "load_longmemeval_json",
     "AnomalyKind",
     "AnomalySignal",
+    "CompositeAnomalyPolicy",
+    "ContradictionAttributeAnomalyPolicy",
+    "LexicalConflictAnomalyPolicy",
     "ThresholdAnomalyPolicy",
+    "default_anomaly_policy",
     "EmbeddingProvider",
     "EmbeddingTopKRetriever",
     "ExampleContractPack",

@@ -73,6 +73,7 @@ Layer B reports should now also surface fixed aggregates for:
 - `dynamic_memory_priming_benchmark.json`
 - `exception_override_benchmark.json`
 - `exception_override_path_benchmark.json`
+- `contradiction_tension_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 - `structure_ablation_benchmark.json`
 
@@ -93,6 +94,7 @@ The default Layer B fixture set now includes route, path, and trace-aware cases:
 - `consolidation_gain_benchmark.json`
 - `exception_override_benchmark.json`
 - `exception_override_path_benchmark.json`
+- `contradiction_tension_benchmark.json`
 - `multi_hop_chain_benchmark.json`
 - `activation_snapshot_benchmark.json`
 
@@ -123,3 +125,9 @@ The source document for this benchmark lives in `examples/priming_pack/runbooks`
 `exception_override_path_benchmark.json` makes the exception override case path-aware: activation spreading should satisfy evidence, path, semantic-role, and contradiction expectations on the same sample.
 
 `structure_ablation_benchmark.json` is a compact regression target for no-structure / no-weight / no-path-expansion comparisons. It is intended to show that graph-aware modes surface the right edge types and semantic roles more reliably than flat retrieval.
+
+Generate a fixed-format ablation and latency report across the default ablation fixtures:
+
+```bash
+python scripts/generate_ablation_report.py --output "benchmarks/structured_memory/ablation_report.json" --markdown-output "benchmarks/structured_memory/ablation_report.md"
+```
