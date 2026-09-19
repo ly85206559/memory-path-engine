@@ -187,6 +187,10 @@ v1 adds an explicit **palace domain** under `src/memory_engine/memory/`:
 - **Recall layering**: `PalaceRecallResult` holds `retrieved_memories`, `routes`, and `activation_snapshot`, derived from a legacy `RetrievalResult` via `RetrievalResult.palace_result` (filled by retrievers in `retrieve.py`). Public benchmarks prefer this list when ranking session-like items.
 - **Retriever construction**: `build_legacy_retriever` in `retrieval_factory.py` is shared by the benchmark service and `RetrieveMemoryService`, avoiding import cycles with the runner.
 - **Dynamic lifecycle on nodes**: `MemoryStatePolicy` still mutates `MemoryWeight`, and also writes `lifecycle_state`, `reinforcement_count`, and `stability_score` on `MemoryNode.attributes` using the v1 state machine.
+- **Stage 6 mechanisms** (additive):
+  - `multi_representation.py`: project a source node into linked episodic / semantic views
+  - `forgetting_policies.py`: mild vs aggressive online decay policies over `MemoryStatePolicy`
+  - `reasoning.PathReasoner`: deterministic query → path → answer with hop citations
 
 Legacy contracts (`MemoryPath`, `RetrievalResult.paths`, structured benchmark reports) remain stable; v1 is additive until callers migrate to palace-first APIs.
 

@@ -19,12 +19,27 @@ from pathlib import Path
 from memory_engine.domain_pack import DomainPack, get_domain_pack
 from memory_engine.ingest import ingest_document
 from memory_engine.memory.application.bridge import store_to_palace
+from memory_engine.memory.application.forgetting_policies import (
+    policy_by_name,
+    snapshot_lifecycle,
+)
+from memory_engine.memory.application.multi_representation import (
+    DualRepresentationIds,
+    project_dual_representations,
+    project_dual_representations_for_store,
+)
 from memory_engine.memory.application.query_models import RecallPolicy, RecallQuery
 from memory_engine.memory.application.retrieve_memory_service import RetrieveMemoryService
 from memory_engine.memory.domain.palace import MemoryPalace
 from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
+from memory_engine.memory_state import (
+    MemoryStatePolicy,
+    decay_unvisited_nodes,
+    reinforce_result_paths,
+)
+from memory_engine.reasoning import PathReasoner, ReasonedAnswer
 from memory_engine.retrieval_factory import build_legacy_retriever
-from memory_engine.schema import RetrievalResult
+from memory_engine.schema import MemoryPath, RetrievalResult
 from memory_engine.store import MemoryStore
 
 
@@ -171,3 +186,100 @@ def recall_from_documents(
         retriever_mode=retriever_mode,
         top_k=top_k,
     )
+
+
+def project_dual_views(
+    store: MemoryStore,
+    *,
+    node_ids: list[str] | None = None,
+) -> list[DualRepresentationIds]:
+    """Project source nodes into linked episodic + semantic views (Stage 6)."""
+    if node_ids is None:
+        return project_dual_representations_for_store(store)
+    return [
+        project_dual_representations(store, source_node_id=node_id) for node_id in node_ids
+    ]
+
+
+def apply_online_memory_step(
+    store: MemoryStore,
+    result: RetrievalResult | UnifiedRecallResult,
+    *,
+    policy: str | MemoryStatePolicy = "default",
+) -> dict[str, dict[str, float | int | str]]:
+    """
+    One online reinforce-visited / decay-unvisited step under a named policy.
+
+    Use ``mild`` / ``aggressive`` to compare forgetting curves on the same graph.
+    """
+    legacy = result.legacy if isinstance(result, UnifiedRecallResult) else result
+    if legacy is None:
+        raise ValueError("apply_online_memory_step requires a legacy RetrievalResult")
+    resolved = policy if isinstance(policy, MemoryStatePolicy) else policy_by_name(policy)
+    visited = {
+        step.node_id
+        for path in legacy.paths
+        for step in path.steps
+    }
+    reinforce_result_paths(store, paths=legacy.paths, policy=resolved)
+    decay_unvisited_nodes(store, visited_node_ids=visited, policy=resolved)
+    return {node.id: snapshot_lifecycle(node) for node in store.nodes()}
+
+
+def reason_from_path(
+    query: str,
+    path: MemoryPath,
+    *,
+    store: MemoryStore | None = None,
+    reasoner: PathReasoner | None = None,
+) -> ReasonedAnswer:
+    """Compose a deterministic answer from a replayable memory path."""
+    return (reasoner or PathReasoner()).reason(query=query, path=path, store=store)
+
+
+def reason_from_recall(
+    query: str,
+    result: RetrievalResult | UnifiedRecallResult,
+    *,
+    store: MemoryStore | None = None,
+    reasoner: PathReasoner | None = None,
+) -> ReasonedAnswer:
+    """query → best path → answer using ``PathReasoner``."""
+    legacy = result.legacy if isinstance(result, UnifiedRecallResult) else result
+    if legacy is None:
+        raise ValueError("reason_from_recall requires a legacy RetrievalResult")
+    return (reasoner or PathReasoner()).reason_from_retrieval(
+        query=query,
+        result=legacy,
+        store=store,
+    )
+
+
+def recall_and_reason(
+    store: MemoryStore,
+    query: str,
+    *,
+    retriever_mode: str = "weighted_graph",
+    top_k: int = 3,
+    forgetting_policy: str | MemoryStatePolicy | None = None,
+    project_palace: bool = False,
+) -> tuple[UnifiedRecallResult, ReasonedAnswer, dict[str, dict[str, float | int | str]] | None]:
+    """
+    Light Stage 6 loop: recall → optional online forgetting step → path answer.
+    """
+    unified = recall_from_store(
+        store,
+        query,
+        retriever_mode=retriever_mode,
+        top_k=top_k,
+        project_palace=project_palace,
+    )
+    snapshots = None
+    if forgetting_policy is not None and unified.legacy is not None:
+        snapshots = apply_online_memory_step(
+            store,
+            unified.legacy,
+            policy=forgetting_policy,
+        )
+    answered = reason_from_recall(query, unified, store=store)
+    return unified, answered, snapshots
