@@ -111,6 +111,12 @@ Generate a fixed-format Layer B report (path/route/space/lifecycle/activation sn
 python scripts/generate_layer_b_report.py --output "benchmarks/structured_memory/layer_b_report.json" --markdown-output "benchmarks/structured_memory/layer_b_report.md"
 ```
 
+Generate a fixed-format ablation matrix and latency summary (no-structure / no-weight / no-path-expansion):
+
+```bash
+python scripts/generate_ablation_report.py --output "benchmarks/structured_memory/ablation_report.json" --markdown-output "benchmarks/structured_memory/ablation_report.md"
+```
+
 Download the official HotpotQA dev distractor file for local benchmark runs:
 
 ```bash
@@ -276,7 +282,6 @@ Current run matrix:
 
 ## Planned next steps
 
-- expand the evaluation runner with ablation reports and latency summaries
 - extend the `domain_pack` interface for more domains such as code, research notes, and policy-like documents
 - add stronger embedding backends behind the same `EmbeddingProvider` interface
 - grow Layer C private golden sets from the `benchmarks/layer_c_minimal` scaffold

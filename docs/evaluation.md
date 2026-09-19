@@ -110,6 +110,20 @@ The primary repository-owned fixture for this comparison is `benchmarks/structur
 
 If these ablations produce no meaningful change, the core design assumptions need to be revisited.
 
+Generate a fixed-format ablation matrix and latency summary with:
+
+```bash
+python scripts/generate_ablation_report.py \
+  --output "benchmarks/structured_memory/ablation_report.json" \
+  --markdown-output "benchmarks/structured_memory/ablation_report.md"
+```
+
+The report compares `lexical_baseline`, `embedding_baseline`, `structure_only`, `weighted_graph`, and `activation_spreading_v1` across the default ablation fixtures and records:
+
+- per-mode `avg` / `median` / `p95` latency
+- family deltas for no-structure, no-weight, and no-path-expansion
+- whether each family moves the primary metric in the expected direction
+
 ## What success looks like
 
 - graph-aware retrieval wins on multi-hop structured-document questions in the example benchmark
