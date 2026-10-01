@@ -197,13 +197,24 @@ class NgramHashingEmbeddingProvider:
 
 
 class FastEmbedEmbeddingProvider:
-    """Optional ONNX embedding backend via ``fastembed`` (Product M5).
+    """Optional ONNX embedding backend via ``fastembed`` (Product M5/M6).
 
     Install with ``pip install 'memory-path-engine[embed]'`` or ``pip install fastembed``.
     Selected by ``MPE_EMBEDDING=fastembed`` (default model: ``BAAI/bge-small-en-v1.5``).
+
+    Long session texts are head+tail truncated to ``max_chars`` (BGE context is
+    ~512 tokens). Batch size auto-falls back to 1 for very long corpora where
+    padding would dominate.
     """
 
-    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5") -> None:
+    def __init__(
+        self,
+        model_name: str = "BAAI/bge-small-en-v1.5",
+        *,
+        batch_size: int = 32,
+        max_chars: int = 2000,
+        long_text_chars: int = 1500,
+    ) -> None:
         try:
             from fastembed import TextEmbedding
         except ImportError as exc:  # pragma: no cover - exercised when extra missing
@@ -212,6 +223,9 @@ class FastEmbedEmbeddingProvider:
                 "Install with: pip install 'memory-path-engine[embed]'"
             ) from exc
         self.model_name = model_name
+        self.batch_size = max(1, batch_size)
+        self.max_chars = max(256, max_chars)
+        self.long_text_chars = max(256, long_text_chars)
         self._model = TextEmbedding(model_name=model_name)
         self._cache: dict[str, list[float]] = {}
 
@@ -243,10 +257,15 @@ class FastEmbedEmbeddingProvider:
                 if text not in unique_index:
                     unique_index[text] = len(unique)
                     unique.append(text)
-            encoded = [
-                [float(value) for value in vector]
-                for vector in self._model.embed(unique)
-            ]
+            prepared = [_truncate_for_dense_embed(text, self.max_chars) for text in unique]
+            avg_len = sum(len(text) for text in prepared) / max(len(prepared), 1)
+            chunk_size = 1 if avg_len >= self.long_text_chars else self.batch_size
+            encoded: list[list[float]] = []
+            for start in range(0, len(prepared), chunk_size):
+                chunk = prepared[start : start + chunk_size]
+                encoded.extend(
+                    [[float(value) for value in vector] for vector in self._model.embed(chunk)]
+                )
             for index, text in zip(pending_idx, pending_texts):
                 vector = encoded[unique_index[text]]
                 self._cache[text] = vector
@@ -255,9 +274,16 @@ class FastEmbedEmbeddingProvider:
 
 
 class SentenceTransformerEmbeddingProvider:
-    """Optional dense embedder via ``sentence-transformers`` (Product M5)."""
+    """Optional dense embedder via ``sentence-transformers`` (Product M5/M6)."""
 
-    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
+    def __init__(
+        self,
+        model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+        *,
+        batch_size: int = 32,
+        max_chars: int = 2000,
+        long_text_chars: int = 1500,
+    ) -> None:
         try:
             from sentence_transformers import SentenceTransformer
         except ImportError as exc:  # pragma: no cover
@@ -266,6 +292,9 @@ class SentenceTransformerEmbeddingProvider:
                 "Install with: pip install 'memory-path-engine[embed-st]'"
             ) from exc
         self.model_name = model_name
+        self.batch_size = max(1, batch_size)
+        self.max_chars = max(256, max_chars)
+        self.long_text_chars = max(256, long_text_chars)
         self._model = SentenceTransformer(model_name)
         self._cache: dict[str, list[float]] = {}
 
@@ -296,13 +325,32 @@ class SentenceTransformerEmbeddingProvider:
                 if text not in unique_index:
                     unique_index[text] = len(unique)
                     unique.append(text)
-            matrix = self._model.encode(unique, normalize_embeddings=True)
-            encoded = [[float(value) for value in row] for row in matrix]
+            prepared = [_truncate_for_dense_embed(text, self.max_chars) for text in unique]
+            avg_len = sum(len(text) for text in prepared) / max(len(prepared), 1)
+            chunk_size = 1 if avg_len >= self.long_text_chars else self.batch_size
+            encoded: list[list[float]] = []
+            for start in range(0, len(prepared), chunk_size):
+                chunk = prepared[start : start + chunk_size]
+                matrix = self._model.encode(
+                    chunk,
+                    normalize_embeddings=True,
+                    batch_size=min(chunk_size, len(chunk)),
+                )
+                encoded.extend([[float(value) for value in row] for row in matrix])
             for index, text in zip(pending_idx, pending_texts):
                 vector = encoded[unique_index[text]]
                 self._cache[text] = vector
                 results[index] = vector
         return [vector or [] for vector in results]
+
+
+def _truncate_for_dense_embed(text: str, max_chars: int) -> str:
+    """Keep head+tail for long memories so dense models stay within context."""
+    if max_chars <= 0 or len(text) <= max_chars:
+        return text
+    head = max_chars // 2
+    tail = max_chars - head
+    return f"{text[:head]}\n...\n{text[-tail:]}"
 
 
 _PROVIDER_CACHE: dict[tuple[str, str | None], EmbeddingProvider] = {}
