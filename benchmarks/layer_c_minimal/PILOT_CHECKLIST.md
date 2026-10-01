@@ -12,7 +12,7 @@ cp benchmarks/layer_c_minimal/templates/inventory_example.csv \
    /path/to/private/layer_c_inventory.csv
 ```
 
-必填列（与 [private-contract-dataset-guide.md](../docs/private-contract-dataset-guide.md) 一致）：
+必填列（与 [private-contract-dataset-guide.md](../../docs/private-contract-dataset-guide.md) 一致）：
 
 | 列 | 说明 |
 | --- | --- |
