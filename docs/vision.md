@@ -161,5 +161,7 @@ The next iterations should focus on:
 ## Relationship to the rest of the docs
 
 - [`architecture.md`](architecture.md): current implementation structure and runtime components
+- [`progress.md`](progress.md): snapshot of completed Stage 0–6 / Product M1–M3 vs remaining work
+- [`ROADMAP.md`](ROADMAP.md): product milestones (M1–M4)
 - [`hypotheses.md`](hypotheses.md): measurable research claims
 - [`evaluation.md`](evaluation.md): baseline modes and evaluation outputs

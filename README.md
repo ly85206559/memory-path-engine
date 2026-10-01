@@ -82,7 +82,8 @@ mpe hooks install
 mpe mcp   # stdio MCP server for Cursor / Claude
 ```
 
-Acceptance checklist: [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).
+Acceptance checklist: [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).  
+Current progress vs vision stages: [`docs/progress.md`](docs/progress.md).
 
 ### LongMemEval product KPI baseline
 
