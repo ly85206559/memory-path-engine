@@ -3,7 +3,7 @@
 > 对照 [vision.md](vision.md) 三阶段路线图与 [benchmark-strategy.md](benchmark-strategy.md) 三层评测模型。  
 > 本文件是可交付的现状快照；**不取代**也不修改历史 plan 文件。
 
-**快照：** Product **M5**（可插拔 dense embedding + LongMemEval KPI 对比）进行中 / 合入后更新。
+**快照：** Product **M5**（可插拔 dense embedding + LongMemEval KPI 对比）已合入本分支。
 
 ## 1. 定位与成熟度
 
