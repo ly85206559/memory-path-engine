@@ -3,7 +3,7 @@
 [![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M3)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M4)-0e7c86.svg)](docs/ROADMAP.md)
 
 Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
@@ -57,10 +57,11 @@ Three product bets:
 
 Maintainers: configure the GitHub link-card image using [docs/social-preview.md](docs/social-preview.md) (`docs/assets/open-graph-cover.png`).
 
-Install the project in editable mode:
+Install the project in editable mode (or see [`docs/install.md`](docs/install.md) for pipx / uv / Docker):
 
 ```bash
 python -m pip install --no-build-isolation -e .
+mpe doctor
 ```
 
 ### Product CLI (`mpe`) — local palace
@@ -71,6 +72,7 @@ mpe ingest examples/runbook_pack/runbooks --pack example_runbook_pack
 mpe search "What if rollback does not recover the API?" --mode hybrid
 mpe path "What if rollback does not recover the API?"
 mpe status
+mpe backup
 ```
 
 Palace files live in `./.mpe/` (or `$MPE_PALACE`). Search always prints an answer plus hop citations.
@@ -80,6 +82,7 @@ Palace files live in `./.mpe/` (or `$MPE_PALACE`). Search always prints an answe
 ```bash
 mpe hooks install
 mpe mcp   # stdio MCP server for Cursor / Claude
+# docker build -t mpe-mcp . && docker run -i --rm -v "$PWD/.mpe:/data/palace" -e MPE_PALACE=/data/palace mpe-mcp
 ```
 
 Acceptance checklist: [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).  
@@ -344,16 +347,18 @@ Current run matrix:
 
 ## What is out of scope for now
 
-- Docker image and multi-backend vector zoo (Product M4)
+- Multi-backend vector zoo / hosted embedding services
 - LLM-backed answer synthesis (path reasoning stays deterministic)
 - multi-modal memory encoding
 - full UI
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term M4:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M4 distribution is done**; next levers:
 
-- `pipx` / `uv tool` polish, Docker stdio MCP, backup/repair basics
+- Organization-side Layer C private gold labels
+- Optional stronger embedding backends
+- Optional PyPI publish
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

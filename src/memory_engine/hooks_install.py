@@ -66,8 +66,9 @@ def install_hooks(
                 "Installed by `mpe hooks install`.",
                 "",
                 "- Wire `mcp.local.json` into Cursor MCP settings (or merge `mcpServers`).",
+                "- Optional: build `docker build -t mpe-mcp .` and use `memory-path-engine-docker` from `mcp.example.json`.",
                 "- Point session-start / stop hooks at the `.sh` scripts in this folder.",
-                "- See `docs/getting-started.md` for the 5-minute closed-loop setup.",
+                "- See `docs/getting-started.md` and `docs/install.md` for install + closed-loop setup.",
                 "",
             ]
         ),

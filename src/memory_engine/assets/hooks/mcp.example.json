@@ -6,6 +6,19 @@
       "env": {
         "MPE_PALACE": ".mpe"
       }
+    },
+    "memory-path-engine-docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "${PWD}/.mpe:/data/palace",
+        "-e",
+        "MPE_PALACE=/data/palace",
+        "mpe-mcp"
+      ]
     }
   }
 }

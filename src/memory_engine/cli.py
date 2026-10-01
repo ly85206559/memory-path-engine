@@ -5,6 +5,7 @@ from __future__ import annotations
 
 Commands:
   init / ingest / memo / search / path / reinforce / status
+  backup / repair / doctor
   mcp / hooks install / bench longmemeval
 """
 
@@ -26,6 +27,7 @@ from memory_engine.product_service import (
     palace_search,
     palace_status,
 )
+from memory_engine.palace_ops import backup_palace, doctor_report, repair_palace
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -112,6 +114,29 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("status", help="Show palace location and graph counts.")
     sub.add_parser("mcp", help="Run the stdio MCP server for agent clients.")
+    sub.add_parser(
+        "doctor",
+        help="Check install + palace health (Product M4).",
+    )
+
+    backup_p = sub.add_parser("backup", help="Archive palace config + SQLite store.")
+    backup_p.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=None,
+        help="Archive path or directory (default: ./mpe-backups/<name>-<ts>.tar.gz).",
+    )
+
+    repair_p = sub.add_parser(
+        "repair",
+        help="Validate/repair palace SQLite (quarantine corrupt stores).",
+    )
+    repair_p.add_argument(
+        "--rebuild-empty",
+        action="store_true",
+        help="Force replace store with an empty graph (keeps a local backup copy).",
+    )
 
     hooks_p = sub.add_parser("hooks", help="Install Cursor/Claude hook templates.")
     hooks_sub = hooks_p.add_subparsers(dest="hooks_command", required=True)
@@ -212,6 +237,12 @@ def run(argv: list[str] | None = None) -> int:
             return _cmd_reinforce(args)
         if args.command == "status":
             return _cmd_status(args)
+        if args.command == "backup":
+            return _cmd_backup(args)
+        if args.command == "repair":
+            return _cmd_repair(args)
+        if args.command == "doctor":
+            return _cmd_doctor(args)
         if args.command == "mcp":
             from memory_engine.mcp_server import serve_stdio
 
@@ -287,6 +318,43 @@ def _cmd_status(args: argparse.Namespace) -> int:
     for key, value in status.items():
         print(f"{key}: {value}")
     return 0
+
+
+def _cmd_backup(args: argparse.Namespace) -> int:
+    result = backup_palace(args.palace, output=args.output)
+    print(f"palace: {result['palace']}")
+    print(f"archive: {result['archive']}")
+    print(f"files: {', '.join(result['files'])}")
+    print(f"bytes: {result['bytes']}")
+    return 0
+
+
+def _cmd_repair(args: argparse.Namespace) -> int:
+    result = repair_palace(args.palace, rebuild_empty=args.rebuild_empty)
+    for key in ("palace", "ok", "integrity", "nodes", "edges"):
+        if key in result:
+            print(f"{key}: {result[key]}")
+    if result.get("issues"):
+        print("issues:")
+        for item in result["issues"]:
+            print(f"  - {item}")
+    if result.get("actions"):
+        print("actions:")
+        for item in result["actions"]:
+            print(f"  - {item}")
+    return 0 if result.get("ok") else 1
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    report = doctor_report(args.palace)
+    print(f"ok: {report['ok']}")
+    for check in report["checks"]:
+        mark = "PASS" if check["ok"] else "FAIL"
+        print(f"[{mark}] {check['name']}: {check['detail']}")
+    print("install tips:")
+    for tip in report["install_tips"]:
+        print(f"  - {tip}")
+    return 0 if report["ok"] else 1
 
 
 def _cmd_search(args: argparse.Namespace, *, emphasize_path: bool) -> int:

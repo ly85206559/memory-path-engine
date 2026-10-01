@@ -38,11 +38,11 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Turn-level session units for LongMemEval (`--granularity turn`)
 - [x] Full LongMemEval-S reproducible recipe documented in README + baseline artifacts for tiny session/turn
 
-### M4 — Distribution (next)
+### M4 — Distribution
 
-- [ ] `pipx` / `uv tool` install path polish
-- [ ] Docker stdio MCP image
-- [ ] Backup / repair basics
+- [x] `pipx` / `uv tool` install path polish ([`install.md`](install.md))
+- [x] Docker stdio MCP image (`Dockerfile`, `mpe-mcp`)
+- [x] Backup / repair / doctor basics (`mpe backup` / `mpe repair` / `mpe doctor`)
 
 ## Non-goals (for now)
 
@@ -52,4 +52,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M3 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M4 scorecard against the original vision + benchmark strategy.

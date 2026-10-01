@@ -3,15 +3,15 @@
 > 对照 [vision.md](vision.md) 三阶段路线图与 [benchmark-strategy.md](benchmark-strategy.md) 三层评测模型。  
 > 本文件是可交付的现状快照；**不取代**也不修改历史 plan 文件。
 
-**快照：** `master` @ Product M3 + 公开召回 KPI 提升（hybrid medium R@5≈0.96–1.0）之后。
+**快照：** `master` @ Product **M4**（分发：pipx/uv、Docker MCP、backup/repair/doctor）之后。
 
 ## 1. 定位与成熟度
 
 | 维度 | 现状 |
 | --- | --- |
 | 定位 | 从研究原型转向 **本地记忆产品**（可回放路径） |
-| 版本 | `pyproject.toml` → `0.4.0` |
-| 产品入口 | `mpe` CLI、`.mpe/` SQLite palace、`mpe mcp`、hooks |
+| 版本 | `pyproject.toml` → `0.5.0` |
+| 产品入口 | `mpe` CLI、`.mpe/` SQLite palace、`mpe mcp` / Docker `mpe-mcp`、hooks |
 | 研究内核 | typed graph、`MemoryPath`、Palace v1、Stage 6 类脑机制 |
 
 一句话：
@@ -64,7 +64,7 @@
 - [x] M2 MCP + hooks + hybrid  
 - [x] M3 LongMemEval turn + full 复现说明  
 - [x] 公开召回 KPI 提升（hybrid medium R@5 ≈ 0.96–1.0）  
-- [ ] M4 分发（pipx / Docker / backup）
+- [x] M4 分发（pipx / uv / Docker MCP / backup·repair·doctor）
 
 ## 7. 计划附录：你还需要准备的数据
 
@@ -93,11 +93,11 @@
 
 ## 8. 建议的下一步优先级
 
-1. **产品 M4**：分发与运维（安装体验、Docker MCP、备份）  
-2. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
-3. **可选**：真 embedding backend；full LongMemEval-S 写入对外表
+1. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
+2. **可选**：真 embedding backend；full LongMemEval-S 写入对外表  
+3. **可选**：发布 PyPI 正式包名 / Homebrew 等二次分发
 
 ## 9. 关闭结论
 
-原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M3** 并完成一轮 **Layer A 召回提升**。  
-未改 plan 文件本身。剩余工作主要是组织侧私有数据与产品分发（M4），不再阻塞本进展分析的验收。
+原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M4**。  
+未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选更强 embedding。

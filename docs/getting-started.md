@@ -5,10 +5,22 @@ path hops → optional MCP / hooks for agents.
 
 ## 1. Install
 
+Dev clone:
+
 ```bash
 python -m pip install --no-build-isolation -e .
 mpe --help
+mpe doctor
 ```
+
+Or isolated tools (Product M4):
+
+```bash
+pipx install git+https://github.com/ly85206559/memory-path-engine.git
+# uv tool install git+https://github.com/ly85206559/memory-path-engine.git
+```
+
+Full install matrix + Docker MCP: [`install.md`](install.md).
 
 ## 2. Create a palace and ingest docs
 
@@ -47,10 +59,24 @@ Then merge `.cursor/mpe-hooks/mcp.local.json` into your MCP client config, or ru
 mpe mcp
 ```
 
+Docker alternative (after `docker build -t mpe-mcp .`):
+
+```bash
+docker run -i --rm -v "$PWD/.mpe:/data/palace" -e MPE_PALACE=/data/palace mpe-mcp
+```
+
 Exposed tools: `mpe_status`, `mpe_init`, `mpe_ingest`, `mpe_ingest_memo`,
 `mpe_search`, `mpe_get_path`, `mpe_reinforce`.
 
-## 6. Optional session hooks
+## 6. Backup / repair
+
+```bash
+mpe backup
+mpe repair
+mpe doctor
+```
+
+## 7. Optional session hooks
 
 Scripts are installed under `.cursor/mpe-hooks/`:
 
@@ -59,7 +85,7 @@ Scripts are installed under `.cursor/mpe-hooks/`:
 
 Point your IDE stop/start hooks at those scripts (see `hooks.example.json`).
 
-## 7. Public KPI baseline
+## 8. Public KPI baseline
 
 ```bash
 mpe bench longmemeval --label tiny
@@ -68,3 +94,4 @@ mpe bench longmemeval --label tiny
 Artifacts: `benchmarks/external/longmemeval/baselines/`.
 
 For acceptance checks, see [`ACCEPTANCE.md`](ACCEPTANCE.md). Roadmap: [`ROADMAP.md`](ROADMAP.md).
+Install matrix: [`install.md`](install.md).
