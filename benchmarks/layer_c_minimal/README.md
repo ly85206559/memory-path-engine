@@ -34,6 +34,8 @@ python scripts/run_layer_c_benchmark.py \
 
 Grow from the current public stand-ins toward **20-50** high-quality private cases, then the larger private-contract pilot in `docs/private-contract-dataset-guide.md` (~30 docs / 120-180 cases).
 
+Operational checklist for that private pilot: [`PILOT_CHECKLIST.md`](PILOT_CHECKLIST.md).
+
 Each private case should keep:
 
 - stable `case_id`

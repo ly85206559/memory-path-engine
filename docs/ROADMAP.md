@@ -49,3 +49,7 @@ recall becomes a first-class product KPI (Layer A).
 - Multi-backend vector zoo before hybrid + CLI are stable
 - LLM answer synthesis as the primary path (PathReasoner stays deterministic)
 - Replacing Layer B with public-only metrics
+
+## Progress snapshot
+
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M3 scorecard against the original vision + benchmark strategy.
