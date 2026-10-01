@@ -1,0 +1,46 @@
+{
+  "label": "medium50",
+  "generated_at": "2026-10-01T15:18:59.455899+00:00",
+  "source": "longmemeval_s_cleaned.json",
+  "notes": [
+    "Public recall KPI after score-ordered ranking + hybrid BM25/ngram boost.",
+    "Do not treat as Layer B architecture proof."
+  ],
+  "modes": {
+    "lexical_baseline": {
+      "questions": 50,
+      "recall_at_5": 0.98,
+      "recall_at_10": 1.0,
+      "ndcg_at_10": 0.948356,
+      "avg_latency_ms": 76.399
+    },
+    "embedding_baseline": {
+      "questions": 50,
+      "recall_at_5": 0.68,
+      "recall_at_10": 0.76,
+      "ndcg_at_10": 0.602618,
+      "avg_latency_ms": 441.715
+    },
+    "weighted_graph": {
+      "questions": 50,
+      "recall_at_5": 0.9,
+      "recall_at_10": 0.92,
+      "ndcg_at_10": 0.736486,
+      "avg_latency_ms": 149.46
+    },
+    "hybrid": {
+      "questions": 50,
+      "recall_at_5": 0.96,
+      "recall_at_10": 1.0,
+      "ndcg_at_10": 0.871089,
+      "avg_latency_ms": 625.392
+    },
+    "activation_spreading_v1": {
+      "questions": 50,
+      "recall_at_5": 0.88,
+      "recall_at_10": 0.92,
+      "ndcg_at_10": 0.826884,
+      "avg_latency_ms": 126.751
+    }
+  }
+}

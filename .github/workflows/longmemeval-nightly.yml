@@ -22,7 +22,7 @@ on:
       modes:
         description: "Comma-separated retriever modes."
         required: false
-        default: "embedding_baseline,weighted_graph,activation_spreading_v1"
+        default: "lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1"
   schedule:
     - cron: "0 3 * * *"
 
@@ -64,7 +64,7 @@ jobs:
           --dataset "benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json"
           --limit "${{ steps.limit.outputs.value }}"
           --top-k "${{ github.event.inputs.top_k || '10' }}"
-          --modes "${{ github.event.inputs.modes || 'embedding_baseline,weighted_graph,activation_spreading_v1' }}"
+          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1' }}"
           --output "benchmarks/external/longmemeval/data/longmemeval-nightly-report.json"
           --summary-output "benchmarks/external/longmemeval/data/longmemeval-nightly-summary.json"
 

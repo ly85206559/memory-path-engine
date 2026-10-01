@@ -40,7 +40,7 @@
 
 | Layer | 目标 | 现状 | 验收命令 |
 | --- | --- | --- | --- |
-| **A** 外部站位 | LongMemEval / HotpotQA | tiny+turn 基线已提交；full 复现配方在 README | `mpe bench longmemeval --label tiny [--granularity turn]` |
+| **A** 外部站位 | LongMemEval / HotpotQA | tiny+turn 基线已提交；medium 30/50q hybrid R@5≈0.96–1.0；full 复现配方在 README | `mpe bench longmemeval --label tiny [--granularity turn]` |
 | **B** 机制验证 | path / semantic / contradiction / dynamic | fixtures + Layer B / ablation 报告脚本 | `python scripts/generate_layer_b_report.py` / `generate_ablation_report.py` |
 | **C** 真实迁移 | 噪声文档 + 私有金标流程 | `layer_c_minimal` 可跑 + inventory/annotation 模板 | `python scripts/run_layer_c_benchmark.py` |
 

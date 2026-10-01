@@ -1,7 +1,7 @@
 {
   "product_kpi": true,
   "label": "tiny-turn",
-  "generated_at": "2026-10-01T13:55:36+00:00",
+  "generated_at": "2026-10-01T15:18:42+00:00",
   "dataset": "/workspace/benchmarks/external/longmemeval/longmemeval_tiny_fixture.json",
   "samples": 2,
   "granularity": "turn",
@@ -11,36 +11,36 @@
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
-      "ndcg_at_10": 0.750633,
-      "avg_latency_ms": 0.236
+      "ndcg_at_10": 0.727803,
+      "avg_latency_ms": 0.454
     },
     "embedding_baseline": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
-      "ndcg_at_10": 0.741238,
-      "avg_latency_ms": 0.353
+      "ndcg_at_10": 0.750633,
+      "avg_latency_ms": 1.004
     },
     "weighted_graph": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
-      "ndcg_at_10": 0.734225,
-      "avg_latency_ms": 2.005
+      "ndcg_at_10": 0.741238,
+      "avg_latency_ms": 2.406
     },
     "hybrid": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
-      "ndcg_at_10": 0.741238,
-      "avg_latency_ms": 2.095
+      "ndcg_at_10": 0.727803,
+      "avg_latency_ms": 3.655
     },
     "activation_spreading_v1": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
-      "ndcg_at_10": 0.715312,
-      "avg_latency_ms": 0.787
+      "ndcg_at_10": 0.741238,
+      "avg_latency_ms": 0.954
     }
   },
   "notes": [

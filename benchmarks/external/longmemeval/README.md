@@ -32,7 +32,7 @@ python scripts/run_longmemeval_benchmark.py
 Run a downloaded official file:
 
 ```bash
-python scripts/run_longmemeval_benchmark.py --dataset "benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json" --limit 50 --top-k 10 --modes embedding_baseline,weighted_graph
+python scripts/run_longmemeval_benchmark.py --dataset "benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json" --limit 50 --top-k 10 --modes lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1
 ```
 
 Pretty-print the full suite JSON:
@@ -67,6 +67,15 @@ This adapter supports **session** and **turn** granularity, and is **retrieval-o
 - `turn`: gold = `has_answer` turns inside those sessions (drawer-like units)
 - it does **not** run answer generation or official QA grading
 - Layer B / Layer C still own path, semantic, contradiction, and dynamic-memory claims
+
+## Public recall KPI snapshots
+
+Committed medium-slice KPI tables (no raw dataset):
+
+- `baselines/longmemeval_kpi_medium30.md` — 30q session
+- `baselines/longmemeval_kpi_medium50.md` — 50q session
+
+Primary product mode for public recall is **`hybrid`** (BM25-aware lexical + n-gram hashing embeddings + score-ordered ranking). Layer B path/contradiction fixtures remain the architecture proof surface.
 
 ## Product KPI baseline
 

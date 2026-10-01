@@ -94,6 +94,17 @@ mpe bench longmemeval --label tiny --granularity turn
 
 Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
 
+**Latest medium-slice public recall (session, LongMemEval-S cleaned):**
+
+| Slice | Mode | R@5 | R@10 | NDCG@10 |
+| --- | --- | ---: | ---: | ---: |
+| 30q | hybrid | 1.000 | 1.000 | 0.932 |
+| 30q | lexical_baseline | 1.000 | 1.000 | 0.988 |
+| 50q | hybrid | 0.960 | 1.000 | 0.871 |
+| 50q | lexical_baseline | 0.980 | 1.000 | 0.948 |
+
+Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}.{json,md}`.
+
 **Reproduce full LongMemEval-S (public KPI):**
 
 ```bash

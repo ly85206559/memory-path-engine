@@ -10,6 +10,7 @@ without importing the benchmark runner stack.
 
 from dataclasses import dataclass, field
 
+from memory_engine.embeddings import NgramHashingEmbeddingProvider
 from memory_engine.memory_state import MemoryStatePolicy, StaticMemoryStatePolicy
 from memory_engine.retrieve import (
     ActivationSpreadingRetriever,
@@ -37,10 +38,22 @@ class LegacyModeRetriever:
         return self._delegate.search(query, top_k=top_k, **kwargs)
 
 
+def _embedding_baseline_retriever(
+    store: MemoryStore,
+    *,
+    memory_state_policy: MemoryStatePolicy,
+) -> EmbeddingTopKRetriever:
+    return EmbeddingTopKRetriever(
+        store,
+        embedding_provider=NgramHashingEmbeddingProvider(),
+        memory_state_policy=memory_state_policy,
+    )
+
+
 def _retriever_builders():
     return {
         "lexical_baseline": BaselineTopKRetriever,
-        "embedding_baseline": EmbeddingTopKRetriever,
+        "embedding_baseline": _embedding_baseline_retriever,
         "structure_only": StructureAwareRetriever,
         "weighted_graph": WeightedGraphRetriever,
         "hybrid": HybridRetriever,
