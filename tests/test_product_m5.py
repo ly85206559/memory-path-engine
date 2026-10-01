@@ -5,6 +5,7 @@ from unittest import mock
 from memory_engine.embeddings import (
     HashingEmbeddingProvider,
     NgramHashingEmbeddingProvider,
+    clear_embedding_provider_cache,
     resolve_embedding_provider,
 )
 from memory_engine.retrieval_factory import build_legacy_retriever
@@ -12,11 +13,22 @@ from memory_engine.store import MemoryStore
 
 
 class ResolveEmbeddingProviderTests(unittest.TestCase):
+    def setUp(self) -> None:
+        clear_embedding_provider_cache()
+
+    def tearDown(self) -> None:
+        clear_embedding_provider_cache()
+
     def test_default_is_ngram(self) -> None:
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop("MPE_EMBEDDING", None)
             provider = resolve_embedding_provider()
         self.assertIsInstance(provider, NgramHashingEmbeddingProvider)
+
+    def test_caches_same_backend_instance(self) -> None:
+        left = resolve_embedding_provider("ngram")
+        right = resolve_embedding_provider("ngram")
+        self.assertIs(left, right)
 
     def test_explicit_hash_and_ngram(self) -> None:
         self.assertIsInstance(resolve_embedding_provider("hash"), HashingEmbeddingProvider)
@@ -49,6 +61,12 @@ class ResolveEmbeddingProviderTests(unittest.TestCase):
 
 
 class FactoryEmbeddingWiringTests(unittest.TestCase):
+    def setUp(self) -> None:
+        clear_embedding_provider_cache()
+
+    def tearDown(self) -> None:
+        clear_embedding_provider_cache()
+
     def test_hybrid_defaults_to_product_provider(self) -> None:
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop("MPE_EMBEDDING", None)

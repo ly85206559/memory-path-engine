@@ -232,6 +232,14 @@ class SentenceTransformerEmbeddingProvider:
         return vector
 
 
+_PROVIDER_CACHE: dict[tuple[str, str | None], EmbeddingProvider] = {}
+
+
+def clear_embedding_provider_cache() -> None:
+    """Drop cached providers (tests / model hot-swap)."""
+    _PROVIDER_CACHE.clear()
+
+
 def resolve_embedding_provider(
     name: str | None = None,
     *,
@@ -241,27 +249,38 @@ def resolve_embedding_provider(
 
     Supported names: ``ngram`` (default), ``hash``, ``fastembed``, ``sentence``.
     Optional model override via ``model_name`` or ``MPE_EMBEDDING_MODEL``.
+
+    Heavy backends (fastembed / sentence-transformers) are cached per
+    ``(name, model)`` so LongMemEval loops do not reload ONNX/weights per sample.
     """
     import os
 
     key = (name or os.environ.get("MPE_EMBEDDING") or "ngram").strip().lower()
     model = model_name or os.environ.get("MPE_EMBEDDING_MODEL")
+    cache_key = (key, model)
+    cached = _PROVIDER_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
     if key in {"ngram", "default", "product"}:
-        return NgramHashingEmbeddingProvider()
-    if key in {"hash", "hashing"}:
-        return HashingEmbeddingProvider()
-    if key in {"fastembed", "bge", "bge-small"}:
-        return FastEmbedEmbeddingProvider(
+        provider: EmbeddingProvider = NgramHashingEmbeddingProvider()
+    elif key in {"hash", "hashing"}:
+        provider = HashingEmbeddingProvider()
+    elif key in {"fastembed", "bge", "bge-small"}:
+        provider = FastEmbedEmbeddingProvider(
             model_name=model or "BAAI/bge-small-en-v1.5",
         )
-    if key in {"sentence", "minilm", "sentence-transformers"}:
-        return SentenceTransformerEmbeddingProvider(
+    elif key in {"sentence", "minilm", "sentence-transformers"}:
+        provider = SentenceTransformerEmbeddingProvider(
             model_name=model or "sentence-transformers/all-MiniLM-L6-v2",
         )
-    raise ValueError(
-        f"Unknown embedding provider '{key}'. "
-        "Supported: ngram, hash, fastembed, sentence."
-    )
+    else:
+        raise ValueError(
+            f"Unknown embedding provider '{key}'. "
+            "Supported: ngram, hash, fastembed, sentence."
+        )
+    _PROVIDER_CACHE[cache_key] = provider
+    return provider
 
 
 def cosine_similarity(left: list[float], right: list[float]) -> float:
