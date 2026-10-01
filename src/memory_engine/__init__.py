@@ -10,6 +10,15 @@ from memory_engine.api import (
     reason_from_path,
     reason_from_recall,
 )
+from memory_engine.palace_workspace import (
+    PalaceConfig,
+    PalaceWorkspace,
+    init_palace,
+    open_palace,
+    resolve_palace_root,
+)
+from memory_engine.persistence import load_store, save_store
+from memory_engine.product_benchmarks import run_longmemeval_baseline
 from memory_engine.memory.application.forgetting_policies import (
     AggressiveForgettingPolicy,
     MildForgettingPolicy,
@@ -172,11 +181,16 @@ __all__ = [
     "AggressiveForgettingPolicy",
     "DualRepresentationIds",
     "MildForgettingPolicy",
+    "PalaceConfig",
+    "PalaceWorkspace",
     "PathReasoner",
     "ReasonedAnswer",
     "apply_online_memory_step",
     "episodic_id_for",
+    "init_palace",
     "ingest_paths",
+    "load_store",
+    "open_palace",
     "policy_by_name",
     "project_dual_representations",
     "project_dual_representations_for_store",
@@ -187,6 +201,9 @@ __all__ = [
     "recall_from_store",
     "reason_from_path",
     "reason_from_recall",
+    "resolve_palace_root",
+    "run_longmemeval_baseline",
+    "save_store",
     "semantic_id_for",
     "snapshot_lifecycle",
     "JsonStructuredBenchmarkDatasetRepository",

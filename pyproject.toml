@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.1.0"
-description = "Research prototype for structured memory, weighted retrieval, and path replay."
+version = "0.2.0"
+description = "Local memory with replayable paths — structured retrieval, CLI palace, and public benchmark KPIs."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -15,6 +15,9 @@ authors = [
 dependencies = [
   "pydantic",
 ]
+
+[project.scripts]
+mpe = "memory_engine.cli:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

@@ -4,8 +4,14 @@ __pycache__/
 *.pyc
 dist/
 build/
+*.egg-info/
 .DS_Store
+.mpe/
 
 # Downloaded benchmark payloads and local reports
 benchmarks/**/data/*.json
 benchmarks/**/*report*.json
+
+# Keep committed LongMemEval baseline KPI skeletons
+!benchmarks/external/longmemeval/baselines/
+!benchmarks/external/longmemeval/baselines/**
