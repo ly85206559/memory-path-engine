@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.5.1"
-description = "Local memory with replayable paths — CLI/MCP, optional dense embeddings (fastembed), public KPI."
+version = "0.6.0"
+description = "Local memory with replayable paths — CLI/MCP, batchable dense embeddings, public KPI."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }

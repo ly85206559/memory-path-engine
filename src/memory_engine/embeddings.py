@@ -118,6 +118,19 @@ class EmbeddingProvider(Protocol):
     def embed(self, text: str) -> list[float]:
         """Return a deterministic embedding vector for the given text."""
 
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        """Return embeddings for many texts (may batch for speed)."""
+
+
+def embed_many(provider: EmbeddingProvider, texts: list[str]) -> list[list[float]]:
+    """Batch-embed texts, falling back to per-text ``embed`` when needed."""
+    if not texts:
+        return []
+    embed_many_fn = getattr(provider, "embed_many", None)
+    if callable(embed_many_fn):
+        return list(embed_many_fn(texts))
+    return [provider.embed(text) for text in texts]
+
 
 class HashingEmbeddingProvider:
     """A dependency-free local embedder for experiments and tests."""
@@ -136,6 +149,9 @@ class HashingEmbeddingProvider:
         if norm == 0.0:
             return vector
         return [value / norm for value in vector]
+
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        return [self.embed(text) for text in texts]
 
 
 class NgramHashingEmbeddingProvider:
@@ -169,6 +185,9 @@ class NgramHashingEmbeddingProvider:
             return vector
         return [value / norm for value in vector]
 
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        return [self.embed(text) for text in texts]
+
     @staticmethod
     def _char_ngrams(text: str, size: int) -> list[str]:
         compact = text.replace(" ", "")
@@ -200,12 +219,39 @@ class FastEmbedEmbeddingProvider:
         cached = self._cache.get(text)
         if cached is not None:
             return cached
-        vectors = list(self._model.embed([text]))
-        if not vectors:
+        vectors = self.embed_many([text])
+        return vectors[0] if vectors else []
+
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
             return []
-        vector = [float(value) for value in vectors[0]]
-        self._cache[text] = vector
-        return vector
+        results: list[list[float] | None] = [None] * len(texts)
+        pending_idx: list[int] = []
+        pending_texts: list[str] = []
+        for index, text in enumerate(texts):
+            cached = self._cache.get(text)
+            if cached is not None:
+                results[index] = cached
+            else:
+                pending_idx.append(index)
+                pending_texts.append(text)
+        if pending_texts:
+            # Deduplicate within the batch so identical contents share one encode.
+            unique: list[str] = []
+            unique_index: dict[str, int] = {}
+            for text in pending_texts:
+                if text not in unique_index:
+                    unique_index[text] = len(unique)
+                    unique.append(text)
+            encoded = [
+                [float(value) for value in vector]
+                for vector in self._model.embed(unique)
+            ]
+            for index, text in zip(pending_idx, pending_texts):
+                vector = encoded[unique_index[text]]
+                self._cache[text] = vector
+                results[index] = vector
+        return [vector or [] for vector in results]
 
 
 class SentenceTransformerEmbeddingProvider:
@@ -227,9 +273,36 @@ class SentenceTransformerEmbeddingProvider:
         cached = self._cache.get(text)
         if cached is not None:
             return cached
-        vector = [float(value) for value in self._model.encode(text, normalize_embeddings=True)]
-        self._cache[text] = vector
-        return vector
+        vectors = self.embed_many([text])
+        return vectors[0] if vectors else []
+
+    def embed_many(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
+        results: list[list[float] | None] = [None] * len(texts)
+        pending_idx: list[int] = []
+        pending_texts: list[str] = []
+        for index, text in enumerate(texts):
+            cached = self._cache.get(text)
+            if cached is not None:
+                results[index] = cached
+            else:
+                pending_idx.append(index)
+                pending_texts.append(text)
+        if pending_texts:
+            unique: list[str] = []
+            unique_index: dict[str, int] = {}
+            for text in pending_texts:
+                if text not in unique_index:
+                    unique_index[text] = len(unique)
+                    unique.append(text)
+            matrix = self._model.encode(unique, normalize_embeddings=True)
+            encoded = [[float(value) for value in row] for row in matrix]
+            for index, text in zip(pending_idx, pending_texts):
+                vector = encoded[unique_index[text]]
+                self._cache[text] = vector
+                results[index] = vector
+        return [vector or [] for vector in results]
 
 
 _PROVIDER_CACHE: dict[tuple[str, str | None], EmbeddingProvider] = {}
