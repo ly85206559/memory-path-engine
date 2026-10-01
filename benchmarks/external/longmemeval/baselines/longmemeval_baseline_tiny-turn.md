@@ -1,6 +1,6 @@
 # LongMemEval baseline (tiny-turn)
 
-- generated_at: `2026-10-01T13:55:36+00:00`
+- generated_at: `2026-10-01T15:18:42+00:00`
 - dataset: `/workspace/benchmarks/external/longmemeval/longmemeval_tiny_fixture.json`
 - samples: **2**
 - granularity: `turn`
@@ -9,11 +9,11 @@
 
 | Mode | R@5 | R@10 | NDCG@10 | avg_ms | questions |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| lexical_baseline | 1.000 | 1.000 | 0.751 | 0.236 | 2 |
-| embedding_baseline | 1.000 | 1.000 | 0.741 | 0.353 | 2 |
-| weighted_graph | 1.000 | 1.000 | 0.734 | 2.005 | 2 |
-| hybrid | 1.000 | 1.000 | 0.741 | 2.095 | 2 |
-| activation_spreading_v1 | 1.000 | 1.000 | 0.715 | 0.787 | 2 |
+| lexical_baseline | 1.000 | 1.000 | 0.728 | 0.454 | 2 |
+| embedding_baseline | 1.000 | 1.000 | 0.751 | 1.004 | 2 |
+| weighted_graph | 1.000 | 1.000 | 0.741 | 2.406 | 2 |
+| hybrid | 1.000 | 1.000 | 0.728 | 3.655 | 2 |
+| activation_spreading_v1 | 1.000 | 1.000 | 0.741 | 0.954 | 2 |
 
 ## Notes
 

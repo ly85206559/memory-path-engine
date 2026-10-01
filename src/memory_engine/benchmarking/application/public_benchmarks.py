@@ -10,32 +10,45 @@ from memory_engine.schema import RetrievalResult
 
 
 def ranked_node_ids_from_result(result: RetrievalResult, *, top_k: int) -> list[str]:
-    if result.palace_result is not None and result.palace_result.retrieved_memories:
-        ranked_node_ids: list[str] = []
-        seen: set[str] = set()
-        for item in result.palace_result.retrieved_memories:
-            if item.memory_id in seen:
-                continue
-            seen.add(item.memory_id)
-            ranked_node_ids.append(item.memory_id)
-            if len(ranked_node_ids) >= top_k:
-                break
-        return ranked_node_ids
+    """Extract a public-KPI ranking from a retrieval result.
 
-    ranked_paths = sorted(result.paths, key=lambda path: path.final_score, reverse=True)
-    ranked_node_ids: list[str] = []
-    seen: set[str] = set()
-    for path in ranked_paths:
-        if not path.steps:
-            continue
-        node_id = path.steps[0].node_id
-        if node_id in seen:
-            continue
-        seen.add(node_id)
-        ranked_node_ids.append(node_id)
-        if len(ranked_node_ids) >= top_k:
-            break
-    return ranked_node_ids
+    Prefer score-ordered unique memories (seed preferred on ties). Path-walk
+    order alone can bury gold seeds behind low-score expansion neighbors and
+    collapse R@5 / NDCG@10 on multi-session haystacks.
+    """
+    if result.palace_result is not None and result.palace_result.retrieved_memories:
+        best: dict[str, tuple[float, int]] = {}
+        for item in result.palace_result.retrieved_memories:
+            seed_bonus = 1 if item.retrieval_role == "seed" else 0
+            previous = best.get(item.memory_id)
+            candidate = (item.score, seed_bonus)
+            if previous is None or candidate > previous:
+                best[item.memory_id] = candidate
+        return [
+            memory_id
+            for memory_id, _score in sorted(
+                best.items(),
+                key=lambda pair: pair[1],
+                reverse=True,
+            )[:top_k]
+        ]
+
+    best: dict[str, tuple[float, int]] = {}
+    for path in result.paths:
+        for step_index, step in enumerate(path.steps):
+            seed_bonus = 1 if step_index == 0 else 0
+            previous = best.get(step.node_id)
+            candidate = (step.score, seed_bonus)
+            if previous is None or candidate > previous:
+                best[step.node_id] = candidate
+    return [
+        memory_id
+        for memory_id, _score in sorted(
+            best.items(),
+            key=lambda pair: pair[1],
+            reverse=True,
+        )[:top_k]
+    ]
 
 
 def matched_ranks(gold_items: list[str], retrieved_items: list[str]) -> list[int]:

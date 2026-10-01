@@ -107,8 +107,7 @@ class PalaceRecallResult:
         if result.palace_result is not None:
             return result.palace_result
 
-        retrieved_memories: list[RetrievedMemory] = []
-        seen: set[str] = set()
+        best_memories: dict[str, RetrievedMemory] = {}
         routes: list[RecallRoute] = []
         activation_steps: list[ActivationSnapshotEntry] = []
         for path_index, path in enumerate(sorted(result.paths, key=lambda item: item.final_score, reverse=True)):
@@ -129,16 +128,24 @@ class PalaceRecallResult:
                 )
             )
             for step_index, step in enumerate(path.steps):
-                if step.node_id not in seen:
-                    seen.add(step.node_id)
-                    retrieved_memories.append(
-                        RetrievedMemory(
-                            memory_id=step.node_id,
-                            score=step.score,
-                            reason=step.reason,
-                            retrieval_role="seed" if step_index == 0 else "support",
-                        )
-                    )
+                role = "seed" if step_index == 0 else "support"
+                existing = best_memories.get(step.node_id)
+                candidate = RetrievedMemory(
+                    memory_id=step.node_id,
+                    score=step.score,
+                    reason=step.reason,
+                    retrieval_role=role,
+                )
+                if existing is None:
+                    best_memories[step.node_id] = candidate
+                    continue
+                existing_key = (
+                    existing.score,
+                    1 if existing.retrieval_role == "seed" else 0,
+                )
+                candidate_key = (candidate.score, 1 if role == "seed" else 0)
+                if candidate_key > existing_key:
+                    best_memories[step.node_id] = candidate
             for trace_step in path.activation_trace:
                 activation_steps.append(
                     ActivationSnapshotEntry(
@@ -153,9 +160,26 @@ class PalaceRecallResult:
                         is_seed=trace_step.is_seed,
                     )
                 )
+        retrieved_memories = tuple(
+            memory
+            for memory, _key in sorted(
+                (
+                    (
+                        memory,
+                        (
+                            memory.score,
+                            1 if memory.retrieval_role == "seed" else 0,
+                        ),
+                    )
+                    for memory in best_memories.values()
+                ),
+                key=lambda item: item[1],
+                reverse=True,
+            )
+        )
         return cls(
             query=result.query,
-            retrieved_memories=tuple(retrieved_memories),
+            retrieved_memories=retrieved_memories,
             routes=tuple(routes),
             activation_snapshot=ActivationSnapshot(tuple(activation_steps)),
             final_answer=result.best_path().final_answer if result.paths else None,

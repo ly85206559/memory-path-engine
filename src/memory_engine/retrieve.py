@@ -12,8 +12,12 @@ from memory_engine.activation import (
 from memory_engine.embeddings import (
     EmbeddingProvider,
     HashingEmbeddingProvider,
+    NgramHashingEmbeddingProvider,
+    bm25_score,
+    content_tokens,
     cosine_similarity,
     lexical_overlap,
+    tokenize,
 )
 from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
 from memory_engine.memory_state import MemoryStatePolicy, decay_unvisited_nodes, reinforce_result_paths
@@ -26,21 +30,68 @@ from memory_engine.semantics import (
 from memory_engine.store import MemoryStore
 
 
+def _corpus_lexical_stats(store: MemoryStore) -> tuple[float, dict[str, int], int]:
+    nodes = list(store.nodes())
+    if not nodes:
+        return 1.0, {}, 0
+    doc_freq: dict[str, int] = {}
+    total_len = 0
+    for node in nodes:
+        tokens = content_tokens(node.content) or tokenize(node.content)
+        total_len += len(tokens)
+        for token in set(tokens):
+            doc_freq[token] = doc_freq.get(token, 0) + 1
+    avgdl = total_len / max(len(nodes), 1)
+    return max(avgdl, 1.0), doc_freq, len(nodes)
+
+
+def _lexical_rank_score(
+    query: str,
+    text: str,
+    *,
+    avgdl: float,
+    doc_freq: dict[str, int],
+    doc_count: int,
+) -> float:
+    overlap = lexical_overlap(query, text)
+    if doc_count <= 1:
+        return overlap
+    bm25 = bm25_score(
+        query,
+        text,
+        avgdl=avgdl,
+        doc_freq=doc_freq,
+        doc_count=doc_count,
+    )
+    # Soft-normalize BM25 into ~[0,1] then blend with coverage overlap.
+    bm25_norm = bm25 / (bm25 + 4.0)
+    return max(0.0, min(0.55 * overlap + 0.45 * bm25_norm, 1.0))
+
+
 class BaselineTopKRetriever:
     def __init__(self, store: MemoryStore, memory_state_policy: MemoryStatePolicy | None = None) -> None:
         self.store = store
         self.memory_state_policy = memory_state_policy or MemoryStatePolicy()
+        self._avgdl, self._doc_freq, self._doc_count = _corpus_lexical_stats(store)
 
     def search(self, query: str, top_k: int = 3) -> RetrievalResult:
-        ranked = sorted(
-            self.store.nodes(),
-            key=lambda node: lexical_overlap(query, node.content),
-            reverse=True,
-        )[:top_k]
+        def score(node) -> float:
+            # Prefer corpus BM25 on large haystacks; keep plain overlap on tiny graphs.
+            if self._doc_count >= 8:
+                return _lexical_rank_score(
+                    query,
+                    node.content,
+                    avgdl=self._avgdl,
+                    doc_freq=self._doc_freq,
+                    doc_count=self._doc_count,
+                )
+            return lexical_overlap(query, node.content)
+
+        ranked = sorted(self.store.nodes(), key=score, reverse=True)[:top_k]
         paths = [
-            path_answer(query, [(node, lexical_overlap(query, node.content), "baseline lexical hit", None)])
+            path_answer(query, [(node, score(node), "baseline lexical hit", None)])
             for node in ranked
-            if lexical_overlap(query, node.content) > 0
+            if score(node) > 0
         ]
         reinforce_result_paths(self.store, paths=paths, policy=self.memory_state_policy)
         decay_unvisited_nodes(
@@ -117,6 +168,7 @@ class WeightedGraphRetriever:
         self.scoring_strategy = scoring_strategy or WeightedSumScoringStrategy(
             memory_state_policy=self.memory_state_policy,
         )
+        self._avgdl, self._doc_freq, self._doc_count = _corpus_lexical_stats(store)
         self.contradiction_candidates = contradiction_candidates(
             self.store.nodes(),
             self.store.edges(),
@@ -330,8 +382,25 @@ class WeightedGraphRetriever:
                 )
                 else 1
             )
-        if edge_type == "next_unit":
-            return 1 if any(token in lowered for token in ("next", "after", "comes after")) else 0
+        if edge_type in {"next", "next_unit", "route_to"}:
+            # LongMemEval / palace timeline edges — prefer when the query is temporal.
+            if any(
+                token in lowered
+                for token in (
+                    "next",
+                    "after",
+                    "before",
+                    "comes after",
+                    "previous",
+                    "earlier",
+                    "later",
+                    "then",
+                    "when did",
+                    "last time",
+                )
+            ):
+                return 2
+            return 0
         return 0
 
     def _route_score(
@@ -544,42 +613,81 @@ class HybridRetriever(WeightedGraphRetriever):
     Unlike ``WeightedGraphRetriever`` (which takes ``max(embedding, lexical)``),
     hybrid uses a weighted blend so exact keyword hits and semantic neighbors
     both contribute to seed ranking — closer to public-memory product behavior.
+
+    Weak local hash embeddings must not drown strong lexical hits, so the final
+    similarity is ``max(lexical, blended)``.
     """
 
-    lexical_weight: float = 0.45
-    embedding_weight: float = 0.55
+    lexical_weight: float = 0.60
+    embedding_weight: float = 0.40
 
-    def _semantic_similarity(self, query: str, text: str) -> float:
-        embedding_score = self.embedding_retriever.semantic_similarity(query, text)
-        lexical_score = lexical_overlap(query, text)
-        blended = (
-            self.embedding_weight * embedding_score
-            + self.lexical_weight * lexical_score
+    def __init__(
+        self,
+        store: MemoryStore,
+        embedding_provider: EmbeddingProvider | None = None,
+        scoring_strategy: ScoringStrategy | None = None,
+        memory_state_policy: MemoryStatePolicy | None = None,
+    ) -> None:
+        super().__init__(
+            store=store,
+            embedding_provider=embedding_provider or NgramHashingEmbeddingProvider(),
+            scoring_strategy=scoring_strategy,
+            memory_state_policy=memory_state_policy,
         )
-        return max(0.0, min(blended, 1.0))
 
     def _rank_seed_candidates(self, query: str, top_k: int) -> list[tuple]:
         combined: dict[str, tuple] = {}
         pool = max(top_k * 3, top_k)
+        use_bm25 = self._doc_count >= 8
+
+        def lexical_score(text: str) -> float:
+            if use_bm25:
+                return _lexical_rank_score(
+                    query,
+                    text,
+                    avgdl=self._avgdl,
+                    doc_freq=self._doc_freq,
+                    doc_count=self._doc_count,
+                )
+            return lexical_overlap(query, text)
+
         for node, embedding_score in self.embedding_retriever.rank_candidates(query, top_k=pool):
-            lexical_score = lexical_overlap(query, node.content)
-            score = (
-                self.embedding_weight * embedding_score
-                + self.lexical_weight * lexical_score
-            )
+            lex = lexical_score(node.content)
+            blended = self.embedding_weight * embedding_score + self.lexical_weight * lex
+            score = max(lex, blended)
             combined[node.id] = (node, score)
-        for node in self._lexical_rank_candidates(query, top_k=pool):
+        for node in sorted(
+            self.store.nodes(),
+            key=lambda item: lexical_score(item.content),
+            reverse=True,
+        )[:pool]:
             embedding_score = self.embedding_retriever.semantic_similarity(query, node.content)
-            lexical_score = lexical_overlap(query, node.content)
-            score = (
-                self.embedding_weight * embedding_score
-                + self.lexical_weight * lexical_score
-            )
+            lex = lexical_score(node.content)
+            blended = self.embedding_weight * embedding_score + self.lexical_weight * lex
+            score = max(lex, blended)
             existing = combined.get(node.id)
             if existing is None or score > existing[1]:
                 combined[node.id] = (node, score)
         ranked = sorted(combined.values(), key=lambda item: item[1], reverse=True)
         return ranked[: max(top_k, min(len(ranked), top_k * 2))]
+
+    def _semantic_similarity(self, query: str, text: str) -> float:
+        embedding_score = self.embedding_retriever.semantic_similarity(query, text)
+        if self._doc_count >= 8:
+            lexical_score = _lexical_rank_score(
+                query,
+                text,
+                avgdl=self._avgdl,
+                doc_freq=self._doc_freq,
+                doc_count=self._doc_count,
+            )
+        else:
+            lexical_score = lexical_overlap(query, text)
+        blended = (
+            self.embedding_weight * embedding_score
+            + self.lexical_weight * lexical_score
+        )
+        return max(0.0, min(max(lexical_score, blended), 1.0))
 
 
 class StructureAwareRetriever(WeightedGraphRetriever):
