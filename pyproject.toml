@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.2.0"
-description = "Local memory with replayable paths — structured retrieval, CLI palace, and public benchmark KPIs."
+version = "0.3.0"
+description = "Local memory with replayable paths — CLI palace, MCP closed loop, and public benchmark KPIs."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -18,10 +18,14 @@ dependencies = [
 
 [project.scripts]
 mpe = "memory_engine.cli:main"
+mpe-mcp = "memory_engine.mcp_server:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+memory_engine = ["assets/hooks/*"]
 

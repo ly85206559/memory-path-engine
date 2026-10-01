@@ -142,6 +142,7 @@ from memory_engine.retrieve import (
     ActivationSpreadingRetriever,
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
+    HybridRetriever,
     StructureAwareRetriever,
     WeightedGraphRetriever,
 )
@@ -224,6 +225,7 @@ __all__ = [
     "LongMemEvalSessionPack",
     "EvidenceRef",
     "HashingEmbeddingProvider",
+    "HybridRetriever",
     "HotpotQAModeSummary",
     "HotpotQAPerQuestionModeResult",
     "HotpotQAPerQuestionSummary",

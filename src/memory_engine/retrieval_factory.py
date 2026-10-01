@@ -15,6 +15,7 @@ from memory_engine.retrieve import (
     ActivationSpreadingRetriever,
     BaselineTopKRetriever,
     EmbeddingTopKRetriever,
+    HybridRetriever,
     StructureAwareRetriever,
     WeightedGraphRetriever,
 )
@@ -42,6 +43,7 @@ def _retriever_builders():
         "embedding_baseline": EmbeddingTopKRetriever,
         "structure_only": StructureAwareRetriever,
         "weighted_graph": WeightedGraphRetriever,
+        "hybrid": HybridRetriever,
         "activation_spreading_v1": ActivationSpreadingRetriever,
         "weighted_graph_static": WeightedGraphRetriever,
         "weighted_graph_dynamic": WeightedGraphRetriever,
@@ -56,6 +58,7 @@ def build_legacy_retriever(retriever_mode: str, store: MemoryStore):
         "embedding_baseline": StaticMemoryStatePolicy(),
         "structure_only": StaticMemoryStatePolicy(),
         "weighted_graph": MemoryStatePolicy(),
+        "hybrid": MemoryStatePolicy(),
         "activation_spreading_v1": MemoryStatePolicy(),
         "weighted_graph_static": StaticMemoryStatePolicy(),
         "weighted_graph_dynamic": MemoryStatePolicy(),

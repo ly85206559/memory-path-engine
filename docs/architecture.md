@@ -192,6 +192,8 @@ v1 adds an explicit **palace domain** under `src/memory_engine/memory/`:
   - `forgetting_policies.py`: mild vs aggressive online decay policies over `MemoryStatePolicy`
   - `reasoning.PathReasoner`: deterministic query → path → answer with hop citations
 - **Product M1 persistence**: `persistence.sqlite_store` + `palace_workspace` write the same `MemoryStore` to `.mpe/store.sqlite`; `mpe` CLI is the product entry.
+- **Product M2 closed loop**: stdio MCP (`mcp_server.py`), hook templates (`hooks_install` / `assets/hooks`), shared `product_service` for CLI+MCP.
+- **Hybrid retriever**: `HybridRetriever` blends lexical + embedding seed scores before graph expansion (`retriever_mode=hybrid`).
 
 Legacy contracts (`MemoryPath`, `RetrievalResult.paths`, structured benchmark reports) remain stable; v1 is additive until callers migrate to palace-first APIs.
 

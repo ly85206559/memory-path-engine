@@ -1,7 +1,7 @@
 {
   "product_kpi": true,
   "label": "tiny",
-  "generated_at": "2026-10-01T08:37:37+00:00",
+  "generated_at": "2026-10-01T08:51:44+00:00",
   "dataset": "/workspace/benchmarks/external/longmemeval/longmemeval_tiny_fixture.json",
   "samples": 2,
   "granularity": "session",
@@ -12,33 +12,41 @@
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
       "ndcg_at_10": 0.785321,
-      "avg_latency_ms": 0.214
+      "avg_latency_ms": 0.222
     },
     "embedding_baseline": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
       "ndcg_at_10": 0.785321,
-      "avg_latency_ms": 0.245
+      "avg_latency_ms": 0.276
     },
     "weighted_graph": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
       "ndcg_at_10": 0.846713,
-      "avg_latency_ms": 1.129
+      "avg_latency_ms": 1.316
+    },
+    "hybrid": {
+      "questions": 2,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0,
+      "ndcg_at_10": 0.846713,
+      "avg_latency_ms": 1.183
     },
     "activation_spreading_v1": {
       "questions": 2,
       "recall_at_5": 1.0,
       "recall_at_10": 1.0,
       "ndcg_at_10": 0.82546,
-      "avg_latency_ms": 0.557
+      "avg_latency_ms": 0.643
     }
   },
   "notes": [
-    "Product M1 baseline skeleton: session-level retrieval-only.",
-    "Turn-level drawers and hybrid recall land in later milestones.",
+    "Product KPI baseline: session-level retrieval-only.",
+    "hybrid mode blends lexical+embedding seeds then graph-expands.",
+    "Turn-level drawers and full LongMemEval-S KPI land in M3.",
     "Layer B path/contradiction metrics remain the architecture proof surface."
   ],
   "metric_layer": "A",
