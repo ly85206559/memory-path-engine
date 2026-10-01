@@ -1,11 +1,10 @@
-# Acceptance checklist (Product M1 + M2)
+# Acceptance checklist (Product M1–M4)
 
-Use this page to验收当前可交付版本。全部勾选即可认为 **工程闭环 MVP** 可验收；
-公开榜单冲高分属于 M3，不阻塞本次验收。
+Use this page to验收当前可交付版本。全部勾选即可认为 **工程闭环 + 分发 MVP** 可验收。
 
 ## A. Local palace + CLI
 
-- [ ] `pip install -e .` 后 `mpe --help` 可用
+- [ ] `pip install -e .` 或 `pipx install git+...` 后 `mpe --help` 可用
 - [ ] `mpe init && mpe ingest examples/runbook_pack/runbooks --pack example_runbook_pack`
 - [ ] `mpe status` 显示 nodes/edges > 0
 - [ ] `mpe search "..."` 输出 ANSWER + PATH hops
@@ -28,14 +27,21 @@ Use this page to验收当前可交付版本。全部勾选即可认为 **工程�
 
 - [ ] `mpe bench longmemeval --label tiny` 写出 JSON + Markdown
 - [ ] 报告中含 `product_kpi: true` 与 R@5 列
-- [ ] README / `docs/ROADMAP.md` 标明 M3 才冲 full LongMemEval
 
-## E. Regression
+## E. Distribution (M4)
+
+- [ ] `mpe backup` 生成 `.tar.gz`
+- [ ] `mpe repair` 对健康 palace 返回 ok
+- [ ] `mpe doctor` 显示 python/package/palace 检查
+- [ ] `docker build -t mpe-mcp .` 成功；`docker run -i --rm ... mpe-mcp` 可起 stdio MCP
+- [ ] [`docs/install.md`](install.md) 含 pipx / uv / Docker 说明
+
+## F. Regression
 
 - [ ] `python -m unittest discover -s tests -v` 全绿
 
 ## Out of scope for this acceptance
 
-- Docker 镜像、多向量后端
+- 多向量后端 / 真 embedding 服务
 - LongMemEval-S full 96%+ 对标数字
 - LLM 生成答案（PathReasoner 保持确定性）

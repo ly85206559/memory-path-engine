@@ -1,0 +1,12 @@
+.git
+.mpe
+mpe-backups
+**/__pycache__
+**/*.pyc
+.venv
+dist
+build
+*.egg-info
+benchmarks/external/**/data
+.pytest_cache
+.cursor

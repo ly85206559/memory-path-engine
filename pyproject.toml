@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.4.0"
-description = "Local memory with replayable paths — CLI/MCP palace, hybrid retrieve, LongMemEval session+turn KPIs."
+version = "0.5.0"
+description = "Local memory with replayable paths — CLI/MCP palace, hybrid retrieve, Docker MCP, backup/repair."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -15,6 +15,11 @@ authors = [
 dependencies = [
   "pydantic",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ly85206559/memory-path-engine"
+Documentation = "https://github.com/ly85206559/memory-path-engine/blob/master/docs/getting-started.md"
+Issues = "https://github.com/ly85206559/memory-path-engine/issues"
 
 [project.scripts]
 mpe = "memory_engine.cli:main"
