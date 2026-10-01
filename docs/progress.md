@@ -49,7 +49,7 @@
 | 阶段 | 计划内容 | 结论 | 本轮复核 |
 | --- | --- | --- | --- |
 | 0 基线守住 | CI + Layer B 不回退 | **通过** | `unittest` **191** OK；Layer B/ablation/Layer C/Layer A tiny 脚本可跑 |
-| 1 Layer B 机制 | 矛盾/异常可证伪 | **通过** | ≥23 相关 case；规格表见 [`STAGE1_CASE_SPEC.md`](../benchmarks/structured_memory/STAGE1_CASE_SPEC.md) |
+| 1 Layer B 机制 | 矛盾/异常可证伪 | **通过** | 既有 fixtures + **新** [`stage1_plan_appendix_benchmark.json`](../benchmarks/structured_memory/stage1_plan_appendix_benchmark.json)（10 case）+ [`STAGE1_CASE_SPEC.md`](../benchmarks/structured_memory/STAGE1_CASE_SPEC.md) |
 | 2 消融工业化 | ablation + 延迟汇总 | **通过** | `generate_ablation_report.py` |
 | 3 Layer A 规模化 | 公开指标与架构指标分离 | **通过** | Layer A 报告 + nightly（含 hybrid）+ medium KPI 快照 |
 | 4 Layer C | 私有金标流程 | **脚手架通过** | [`layer-c-pilot-checklist.md`](layer-c-pilot-checklist.md)；私有 30 文档 / 120–180 case 仍属组织侧 |
@@ -71,6 +71,7 @@
 ### A. Layer B（仓库内 — 已交付）
 
 - 合成 markdown + contradiction / exception fixture（`benchmarks/structured_memory/`）
+- **计划附录新包**：`examples/graph_contract_pack/stage1_plan_pack/` + `stage1_plan_appendix_benchmark.json`（10 case）
 - 标注规格表：[`STAGE1_CASE_SPEC.md`](../benchmarks/structured_memory/STAGE1_CASE_SPEC.md)
 - 稳定 node id 与 domain pack 边类型对齐
 

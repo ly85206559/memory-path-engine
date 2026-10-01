@@ -121,6 +121,32 @@ class BenchmarkFixtureTests(unittest.TestCase):
         )
         self.assertTrue(report.case_reports[0].surfaced_contradictions)
 
+    def test_stage1_plan_appendix_fixture_covers_exception_and_contradiction(self):
+        from memory_engine.benchmarking.application.service import (
+            StructuredBenchmarkEvaluationService,
+        )
+
+        dataset_path = Path("benchmarks/structured_memory/stage1_plan_appendix_benchmark.json")
+        report = StructuredBenchmarkEvaluationService().run_from_dataset_path(
+            dataset_path=dataset_path,
+            retriever_mode="activation_spreading_v1",
+            top_k=3,
+        )
+
+        self.assertEqual(report.dataset_id, "stage1-plan-appendix-benchmark-v1")
+        self.assertEqual(len(report.case_reports), 10)
+        self.assertEqual(report.evidence_hit_rate, 1.0)
+        self.assertTrue(all(case.hit for case in report.case_reports))
+        self.assertTrue(
+            any(case.contradiction_hit for case in report.case_reports if case.contradiction_hit is not None)
+        )
+        self.assertTrue(
+            any("exception" in (case.surfaced_semantic_roles or []) for case in report.case_reports)
+        )
+        self.assertTrue(
+            any("contradicts" in (case.path_edge_types or []) for case in report.case_reports)
+        )
+
     def test_multi_hop_chain_fixture_runs_with_activation_spreading(self):
         from memory_engine.benchmarking.application.service import (
             StructuredBenchmarkEvaluationService,
