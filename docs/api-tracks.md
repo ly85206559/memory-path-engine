@@ -53,8 +53,13 @@ On-disk workspace helpers (see [`palace_workspace.py`](../src/memory_engine/pala
 | `mpe init` | Create `.mpe/config.json` + `store.sqlite` |
 | `mpe ingest <paths>` | Domain-pack ingest into the SQLite store |
 | `mpe search` / `mpe path` | Recall + deterministic path answer |
+| `mpe memo` | Append freeform session memo |
+| `mpe reinforce` | Search + online mild/aggressive forgetting step |
 | `mpe status` | Node/edge counts and palace location |
+| `mpe mcp` | Stdio MCP server for Cursor / Claude |
+| `mpe hooks install` | Copy hook + MCP templates into `.cursor/mpe-hooks/` |
 | `mpe bench longmemeval` | Layer A KPI baseline JSON/Markdown |
 
 Prefer the CLI for product flows; keep `memory_engine.api` for library embedding.
+See [`getting-started.md`](getting-started.md) and [`ACCEPTANCE.md`](ACCEPTANCE.md).
 

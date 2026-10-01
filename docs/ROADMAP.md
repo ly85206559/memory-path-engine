@@ -17,7 +17,7 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Milestones
 
-### M1 — Persist + CLI + baseline skeleton (current)
+### M1 — Persist + CLI + baseline skeleton
 
 - [x] SQLite-backed `MemoryStore` persistence
 - [x] Local palace directory (`.mpe/` or `$MPE_PALACE`)
@@ -25,16 +25,17 @@ recall becomes a first-class product KPI (Layer A).
 - [x] `mpe bench longmemeval` writes JSON + Markdown baseline artifacts
 - [x] Commit tiny-fixture baseline under `benchmarks/external/longmemeval/baselines/`
 
-### M2 — Agent closed loop
+### M2 — Agent closed loop (current)
 
-- [ ] MCP server (status, ingest, search, get_path, reinforce)
-- [ ] Cursor / Claude session hooks (write on stop/compact; recall on start)
-- [ ] 5-minute getting-started guide
+- [x] MCP server (`mpe mcp` / `mpe-mcp`): status, ingest, memo, search, path, reinforce
+- [x] Cursor hook templates + `mpe hooks install`
+- [x] 5-minute guide: [`getting-started.md`](getting-started.md)
+- [x] Acceptance checklist: [`ACCEPTANCE.md`](ACCEPTANCE.md)
 
-### M3 — Stronger public KPI
+### M3 — Stronger public KPI (next)
 
-- [ ] Turn-level session units for LongMemEval (closer to product drawers)
-- [ ] Hybrid retrieve (lexical + embedding) before graph expansion
+- [x] Hybrid retrieve mode (`hybrid`) — lexical+embedding blend then graph expand
+- [ ] Turn-level session units for LongMemEval
 - [ ] Full LongMemEval-S reproducible report in README
 
 ### M4 — Distribution

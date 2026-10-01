@@ -537,6 +537,51 @@ class WeightedGraphRetriever:
         )
 
 
+class HybridRetriever(WeightedGraphRetriever):
+    """
+    Product hybrid mode: blend lexical + embedding seed scores, then graph-expand.
+
+    Unlike ``WeightedGraphRetriever`` (which takes ``max(embedding, lexical)``),
+    hybrid uses a weighted blend so exact keyword hits and semantic neighbors
+    both contribute to seed ranking — closer to public-memory product behavior.
+    """
+
+    lexical_weight: float = 0.45
+    embedding_weight: float = 0.55
+
+    def _semantic_similarity(self, query: str, text: str) -> float:
+        embedding_score = self.embedding_retriever.semantic_similarity(query, text)
+        lexical_score = lexical_overlap(query, text)
+        blended = (
+            self.embedding_weight * embedding_score
+            + self.lexical_weight * lexical_score
+        )
+        return max(0.0, min(blended, 1.0))
+
+    def _rank_seed_candidates(self, query: str, top_k: int) -> list[tuple]:
+        combined: dict[str, tuple] = {}
+        pool = max(top_k * 3, top_k)
+        for node, embedding_score in self.embedding_retriever.rank_candidates(query, top_k=pool):
+            lexical_score = lexical_overlap(query, node.content)
+            score = (
+                self.embedding_weight * embedding_score
+                + self.lexical_weight * lexical_score
+            )
+            combined[node.id] = (node, score)
+        for node in self._lexical_rank_candidates(query, top_k=pool):
+            embedding_score = self.embedding_retriever.semantic_similarity(query, node.content)
+            lexical_score = lexical_overlap(query, node.content)
+            score = (
+                self.embedding_weight * embedding_score
+                + self.lexical_weight * lexical_score
+            )
+            existing = combined.get(node.id)
+            if existing is None or score > existing[1]:
+                combined[node.id] = (node, score)
+        ranked = sorted(combined.values(), key=lambda item: item[1], reverse=True)
+        return ranked[: max(top_k, min(len(ranked), top_k * 2))]
+
+
 class StructureAwareRetriever(WeightedGraphRetriever):
     def __init__(
         self,

@@ -3,9 +3,9 @@
 [![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M1)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M2)-0e7c86.svg)](docs/ROADMAP.md)
 
-Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI and public-benchmark KPIs.
+Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
 `Memory Path Engine` models memory as typed nodes, edges, weights, and `MemoryPath` objects so a system can retrieve, traverse, and explain how it reached an answer. Product M1 adds an on-disk palace (SQLite) and the `mpe` CLI; Layer B fixtures remain the architecture proof surface.
 
@@ -66,14 +66,23 @@ python -m pip install --no-build-isolation -e .
 ### Product CLI (`mpe`) — local palace
 
 ```bash
-mpe init
+mpe init --mode hybrid
 mpe ingest examples/runbook_pack/runbooks --pack example_runbook_pack
-mpe search "What if rollback does not recover the API?"
+mpe search "What if rollback does not recover the API?" --mode hybrid
 mpe path "What if rollback does not recover the API?"
 mpe status
 ```
 
 Palace files live in `./.mpe/` (or `$MPE_PALACE`). Search always prints an answer plus hop citations.
+
+5-minute agent closed loop (MCP + hooks): see [`docs/getting-started.md`](docs/getting-started.md).
+
+```bash
+mpe hooks install
+mpe mcp   # stdio MCP server for Cursor / Claude
+```
+
+Acceptance checklist: [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).
 
 ### LongMemEval product KPI baseline
 
@@ -294,29 +303,29 @@ Current run matrix:
 - `benchmarks/external/longmemeval/data/*.json`: local / nightly (`medium` default 50 samples, `full` optional)
 - `benchmarks/layer_c_minimal/*`: runnable Layer C transfer stand-ins + private annotation templates
 
-## What is in scope for v0.2 (Product M1)
+## What is in scope for v0.3 (Product M2)
 
 - typed `MemoryNode` / `MemoryEdge` / `MemoryPath` graph
 - SQLite-backed local palace (`.mpe/`) and `mpe` CLI
+- stdio MCP server + Cursor hook templates (`mpe hooks install`)
+- `hybrid` retriever mode (lexical + embedding blend → graph expand)
 - domain packs for contract / runbook / research documents
-- multi-mode retrieval + Stage 6 path reasoning helpers
 - LongMemEval baseline report artifacts as Layer A product KPIs
 
 ## What is out of scope for now
 
-- MCP server and IDE hooks (Product M2)
-- hybrid lexical+embedding recall and turn-level LongMemEval units (Product M3)
+- Docker image and multi-backend vector zoo (Product M4)
+- Turn-level LongMemEval full-corpus KPI race (Product M3 remainder)
 - multi-modal memory encoding
 - full UI
 - LLM-backed answer synthesis (path reasoning stays deterministic)
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for M2–M4. Near-term:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term M3:
 
-- MCP + Cursor/Claude hooks for an agent closed loop
-- hybrid retrieve before graph expansion; full LongMemEval-S KPI in README
-- stronger embedding backends behind `EmbeddingProvider`
+- turn-level session units for LongMemEval
+- full LongMemEval-S reproducible report in README
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

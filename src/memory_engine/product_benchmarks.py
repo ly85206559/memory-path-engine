@@ -17,6 +17,7 @@ DEFAULT_MODES: tuple[str, ...] = (
     "lexical_baseline",
     "embedding_baseline",
     "weighted_graph",
+    "hybrid",
     "activation_spreading_v1",
 )
 
@@ -89,8 +90,9 @@ def run_longmemeval_baseline(
                 for mode_name, report in suite.modes.items()
             },
             "notes": [
-                "Product M1 baseline skeleton: session-level retrieval-only.",
-                "Turn-level drawers and hybrid recall land in later milestones.",
+                "Product KPI baseline: session-level retrieval-only.",
+                "hybrid mode blends lexical+embedding seeds then graph-expands.",
+                "Turn-level drawers and full LongMemEval-S KPI land in M3.",
                 "Layer B path/contradiction metrics remain the architecture proof surface.",
             ],
         },

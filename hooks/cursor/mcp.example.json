@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "memory-path-engine": {
+      "command": "mpe",
+      "args": ["mcp"],
+      "env": {
+        "MPE_PALACE": ".mpe"
+      }
+    }
+  }
+}

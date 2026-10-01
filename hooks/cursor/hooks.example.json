@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "bash",
+        "args": ["hooks/cursor/mpe_session_start.sh"]
+      }
+    ],
+    "stop": [
+      {
+        "command": "bash",
+        "args": ["hooks/cursor/mpe_stop_save.sh"]
+      }
+    ]
+  },
+  "notes": "Example Cursor hook wiring for Memory Path Engine. Adjust paths to your checkout or installed hook copies under .cursor/mpe-hooks/."
+}
