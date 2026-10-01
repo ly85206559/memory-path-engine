@@ -1,0 +1,232 @@
+{
+  "dataset_id": "stage1-plan-appendix-benchmark-v1",
+  "dataset_name": "Stage 1 plan appendix contradiction/exception pack",
+  "domain_pack_name": "example_contract_pack",
+  "document_directory": "../../examples/graph_contract_pack/stage1_plan_pack",
+  "cases": [
+    {
+      "case_id": "stage1-exception-001",
+      "query": "What overrides the twelve month warranty for refurbished units?",
+      "tags": [
+        "exception",
+        "override",
+        "warranty",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:5",
+          "03_warranty_attachment_tension_contract:1"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": [
+          "exception_to"
+        ],
+        "required_semantic_roles": [
+          "exception"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-exception-002",
+      "query": "Unless the Attachment states otherwise, which warranty term applies from the Master Agreement?",
+      "tags": [
+        "exception",
+        "unless",
+        "warranty",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:3"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": [
+          "exception"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-contradiction-001",
+      "query": "The Agreement and Attachment conflict on invoice payment timing. Which payment terms govern?",
+      "tags": [
+        "contradiction",
+        "tension",
+        "payment",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:4",
+          "03_warranty_attachment_tension_contract:8"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": [
+          "contradicts"
+        ],
+        "required_contradiction_pairs": [
+          [
+            "03_warranty_attachment_tension_contract:4",
+            "03_warranty_attachment_tension_contract:8"
+          ]
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-contradiction-002",
+      "query": "Which clauses conflict on Buyer payment of invoices between the Agreement and Attachment?",
+      "tags": [
+        "contradiction",
+        "multi_hop",
+        "payment",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:4",
+          "03_warranty_attachment_tension_contract:8"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": [
+          "contradicts"
+        ],
+        "required_contradiction_pairs": [
+          [
+            "03_warranty_attachment_tension_contract:4",
+            "03_warranty_attachment_tension_contract:8"
+          ]
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-condition-001",
+      "query": "If refurbished units fail within the shortened warranty, what must Seller do?",
+      "tags": [
+        "exception",
+        "condition",
+        "remedy",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:6",
+          "03_warranty_attachment_tension_contract:5"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": [
+          "depends_on"
+        ],
+        "required_semantic_roles": [
+          "condition"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-exception-003",
+      "query": "Except when Buyer fails to notify Seller within thirty days, must Seller honor the Attachment warranty remedy?",
+      "tags": [
+        "exception",
+        "notify",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:9"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": [
+          "exception"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-contradiction-003",
+      "query": "Does Attachment payment of invoices conflict with Agreement payment of invoices?",
+      "tags": [
+        "contradiction",
+        "lexical_conflict",
+        "payment",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:4",
+          "03_warranty_attachment_tension_contract:8"
+        ],
+        "minimum_evidence_matches": 2,
+        "required_edge_types": [
+          "contradicts"
+        ],
+        "required_contradiction_pairs": [
+          [
+            "03_warranty_attachment_tension_contract:4",
+            "03_warranty_attachment_tension_contract:8"
+          ]
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-exception-004",
+      "query": "What is the warranty length for refurbished units notwithstanding Section 1?",
+      "tags": [
+        "exception",
+        "override",
+        "refurbished",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:5"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": [
+          "exception"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-exception-005",
+      "query": "Which clause creates an exception to the twelve month Seller warranty?",
+      "tags": [
+        "exception",
+        "override",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:5",
+          "03_warranty_attachment_tension_contract:3"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_semantic_roles": [
+          "exception"
+        ]
+      }
+    },
+    {
+      "case_id": "stage1-contradiction-004",
+      "query": "Order Form style tension: which Attachment clause says Attachment payment shall control over the Agreement?",
+      "tags": [
+        "contradiction",
+        "tension",
+        "control",
+        "stage1"
+      ],
+      "expectation": {
+        "evidence_node_ids": [
+          "03_warranty_attachment_tension_contract:8"
+        ],
+        "minimum_evidence_matches": 1,
+        "required_edge_types": [
+          "contradicts"
+        ],
+        "required_contradiction_pairs": [
+          [
+            "03_warranty_attachment_tension_contract:4",
+            "03_warranty_attachment_tension_contract:8"
+          ]
+        ]
+      }
+    }
+  ]
+}

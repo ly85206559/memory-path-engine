@@ -15,6 +15,7 @@ DEFAULT_FIXTURES = (
     "exception_override_benchmark.json",
     "exception_override_path_benchmark.json",
     "contradiction_tension_benchmark.json",
+    "stage1_plan_appendix_benchmark.json",
     "multi_hop_chain_benchmark.json",
     "activation_snapshot_benchmark.json",
 )
