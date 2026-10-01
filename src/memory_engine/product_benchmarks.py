@@ -53,8 +53,8 @@ def run_longmemeval_baseline(
     """
     Run LongMemEval retrieval baseline and write JSON + Markdown artifacts.
 
-    This is the Product M1 KPI skeleton: reproducible numbers first; full-corpus
-    and hybrid modes come in later milestones.
+    This is the Product Layer A KPI runner: reproducible session/turn recall
+    reports for tiny fixtures and full downloaded LongMemEval-S corpora.
     """
     dataset_path = dataset or default_longmemeval_dataset()
     if not dataset_path.is_absolute():
@@ -90,9 +90,10 @@ def run_longmemeval_baseline(
                 for mode_name, report in suite.modes.items()
             },
             "notes": [
-                "Product KPI baseline: session-level retrieval-only.",
+                "Product KPI baseline for Layer A public recall.",
+                "granularity=session aggregates each session; granularity=turn stores drawer-like turn units.",
                 "hybrid mode blends lexical+embedding seeds then graph-expands.",
-                "Turn-level drawers and full LongMemEval-S KPI land in M3.",
+                "Full LongMemEval-S: download the cleaned file and run with --label full.",
                 "Layer B path/contradiction metrics remain the architecture proof surface.",
             ],
         },

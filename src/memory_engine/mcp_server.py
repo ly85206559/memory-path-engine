@@ -23,7 +23,7 @@ from memory_engine.product_service import (
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {
     "name": "memory-path-engine",
-    "version": "0.3.0",
+    "version": "0.4.0",
 }
 
 TOOLS: list[dict[str, Any]] = [

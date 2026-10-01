@@ -72,8 +72,8 @@ def main() -> None:
     parser.add_argument(
         "--granularity",
         default="session",
-        choices=("session",),
-        help="Retrieval granularity. LongMemEval v0 currently supports session only.",
+        choices=("session", "turn"),
+        help="Retrieval granularity: session aggregates or turn-level drawer units.",
     )
     parser.add_argument(
         "--pretty",

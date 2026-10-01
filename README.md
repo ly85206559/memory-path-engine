@@ -3,7 +3,7 @@
 [![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M2)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M3)-0e7c86.svg)](docs/ROADMAP.md)
 
 Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
@@ -87,10 +87,28 @@ Acceptance checklist: [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).
 ### LongMemEval product KPI baseline
 
 ```bash
-mpe bench longmemeval --label tiny
+mpe bench longmemeval --label tiny --granularity session
+mpe bench longmemeval --label tiny --granularity turn
 ```
 
-Writes JSON + Markdown under `benchmarks/external/longmemeval/baselines/`. Use a downloaded full file and `--label full` for the public KPI run (see [`benchmarks/external/longmemeval/README.md`](benchmarks/external/longmemeval/README.md)). Product roadmap: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
+
+**Reproduce full LongMemEval-S (public KPI):**
+
+```bash
+python scripts/download_longmemeval.py
+mpe bench longmemeval \
+  --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json \
+  --label full --granularity session --limit 0
+```
+
+| Slice | Granularity | How to run | Notes |
+| --- | --- | --- | --- |
+| tiny (2q, checked in) | session / turn | `mpe bench longmemeval --label tiny [--granularity turn]` | CI smoke + committed baselines |
+| medium (50q) | session | nightly / local with `--limit 50` | positioning |
+| full (LongMemEval-S) | session / turn | download + `--label full --limit 0` | headline public KPI |
+
+See [`benchmarks/external/longmemeval/README.md`](benchmarks/external/longmemeval/README.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 Run the test suite:
 
@@ -289,7 +307,7 @@ The repository also includes a dedicated structured benchmark bounded context wi
 
 The benchmark story is intentionally split into three layers:
 
-- **External positioning:** LongMemEval retrieval-only session recall (`R@5`, `R@10`, `NDCG@10`) for broad long-memory comparison
+- **External positioning:** LongMemEval retrieval-only recall (`R@5`, `R@10`, `NDCG@10`) at **session** or **turn** granularity
 - **Public retrieval sanity:** HotpotQA evidence retrieval on distractor-style multi-document questions
 - **Mechanism validation:** repository-owned structured fixtures for path, semantic, contradiction, and dynamic-memory behavior
 
@@ -303,29 +321,27 @@ Current run matrix:
 - `benchmarks/external/longmemeval/data/*.json`: local / nightly (`medium` default 50 samples, `full` optional)
 - `benchmarks/layer_c_minimal/*`: runnable Layer C transfer stand-ins + private annotation templates
 
-## What is in scope for v0.3 (Product M2)
+## What is in scope for v0.4 (Product M3)
 
 - typed `MemoryNode` / `MemoryEdge` / `MemoryPath` graph
 - SQLite-backed local palace (`.mpe/`) and `mpe` CLI
 - stdio MCP server + Cursor hook templates (`mpe hooks install`)
 - `hybrid` retriever mode (lexical + embedding blend → graph expand)
+- LongMemEval **session + turn** KPI baselines and full-corpus reproduce recipe
 - domain packs for contract / runbook / research documents
-- LongMemEval baseline report artifacts as Layer A product KPIs
 
 ## What is out of scope for now
 
 - Docker image and multi-backend vector zoo (Product M4)
-- Turn-level LongMemEval full-corpus KPI race (Product M3 remainder)
+- LLM-backed answer synthesis (path reasoning stays deterministic)
 - multi-modal memory encoding
 - full UI
-- LLM-backed answer synthesis (path reasoning stays deterministic)
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term M3:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Near-term M4:
 
-- turn-level session units for LongMemEval
-- full LongMemEval-S reproducible report in README
+- `pipx` / `uv tool` polish, Docker stdio MCP, backup/repair basics
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

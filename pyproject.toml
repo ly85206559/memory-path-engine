@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.3.0"
-description = "Local memory with replayable paths — CLI palace, MCP closed loop, and public benchmark KPIs."
+version = "0.4.0"
+description = "Local memory with replayable paths — CLI/MCP palace, hybrid retrieve, LongMemEval session+turn KPIs."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
