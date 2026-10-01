@@ -426,6 +426,7 @@ def run_longmemeval_benchmark(
     top_k: int = 10,
     granularity: str = "session",
     dataset_id: str = "longmemeval-adapter-eval",
+    embedding: str | None = None,
 ) -> PublicBenchmarkSuiteReport:
     mode_reports = {}
 
@@ -434,7 +435,7 @@ def run_longmemeval_benchmark(
         for sample in samples:
             palace = build_longmemeval_memory_palace(sample, granularity=granularity)
             store = palace_to_store(palace)
-            retriever = build_retriever(mode, store)
+            retriever = build_retriever(mode, store, embedding=embedding)
             started = perf_counter()
             result = retriever.search(sample["question"], top_k=top_k)
             latency_ms = (perf_counter() - started) * 1000
@@ -450,6 +451,7 @@ def run_longmemeval_benchmark(
                         "question_type": sample.get("question_type", "unknown"),
                         "question_date": sample.get("question_date"),
                         "granularity": granularity,
+                        "embedding": embedding,
                         "memory_kind_distribution": {
                             "episodic": sum(
                                 1

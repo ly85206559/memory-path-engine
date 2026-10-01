@@ -49,6 +49,7 @@ def run_longmemeval_baseline(
     output_dir: Path | None = None,
     label: str = "tiny",
     granularity: str = "session",
+    embedding: str | None = None,
 ) -> dict[str, Any]:
     """
     Run LongMemEval retrieval baseline and write JSON + Markdown artifacts.
@@ -69,6 +70,7 @@ def run_longmemeval_baseline(
         top_k=top_k,
         granularity=granularity,
         dataset_id=f"longmemeval::{dataset_path.stem}::{label}",
+        embedding=embedding,
     )
     summary = annotate_external_summary(
         {
@@ -78,6 +80,7 @@ def run_longmemeval_baseline(
             "dataset": str(dataset_path),
             "samples": len(samples),
             "granularity": granularity,
+            "embedding": embedding or "ngram",
             "top_k": top_k,
             "modes": {
                 mode_name: {
@@ -93,6 +96,7 @@ def run_longmemeval_baseline(
                 "Product KPI baseline for Layer A public recall.",
                 "granularity=session aggregates each session; granularity=turn stores drawer-like turn units.",
                 "hybrid mode blends lexical+embedding seeds then graph-expands.",
+                "embedding=ngram (default) or fastembed/sentence via --embedding / MPE_EMBEDDING.",
                 "Full LongMemEval-S: download the cleaned file and run with --label full.",
                 "Layer B path/contradiction metrics remain the architecture proof surface.",
             ],
@@ -127,6 +131,7 @@ def format_longmemeval_baseline_markdown(summary: dict[str, Any]) -> str:
         f"- granularity: `{summary.get('granularity', 'session')}`",
         f"- metric_scope: `{summary.get('metric_scope', 'external_positioning')}`",
         f"- product_kpi: `{summary.get('product_kpi', False)}`",
+        f"- embedding: `{summary.get('embedding', 'ngram')}`",
         "",
         "| Mode | R@5 | R@10 | NDCG@10 | avg_ms | questions |",
         "| --- | ---: | ---: | ---: | ---: | ---: |",

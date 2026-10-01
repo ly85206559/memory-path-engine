@@ -88,14 +88,19 @@ def build_palace_for_dataset(dataset: StructuredBenchmarkDataset, dataset_root: 
     )
 
 
-def build_retriever(retriever_mode: str, store: MemoryStore):
+def build_retriever(
+    retriever_mode: str,
+    store: MemoryStore,
+    *,
+    embedding: str | None = None,
+):
     """Construct a legacy :class:`MemoryStore` retriever (v0 graph stack).
 
     v1 palace recall uses :class:`memory_engine.memory.application.retrieve_memory_service.RetrieveMemoryService`
     with :func:`memory_engine.memory.application.bridge.palace_to_store` internally; this factory stays the
     stable entry for structured benchmarks and scripts that operate on a plain store.
     """
-    return build_legacy_retriever(retriever_mode, store)
+    return build_legacy_retriever(retriever_mode, store, embedding=embedding)
 
 
 def build_palace_retriever(

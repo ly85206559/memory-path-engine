@@ -41,6 +41,14 @@ mpe path "What if rollback does not recover the API?"
 
 You should see an **ANSWER** block plus **PATH** hops (`node_id`, `via`, `score`).
 
+Optional denser embeddings (after `pip install 'memory-path-engine[embed]'`):
+
+```bash
+export MPE_EMBEDDING=fastembed
+mpe search "What if rollback does not recover the API?" --mode hybrid
+# KPI: mpe bench longmemeval --label tiny --embedding fastembed
+```
+
 ## 4. Save a session memo
 
 ```bash

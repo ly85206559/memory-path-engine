@@ -202,6 +202,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("session", "turn"),
         help="Memory unit granularity: session (default) or turn.",
     )
+    lme.add_argument(
+        "--embedding",
+        default=None,
+        help="Embedding backend for hybrid/embedding_baseline: ngram|hash|fastembed|sentence (or MPE_EMBEDDING).",
+    )
     return parser
 
 
@@ -434,6 +439,7 @@ def _cmd_bench_longmemeval(args: argparse.Namespace) -> int:
         output_dir=args.output_dir,
         label=label,
         granularity=args.granularity,
+        embedding=args.embedding,
     )
     print(f"dataset: {result['dataset']}")
     print(f"samples: {result['samples']}")

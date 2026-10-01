@@ -177,6 +177,112 @@ class NgramHashingEmbeddingProvider:
         return [compact[idx : idx + size] for idx in range(len(compact) - size + 1)]
 
 
+class FastEmbedEmbeddingProvider:
+    """Optional ONNX embedding backend via ``fastembed`` (Product M5).
+
+    Install with ``pip install 'memory-path-engine[embed]'`` or ``pip install fastembed``.
+    Selected by ``MPE_EMBEDDING=fastembed`` (default model: ``BAAI/bge-small-en-v1.5``).
+    """
+
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5") -> None:
+        try:
+            from fastembed import TextEmbedding
+        except ImportError as exc:  # pragma: no cover - exercised when extra missing
+            raise ImportError(
+                "FastEmbedEmbeddingProvider requires the optional 'fastembed' package. "
+                "Install with: pip install 'memory-path-engine[embed]'"
+            ) from exc
+        self.model_name = model_name
+        self._model = TextEmbedding(model_name=model_name)
+        self._cache: dict[str, list[float]] = {}
+
+    def embed(self, text: str) -> list[float]:
+        cached = self._cache.get(text)
+        if cached is not None:
+            return cached
+        vectors = list(self._model.embed([text]))
+        if not vectors:
+            return []
+        vector = [float(value) for value in vectors[0]]
+        self._cache[text] = vector
+        return vector
+
+
+class SentenceTransformerEmbeddingProvider:
+    """Optional dense embedder via ``sentence-transformers`` (Product M5)."""
+
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2") -> None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:  # pragma: no cover
+            raise ImportError(
+                "SentenceTransformerEmbeddingProvider requires 'sentence-transformers'. "
+                "Install with: pip install 'memory-path-engine[embed-st]'"
+            ) from exc
+        self.model_name = model_name
+        self._model = SentenceTransformer(model_name)
+        self._cache: dict[str, list[float]] = {}
+
+    def embed(self, text: str) -> list[float]:
+        cached = self._cache.get(text)
+        if cached is not None:
+            return cached
+        vector = [float(value) for value in self._model.encode(text, normalize_embeddings=True)]
+        self._cache[text] = vector
+        return vector
+
+
+_PROVIDER_CACHE: dict[tuple[str, str | None], EmbeddingProvider] = {}
+
+
+def clear_embedding_provider_cache() -> None:
+    """Drop cached providers (tests / model hot-swap)."""
+    _PROVIDER_CACHE.clear()
+
+
+def resolve_embedding_provider(
+    name: str | None = None,
+    *,
+    model_name: str | None = None,
+) -> EmbeddingProvider:
+    """Resolve an embedding backend by name or ``MPE_EMBEDDING`` env var.
+
+    Supported names: ``ngram`` (default), ``hash``, ``fastembed``, ``sentence``.
+    Optional model override via ``model_name`` or ``MPE_EMBEDDING_MODEL``.
+
+    Heavy backends (fastembed / sentence-transformers) are cached per
+    ``(name, model)`` so LongMemEval loops do not reload ONNX/weights per sample.
+    """
+    import os
+
+    key = (name or os.environ.get("MPE_EMBEDDING") or "ngram").strip().lower()
+    model = model_name or os.environ.get("MPE_EMBEDDING_MODEL")
+    cache_key = (key, model)
+    cached = _PROVIDER_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    if key in {"ngram", "default", "product"}:
+        provider: EmbeddingProvider = NgramHashingEmbeddingProvider()
+    elif key in {"hash", "hashing"}:
+        provider = HashingEmbeddingProvider()
+    elif key in {"fastembed", "bge", "bge-small"}:
+        provider = FastEmbedEmbeddingProvider(
+            model_name=model or "BAAI/bge-small-en-v1.5",
+        )
+    elif key in {"sentence", "minilm", "sentence-transformers"}:
+        provider = SentenceTransformerEmbeddingProvider(
+            model_name=model or "sentence-transformers/all-MiniLM-L6-v2",
+        )
+    else:
+        raise ValueError(
+            f"Unknown embedding provider '{key}'. "
+            "Supported: ngram, hash, fastembed, sentence."
+        )
+    _PROVIDER_CACHE[cache_key] = provider
+    return provider
+
+
 def cosine_similarity(left: list[float], right: list[float]) -> float:
     if not left or not right:
         return 0.0

@@ -3,16 +3,17 @@
 > 对照 [vision.md](vision.md) 三阶段路线图与 [benchmark-strategy.md](benchmark-strategy.md) 三层评测模型。  
 > 本文件是可交付的现状快照；**不取代**也不修改历史 plan 文件。
 
-**快照：** `master` @ Product **M4**（分发：pipx/uv、Docker MCP、backup/repair/doctor）之后。
+**快照：** Product **M5**（可插拔 dense embedding + LongMemEval KPI 对比）已合入本分支。
 
 ## 1. 定位与成熟度
 
 | 维度 | 现状 |
 | --- | --- |
 | 定位 | 从研究原型转向 **本地记忆产品**（可回放路径） |
-| 版本 | `pyproject.toml` → `0.5.0` |
+| 版本 | `pyproject.toml` → `0.5.1` |
 | 产品入口 | `mpe` CLI、`.mpe/` SQLite palace、`mpe mcp` / Docker `mpe-mcp`、hooks |
 | 研究内核 | typed graph、`MemoryPath`、Palace v1、Stage 6 类脑机制 |
+| Embedding | 默认 `ngram`（无新硬依赖）；可选 `fastembed` / `sentence-transformers` |
 
 一句话：
 
@@ -22,7 +23,7 @@
 
 | 轨道 | 位置 | 状态 |
 | --- | --- | --- |
-| v0 图检索栈 | `schema` / `store` / `retrieve` / `scoring` / `replay` | 稳定；含 `hybrid`（BM25 + n-gram 嵌入） |
+| v0 图检索栈 | `schema` / `store` / `retrieve` / `scoring` / `replay` | 稳定；含 `hybrid`（BM25 + 可插拔 embedding） |
 | Memory Palace v1 | `memory/` domain + application | 稳定；`palace_to_store` 桥接 |
 | 产品持久化 | `persistence/` + `palace_workspace` | M1 已合入 |
 | Agent 闭环 | `mcp_server` + `hooks_install` | M2 已合入 |
@@ -40,7 +41,7 @@
 
 | Layer | 目标 | 现状 | 验收命令 |
 | --- | --- | --- | --- |
-| **A** 外部站位 | LongMemEval / HotpotQA | tiny+turn 基线；medium 30/50q KPI 已提交；full 配方在 README | `mpe bench longmemeval --label tiny [--granularity turn]` |
+| **A** 外部站位 | LongMemEval / HotpotQA | tiny+turn 基线；medium 30/50q KPI；M5 ngram vs fastembed 对比 | `mpe bench longmemeval --label tiny [--embedding fastembed]` |
 | **B** 机制验证 | path / semantic / contradiction / dynamic | fixtures + Stage1 标注规格 + Layer B / ablation 报告 | `python scripts/generate_layer_b_report.py` |
 | **C** 真实迁移 | 噪声文档 + 私有金标流程 | stand-in 可跑 + inventory/annotation 模板 + 试点清单 | `python scripts/run_layer_c_benchmark.py` |
 
@@ -64,7 +65,8 @@
 - [x] M2 MCP + hooks + hybrid  
 - [x] M3 LongMemEval turn + full 复现说明  
 - [x] 公开召回 KPI 提升（hybrid medium R@5 ≈ 0.96–1.0）  
-- [x] M4 分发（pipx / uv / Docker MCP / backup·repair·doctor）
+- [x] M4 分发（pipx / uv / Docker MCP / backup·repair·doctor）  
+- [x] M5 可插拔 dense embedding（`ngram`/`hash`/`fastembed`/`sentence`）+ KPI 对比
 
 ## 7. 计划附录：你还需要准备的数据
 
@@ -89,15 +91,16 @@
 ### C. Layer A 公开集
 
 不必自建；使用 `scripts/download_hotpotqa.py` / `download_longmemeval.py`。  
-已提交 medium KPI：`benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}.*`。
+已提交 medium KPI：`benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}.*`。  
+M5 对比：`longmemeval_kpi_medium50_fastembed.*`（相对默认 ngram）。
 
 ## 8. 建议的下一步优先级
 
 1. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
-2. **可选**：真 embedding backend；full LongMemEval-S 写入对外表  
+2. **可选**：full LongMemEval-S 写入对外表（可配 `--embedding fastembed`）  
 3. **可选**：发布 PyPI 正式包名 / Homebrew 等二次分发
 
 ## 9. 关闭结论
 
-原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M4**。  
-未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选更强 embedding。
+原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M5**。  
+未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选 full KPI / PyPI。
