@@ -1,4 +1,4 @@
-# Install (Product M4)
+# Install (Product M4 + M5)
 
 ## Quick paths
 
@@ -7,6 +7,14 @@
 ```bash
 python -m pip install --no-build-isolation -e .
 mpe doctor
+```
+
+Optional dense embeddings (Product M5 — not required for default `ngram`):
+
+```bash
+python -m pip install --no-build-isolation -e '.[embed]'      # fastembed / BGE-small
+# python -m pip install --no-build-isolation -e '.[embed-st]'  # sentence-transformers
+export MPE_EMBEDDING=fastembed   # or pass --embedding on bench / search paths
 ```
 
 ### pipx (isolated CLI)

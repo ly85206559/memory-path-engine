@@ -44,12 +44,20 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Docker stdio MCP image (`Dockerfile`, `mpe-mcp`)
 - [x] Backup / repair / doctor basics (`mpe backup` / `mpe repair` / `mpe doctor`)
 
+### M5 — Pluggable dense embeddings + KPI
+
+- [x] `EmbeddingProvider` registry: `ngram` (default) / `hash` / `fastembed` / `sentence`
+- [x] Select via `--embedding` or `MPE_EMBEDDING` (optional model via `MPE_EMBEDDING_MODEL`)
+- [x] Optional extras: `pip install 'memory-path-engine[embed]'` (fastembed) / `[embed-st]`
+- [x] Default stack stays dependency-light; Layer B hashing defaults unchanged unless embedding is explicit
+- [x] LongMemEval medium KPI comparison artifacts (ngram vs fastembed)
+
 ## Non-goals (for now)
 
-- Multi-backend vector zoo before hybrid + CLI are stable
+- Hosted multi-vendor vector zoo as a hard requirement
 - LLM answer synthesis as the primary path (PathReasoner stays deterministic)
 - Replacing Layer B with public-only metrics
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M4 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M5 scorecard against the original vision + benchmark strategy.

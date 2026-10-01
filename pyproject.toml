@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memory-path-engine"
-version = "0.5.0"
-description = "Local memory with replayable paths — CLI/MCP palace, hybrid retrieve, Docker MCP, backup/repair."
+version = "0.5.1"
+description = "Local memory with replayable paths — CLI/MCP, optional dense embeddings (fastembed), public KPI."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -14,6 +14,14 @@ authors = [
 ]
 dependencies = [
   "pydantic",
+]
+
+[project.optional-dependencies]
+embed = [
+  "fastembed>=0.4",
+]
+embed-st = [
+  "sentence-transformers>=2.2",
 ]
 
 [project.urls]

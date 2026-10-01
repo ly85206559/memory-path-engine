@@ -17,6 +17,7 @@ from memory_engine.embeddings import (
     content_tokens,
     cosine_similarity,
     lexical_overlap,
+    resolve_embedding_provider,
     tokenize,
 )
 from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
@@ -630,7 +631,7 @@ class HybridRetriever(WeightedGraphRetriever):
     ) -> None:
         super().__init__(
             store=store,
-            embedding_provider=embedding_provider or NgramHashingEmbeddingProvider(),
+            embedding_provider=embedding_provider or resolve_embedding_provider(),
             scoring_strategy=scoring_strategy,
             memory_state_policy=memory_state_policy,
         )

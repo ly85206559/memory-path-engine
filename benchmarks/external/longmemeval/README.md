@@ -75,7 +75,15 @@ Committed medium-slice KPI tables (no raw dataset):
 - `baselines/longmemeval_kpi_medium30.md` — 30q session
 - `baselines/longmemeval_kpi_medium50.md` — 50q session
 
-Primary product mode for public recall is **`hybrid`** (BM25-aware lexical + n-gram hashing embeddings + score-ordered ranking). Layer B path/contradiction fixtures remain the architecture proof surface.
+Primary product mode for public recall is **`hybrid`** (BM25-aware lexical + pluggable embeddings + score-ordered ranking). Default embedding is dependency-free **`ngram`**; optional dense backends:
+
+```bash
+pip install 'memory-path-engine[embed]'
+mpe bench longmemeval --label tiny --embedding fastembed
+# or: MPE_EMBEDDING=fastembed mpe bench longmemeval --limit 50 ...
+```
+
+Committed M5 comparison: `baselines/longmemeval_kpi_medium50_fastembed.{json,md}` vs default ngram `medium50`. Layer B path/contradiction fixtures remain the architecture proof surface.
 
 ## Product KPI baseline
 
