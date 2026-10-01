@@ -43,3 +43,18 @@ Optional helpers on the same dual-track surface:
 | query → path → answer | `reason_from_recall` / `recall_and_reason` | Deterministic hop citations; not an LLM caller |
 
 These stay additive: existing Layer B fixtures and retriever modes do not require them.
+
+## Product M1 local palace
+
+On-disk workspace helpers (see [`palace_workspace.py`](../src/memory_engine/palace_workspace.py)):
+
+| Command | Purpose |
+| --- | --- |
+| `mpe init` | Create `.mpe/config.json` + `store.sqlite` |
+| `mpe ingest <paths>` | Domain-pack ingest into the SQLite store |
+| `mpe search` / `mpe path` | Recall + deterministic path answer |
+| `mpe status` | Node/edge counts and palace location |
+| `mpe bench longmemeval` | Layer A KPI baseline JSON/Markdown |
+
+Prefer the CLI for product flows; keep `memory_engine.api` for library embedding.
+

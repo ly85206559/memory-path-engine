@@ -65,4 +65,16 @@ This adapter is currently **session-only** and **retrieval-only**:
 
 - it evaluates whether gold `answer_session_ids` appear in the retrieved top-k session list
 - it does **not** run answer generation or official QA grading
-- it is intended as an external positioning benchmark, not as proof of path, semantic, contradiction, or dynamic-memory claims
+- Layer B / Layer C still own path, semantic, contradiction, and dynamic-memory claims
+
+## Product KPI baseline (M1)
+
+Treat LongMemEval recall as a **product KPI**, not only a research footnote:
+
+```bash
+mpe bench longmemeval --label tiny
+# or against a downloaded cleaned file:
+mpe bench longmemeval --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json --label full --limit 0
+```
+
+Artifacts land in `benchmarks/external/longmemeval/baselines/` (`*.json` + `*.md`). See [`docs/ROADMAP.md`](../../../docs/ROADMAP.md) for hybrid / turn-level upgrades (M3).

@@ -191,8 +191,9 @@ v1 adds an explicit **palace domain** under `src/memory_engine/memory/`:
   - `multi_representation.py`: project a source node into linked episodic / semantic views
   - `forgetting_policies.py`: mild vs aggressive online decay policies over `MemoryStatePolicy`
   - `reasoning.PathReasoner`: deterministic query → path → answer with hop citations
+- **Product M1 persistence**: `persistence.sqlite_store` + `palace_workspace` write the same `MemoryStore` to `.mpe/store.sqlite`; `mpe` CLI is the product entry.
 
 Legacy contracts (`MemoryPath`, `RetrievalResult.paths`, structured benchmark reports) remain stable; v1 is additive until callers migrate to palace-first APIs.
 
-For a practical dual-track mental model and the preferred entry points (`recall_from_store`, `recall_from_palace`, `recall_from_documents`), see [`api-tracks.md`](api-tracks.md).
+For a practical dual-track mental model and the preferred entry points (`recall_from_store`, `recall_from_palace`, `recall_from_documents`), see [`api-tracks.md`](api-tracks.md). Product milestones live in [`ROADMAP.md`](ROADMAP.md).
 

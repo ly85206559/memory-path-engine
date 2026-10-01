@@ -3,30 +3,28 @@
 [![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Research Prototype](https://img.shields.io/badge/status-research%20prototype-lightgrey.svg)](docs/vision.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M1)-0e7c86.svg)](docs/ROADMAP.md)
 
-Structured memory retrieval for AI agents that returns evidence paths, not just `top-k` chunks. Think **navigable memory** in a memory-palace-style sense: a graph you can walk, not only a flat similarity list.
+Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI and public-benchmark KPIs.
 
-`Memory Path Engine` is a research-first prototype for moving beyond flat retrieval. Instead of treating memory as an unordered vector index, it models memory as typed nodes, edges, weights, and replayable paths so a system can retrieve, traverse, and explain how it reached an answer.
+`Memory Path Engine` models memory as typed nodes, edges, weights, and `MemoryPath` objects so a system can retrieve, traverse, and explain how it reached an answer. Product M1 adds an on-disk palace (SQLite) and the `mpe` CLI; Layer B fixtures remain the architecture proof surface.
 
-This repository is aimed at people exploring agent memory, graph-aware retrieval, and explainable evidence chains across more than one document shape.
+### System shape (v0 + Memory Palace v1 + Product M1)
 
-### System shape (v0 + Memory Palace v1)
+Bundled markdown packs are ingested into a graph (`MemoryNode` / `MemoryEdge`). Retrievers return a `MemoryPath`. The CLI persists that graph under `.mpe/` and prints answer + hops.
 
-Bundled markdown packs are ingested into an in-memory graph (`MemoryNode` / `MemoryEdge`, with weights). Retrievers return a `MemoryPath`: a composed answer plus ordered steps you can inspect. The CLI demo exercises exactly this path end to end.
-
-**Memory Palace v1** adds a parallel domain (`memory_engine.memory`): `MemoryPalace`, typed memories, and `PalaceRecallResult` (retrieved items + routes + activation snapshot). It maps to the same `MemoryStore` via `palace_to_store`, so existing retriever modes are unchanged. See [`docs/architecture.md`](docs/architecture.md) for the compatibility picture.
+**Memory Palace v1** adds a parallel domain (`memory_engine.memory`) mapped through `palace_to_store`. See [`docs/architecture.md`](docs/architecture.md) and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ```text
- examples/*_pack  ──▶  ingest  ──▶  MemoryStore (typed graph)
-                                        │
-                         ┌──────────────┼──────────────┐
-                         ▼              ▼              ▼
-                   BaselineTopK    other modes    WeightedGraph
-                   (flat answers)  in `retrieve`  (path + scores)
-                                        │
-                                        ▼
-                         stitched answer + replayable step list
+ examples/*_pack  ──▶  mpe ingest  ──▶  .mpe/store.sqlite (typed graph)
+                                              │
+                               ┌──────────────┼──────────────┐
+                               ▼              ▼              ▼
+                         BaselineTopK    other modes    WeightedGraph
+                         (flat answers)  in `retrieve`  (path + scores)
+                                              │
+                                              ▼
+                               mpe search/path → answer + hop list
 ```
 
 ## Why this project is different
@@ -38,15 +36,15 @@ Most RAG systems still look like this:
 3. Return `top-k` matches.
 4. Ask the LLM to improvise the reasoning.
 
-This repo explores a different question:
+This project asks:
 
 > Can we retrieve a memory path instead of only retrieving similar chunks?
 
-The prototype is built around three ideas:
+Three product bets:
 
-- `structure`: memory is not flat; it has typed nodes and edges
-- `weight`: not every memory should be treated equally
-- `path`: retrieval should expose the chain of evidence, not hide it
+- `structure`: typed nodes and edges, not only a flat vector index
+- `weight`: importance, risk, novelty, reinforcement / forgetting
+- `path`: replayable evidence chains as the default search output
 
 ## What you can do here
 
@@ -64,6 +62,26 @@ Install the project in editable mode:
 ```bash
 python -m pip install --no-build-isolation -e .
 ```
+
+### Product CLI (`mpe`) — local palace
+
+```bash
+mpe init
+mpe ingest examples/runbook_pack/runbooks --pack example_runbook_pack
+mpe search "What if rollback does not recover the API?"
+mpe path "What if rollback does not recover the API?"
+mpe status
+```
+
+Palace files live in `./.mpe/` (or `$MPE_PALACE`). Search always prints an answer plus hop citations.
+
+### LongMemEval product KPI baseline
+
+```bash
+mpe bench longmemeval --label tiny
+```
+
+Writes JSON + Markdown under `benchmarks/external/longmemeval/baselines/`. Use a downloaded full file and `--label full` for the public KPI run (see [`benchmarks/external/longmemeval/README.md`](benchmarks/external/longmemeval/README.md)). Product roadmap: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 Run the test suite:
 
@@ -276,28 +294,29 @@ Current run matrix:
 - `benchmarks/external/longmemeval/data/*.json`: local / nightly (`medium` default 50 samples, `full` optional)
 - `benchmarks/layer_c_minimal/*`: runnable Layer C transfer stand-ins + private annotation templates
 
-## What is in scope for v0
+## What is in scope for v0.2 (Product M1)
 
-- minimal `MemoryNode`, `MemoryEdge`, `MemoryPath`, and `EvidenceRef` schema
-- an in-memory store for fast iteration
-- simple ingestion paths for multiple example document styles
-- multiple retrieval modes in one research harness
-- a small synthetic contract evaluation set for end-to-end experiments
+- typed `MemoryNode` / `MemoryEdge` / `MemoryPath` graph
+- SQLite-backed local palace (`.mpe/`) and `mpe` CLI
+- domain packs for contract / runbook / research documents
+- multi-mode retrieval + Stage 6 path reasoning helpers
+- LongMemEval baseline report artifacts as Layer A product KPIs
 
 ## What is out of scope for now
 
-- production infrastructure
-- MCP integration
+- MCP server and IDE hooks (Product M2)
+- hybrid lexical+embedding recall and turn-level LongMemEval units (Product M3)
 - multi-modal memory encoding
-- large-scale benchmarks
 - full UI
-- LLM-backed answer synthesis (Stage 6 path reasoning stays deterministic)
+- LLM-backed answer synthesis (path reasoning stays deterministic)
 
 ## Planned next steps
 
-- add stronger embedding backends behind the same `EmbeddingProvider` interface
-- expand private Layer C golden sets beyond the public stand-ins in `benchmarks/layer_c_minimal`
-- deepen Stage 6 mechanisms (richer multi-rep bridging, more forgetting ablations)
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for M2–M4. Near-term:
+
+- MCP + Cursor/Claude hooks for an agent closed loop
+- hybrid retrieve before graph expansion; full LongMemEval-S KPI in README
+- stronger embedding backends behind `EmbeddingProvider`
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 
