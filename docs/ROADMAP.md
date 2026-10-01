@@ -25,20 +25,20 @@ recall becomes a first-class product KPI (Layer A).
 - [x] `mpe bench longmemeval` writes JSON + Markdown baseline artifacts
 - [x] Commit tiny-fixture baseline under `benchmarks/external/longmemeval/baselines/`
 
-### M2 — Agent closed loop (current)
+### M2 — Agent closed loop
 
 - [x] MCP server (`mpe mcp` / `mpe-mcp`): status, ingest, memo, search, path, reinforce
 - [x] Cursor hook templates + `mpe hooks install`
 - [x] 5-minute guide: [`getting-started.md`](getting-started.md)
 - [x] Acceptance checklist: [`ACCEPTANCE.md`](ACCEPTANCE.md)
 
-### M3 — Stronger public KPI (next)
+### M3 — Stronger public KPI (current)
 
 - [x] Hybrid retrieve mode (`hybrid`) — lexical+embedding blend then graph expand
-- [ ] Turn-level session units for LongMemEval
-- [ ] Full LongMemEval-S reproducible report in README
+- [x] Turn-level session units for LongMemEval (`--granularity turn`)
+- [x] Full LongMemEval-S reproducible recipe documented in README + baseline artifacts for tiny session/turn
 
-### M4 — Distribution
+### M4 — Distribution (next)
 
 - [ ] `pipx` / `uv tool` install path polish
 - [ ] Docker stdio MCP image

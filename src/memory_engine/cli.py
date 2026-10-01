@@ -171,6 +171,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="tiny",
         help="Baseline label used in output filenames (e.g. tiny, medium, full).",
     )
+    lme.add_argument(
+        "--granularity",
+        default="session",
+        choices=("session", "turn"),
+        help="Memory unit granularity: session (default) or turn.",
+    )
     return parser
 
 
@@ -349,13 +355,17 @@ def _cmd_hooks_install(args: argparse.Namespace) -> int:
 
 
 def _cmd_bench_longmemeval(args: argparse.Namespace) -> int:
+    label = args.label
+    if args.granularity == "turn" and "turn" not in label:
+        label = f"{label}-turn"
     result = run_longmemeval_baseline(
         dataset=args.dataset,
         limit=args.limit,
         modes=tuple(part.strip() for part in args.modes.split(",") if part.strip()),
         top_k=args.top_k,
         output_dir=args.output_dir,
-        label=args.label,
+        label=label,
+        granularity=args.granularity,
     )
     print(f"dataset: {result['dataset']}")
     print(f"samples: {result['samples']}")

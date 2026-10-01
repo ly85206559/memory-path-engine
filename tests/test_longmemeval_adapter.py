@@ -15,6 +15,26 @@ class LongMemEvalAdapterTests(unittest.TestCase):
             ["q-001:sess-2", "q-001:sess-4"],
         )
 
+    def test_gold_turn_ids_prefer_has_answer_marks(self):
+        from memory_engine.benchmarking.adapters.longmemeval import longmemeval_gold_node_ids
+
+        sample = {
+            "question_id": "q-turn",
+            "haystack_session_ids": ["sess-1", "sess-2"],
+            "haystack_sessions": [
+                [{"role": "user", "content": "noise"}],
+                [
+                    {"role": "user", "content": "gold fact", "has_answer": True},
+                    {"role": "assistant", "content": "ok"},
+                ],
+            ],
+            "answer_session_ids": ["sess-2"],
+        }
+        self.assertEqual(
+            longmemeval_gold_node_ids(sample, granularity="turn"),
+            ["q-turn:sess-2:t1"],
+        )
+
     def test_build_longmemeval_memory_store_creates_session_nodes(self):
         from memory_engine.benchmarking.adapters.longmemeval import (
             build_longmemeval_memory_palace,
@@ -50,6 +70,34 @@ class LongMemEvalAdapterTests(unittest.TestCase):
         self.assertIn(longmemeval_session_node_id(sample, "sess-2"), node_ids)
         self.assertTrue(store.neighbors(longmemeval_session_node_id(sample, "sess-1")))
 
+    def test_build_turn_palace_creates_turn_nodes(self):
+        from memory_engine.benchmarking.adapters.longmemeval import (
+            build_longmemeval_memory_store,
+            longmemeval_turn_node_id,
+        )
+
+        sample = {
+            "question_id": "q-003",
+            "question_type": "single-session-user",
+            "question": "What tea?",
+            "haystack_session_ids": ["sess-1"],
+            "haystack_dates": ["2025-01-01"],
+            "haystack_sessions": [
+                [
+                    {"role": "user", "content": "I like jasmine tea.", "has_answer": True},
+                    {"role": "assistant", "content": "Noted."},
+                ]
+            ],
+            "answer_session_ids": ["sess-1"],
+        }
+        store = build_longmemeval_memory_store(sample, granularity="turn")
+        node_ids = {node.id for node in store.nodes()}
+        self.assertIn(longmemeval_turn_node_id(sample, "sess-1", 1), node_ids)
+        self.assertIn(longmemeval_turn_node_id(sample, "sess-1", 2), node_ids)
+        self.assertTrue(
+            store.neighbors(longmemeval_turn_node_id(sample, "sess-1", 1))
+        )
+
     def test_tiny_fixture_runs_suite(self):
         from memory_engine.benchmarking.adapters.longmemeval import (
             load_longmemeval_json,
@@ -72,6 +120,25 @@ class LongMemEvalAdapterTests(unittest.TestCase):
         self.assertGreaterEqual(suite.modes["weighted_graph"].recall_at_5, 0.5)
         self.assertTrue(suite.modes["embedding_baseline"].metadata["v1_memory_architecture"])
         self.assertIn("space_count", suite.modes["embedding_baseline"].case_reports[0].metadata)
+
+    def test_tiny_fixture_turn_granularity_runs(self):
+        from memory_engine.benchmarking.adapters.longmemeval import (
+            load_longmemeval_json,
+            run_longmemeval_benchmark,
+        )
+
+        path = Path("benchmarks/external/longmemeval/longmemeval_tiny_fixture.json")
+        samples = load_longmemeval_json(path)
+        suite = run_longmemeval_benchmark(
+            samples,
+            retriever_modes=("hybrid", "weighted_graph"),
+            top_k=5,
+            granularity="turn",
+            dataset_id="longmemeval-tiny-turn-ci",
+        )
+        self.assertEqual(suite.modes["hybrid"].metadata["granularity"], "turn")
+        self.assertGreaterEqual(suite.modes["hybrid"].recall_at_5, 0.5)
+        self.assertGreaterEqual(suite.modes["weighted_graph"].recall_at_5, 0.5)
 
     def test_validate_longmemeval_sample_rejects_unknown_answer_session(self):
         from memory_engine.benchmarking.adapters.longmemeval import validate_longmemeval_sample

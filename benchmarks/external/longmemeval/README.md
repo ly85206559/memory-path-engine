@@ -61,20 +61,34 @@ Nightly defaults to a **medium** slice (`50` samples). Use `slice_profile=full` 
 
 ## Important limitation
 
-This adapter is currently **session-only** and **retrieval-only**:
+This adapter supports **session** and **turn** granularity, and is **retrieval-only**:
 
-- it evaluates whether gold `answer_session_ids` appear in the retrieved top-k session list
+- `session`: gold = `answer_session_ids` mapped to session nodes
+- `turn`: gold = `has_answer` turns inside those sessions (drawer-like units)
 - it does **not** run answer generation or official QA grading
 - Layer B / Layer C still own path, semantic, contradiction, and dynamic-memory claims
 
-## Product KPI baseline (M1)
+## Product KPI baseline
 
-Treat LongMemEval recall as a **product KPI**, not only a research footnote:
+Treat LongMemEval recall as a **product KPI**:
 
 ```bash
-mpe bench longmemeval --label tiny
-# or against a downloaded cleaned file:
-mpe bench longmemeval --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json --label full --limit 0
+# Tiny fixture (CI / local smoke)
+mpe bench longmemeval --label tiny --granularity session
+mpe bench longmemeval --label tiny --granularity turn
+
+# Full cleaned LongMemEval-S (after download)
+python scripts/download_longmemeval.py
+mpe bench longmemeval \
+  --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json \
+  --label full \
+  --granularity session \
+  --limit 0
+mpe bench longmemeval \
+  --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json \
+  --label full \
+  --granularity turn \
+  --limit 0
 ```
 
-Artifacts land in `benchmarks/external/longmemeval/baselines/` (`*.json` + `*.md`). See [`docs/ROADMAP.md`](../../../docs/ROADMAP.md) for hybrid / turn-level upgrades (M3).
+Artifacts land in `benchmarks/external/longmemeval/baselines/` (`*.json` + `*.md`).
