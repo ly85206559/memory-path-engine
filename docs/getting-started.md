@@ -5,6 +5,15 @@ path hops → optional MCP / hooks for agents.
 
 ## 1. Install
 
+PyPI (Product M8):
+
+```bash
+pip install memory-path-engine
+# pip install 'memory-path-engine[embed]'
+mpe --help
+mpe doctor
+```
+
 Dev clone:
 
 ```bash
@@ -13,14 +22,16 @@ mpe --help
 mpe doctor
 ```
 
-Or isolated tools (Product M4):
+Or isolated tools:
 
 ```bash
-pipx install git+https://github.com/ly85206559/memory-path-engine.git
-# uv tool install git+https://github.com/ly85206559/memory-path-engine.git
+pipx install memory-path-engine
+# uv tool install memory-path-engine
+# fallback: pipx install git+https://github.com/ly85206559/memory-path-engine.git
 ```
 
-Full install matrix + Docker MCP: [`install.md`](install.md).
+Full install matrix + Docker MCP: [`install.md`](install.md).  
+First PyPI release / tagging: [`publish.md`](publish.md).
 
 ## 2. Create a palace and ingest docs
 

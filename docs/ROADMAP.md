@@ -66,6 +66,13 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Layer B `WeightedGraphRetriever` unchanged
 - [x] Refresh medium50 / full LongMemEval KPI tables
 
+### M8 — PyPI distribution
+
+- [x] PyPI-ready `pyproject.toml` metadata (classifiers, keywords, URLs, extras)
+- [x] Trusted Publisher workflow (`.github/workflows/publish.yml`) + CI package build job
+- [x] Publish guide [`publish.md`](publish.md) + `CHANGELOG.md`
+- [ ] First `v0.8.0` tag upload (one-time PyPI Trusted Publisher + GitHub `pypi` environment)
+
 ## Non-goals (for now)
 
 - Hosted multi-vendor vector zoo as a hard requirement
@@ -74,4 +81,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M7 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M8 scorecard against the original vision + benchmark strategy.

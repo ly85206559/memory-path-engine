@@ -3,7 +3,7 @@
 [![CI](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ly85206559/memory-path-engine/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M4)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M8)-0e7c86.svg)](docs/ROADMAP.md)
 
 Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
@@ -57,13 +57,16 @@ Three product bets:
 
 Maintainers: configure the GitHub link-card image using [docs/social-preview.md](docs/social-preview.md) (`docs/assets/open-graph-cover.png`).
 
-Install the project in editable mode (or see [`docs/install.md`](docs/install.md) for pipx / uv / Docker):
+Install from PyPI (Product M8) or editable clone (see [`docs/install.md`](docs/install.md) for pipx / uv / Docker):
 
 ```bash
-python -m pip install --no-build-isolation -e .
+pip install memory-path-engine
+# pip install 'memory-path-engine[embed]'   # optional dense backends
+# or: python -m pip install --no-build-isolation -e .
 mpe doctor
 ```
 
+Publish / first tag: [`docs/publish.md`](docs/publish.md) · Changelog: [`CHANGELOG.md`](CHANGELOG.md).
 ### Product CLI (`mpe`) — local palace
 
 ```bash
@@ -367,10 +370,10 @@ Current run matrix:
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M7** are done; next levers:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M8** (PyPI-ready) are done; next levers:
 
+- First PyPI upload (`v0.8.0` tag after Trusted Publisher setup — [`docs/publish.md`](docs/publish.md))
 - Organization-side Layer C private gold labels
-- Optional PyPI publish
 - Optional dense-wins over lexical on paraphrase-heavy slices
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
