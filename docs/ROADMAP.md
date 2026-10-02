@@ -59,6 +59,13 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Commit full LongMemEval-S (500q) public KPI table (`longmemeval_kpi_full_ngram.*`)
 - [x] Optional full fastembed comparison artifact when runtime permits
 
+### M7 — Hybrid public ranking / NDCG
+
+- [x] Diagnose NDCG gap: seed order was correct; path scoring buried gold seeds
+- [x] `HybridRetriever` re-aligns palace ranking to BM25/blend seed scores after expansion
+- [x] Layer B `WeightedGraphRetriever` unchanged
+- [x] Refresh medium50 / full LongMemEval KPI tables
+
 ## Non-goals (for now)
 
 - Hosted multi-vendor vector zoo as a hard requirement
@@ -67,4 +74,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M6 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M7 scorecard against the original vision + benchmark strategy.

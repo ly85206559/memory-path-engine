@@ -86,7 +86,7 @@ mpe bench longmemeval --label tiny --embedding fastembed
 # or: MPE_EMBEDDING=fastembed mpe bench longmemeval --limit 50 ...
 ```
 
-Full headline: ngram hybrid **R@5=0.938 / R@10=0.978**; fastembed hybrid **R@5=0.952 / R@10=0.982** (500q). Layer B path/contradiction fixtures remain the architecture proof surface.
+Full headline (M7): ngram hybrid matches lexical at **R@5=0.950 / R@10=0.974 / NDCG@10=0.863** on 500q. Layer B path/contradiction fixtures remain the architecture proof surface.
 
 ## Product KPI baseline
 
