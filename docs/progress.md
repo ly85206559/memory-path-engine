@@ -3,18 +3,18 @@
 > 对照 [vision.md](vision.md) 三阶段路线图与 [benchmark-strategy.md](benchmark-strategy.md) 三层评测模型。  
 > 本文件是可交付的现状快照；**不取代**也不修改历史 plan 文件。
 
-**快照：** Product **M8**（PyPI 发布就绪）已合入本分支；首次 `v0.8.0` 上传待 Trusted Publisher 配置。
+**快照：** Product **M9**（发布面收口）；**PyPI 已上架** [`memory-path-engine==0.8.0`](https://pypi.org/project/memory-path-engine/)。
 
 ## 1. 定位与成熟度
 
 | 维度 | 现状 |
 | --- | --- |
 | 定位 | 从研究原型转向 **本地记忆产品**（可回放路径） |
-| 版本 | `pyproject.toml` → `0.8.0` |
+| 版本 | `pyproject.toml` → `0.8.1`（polish）；PyPI 当前 `0.8.0` |
 | 产品入口 | `mpe` CLI、`.mpe/` SQLite palace、`mpe mcp` / Docker `mpe-mcp`、hooks |
 | 研究内核 | typed graph、`MemoryPath`、Palace v1、Stage 6 类脑机制 |
 | Embedding | 默认 `ngram`；可选 `fastembed` / `sentence-transformers` |
-| 分发 | pipx/git + Docker；**PyPI Trusted Publisher 工作流已就绪**（待首次打 tag） |
+| 分发 | **`pip install memory-path-engine`** / pipx / uv / Docker |
 
 一句话：
 
@@ -70,7 +70,8 @@
 - [x] M5 可插拔 dense embedding（`ngram`/`hash`/`fastembed`/`sentence`）+ KPI 对比  
 - [x] M6 batch embed + full LongMemEval-S KPI  
 - [x] M7 hybrid seed 重排（full hybrid NDCG@10 **0.767→0.863**，对齐 lexical）  
-- [x] M8 PyPI 元数据 + Trusted Publisher 工作流（首次 `v0.8.0` 上传需人工配置环境）
+- [x] M8 PyPI 元数据 + Trusted Publisher；**已上架** `memory-path-engine==0.8.0`  
+- [x] M9 发布面收口（文档 / doctor 提示 / Release）
 
 ## 7. 计划附录：你还需要准备的数据
 
@@ -101,11 +102,11 @@ M6 full：`longmemeval_kpi_full_ngram.*` / `longmemeval_kpi_full_fastembed.*`（
 
 ## 8. 建议的下一步优先级
 
-1. **首次 PyPI 发布**：按 [`publish.md`](publish.md) 配置 Trusted Publisher + `pypi` environment，打 `v0.8.0`  
-2. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
-3. **可选**：dense hybrid 在 paraphrase 题型上相对 lexical 的稳定优势
+1. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
+2. **可选**：dense hybrid 在 paraphrase 题型上相对 lexical 的稳定优势  
+3. **可选**：HotpotQA 中量表 / full turn KPI / 向量落盘缓存
 
 ## 9. 关闭结论
 
-原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M8（发布就绪）**。  
-未改 plan 文件本身。剩余工作主要是首次 PyPI 上传与组织侧私有数据。
+原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M9**，PyPI 正式包可用。  
+未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选 KPI/体验增强。

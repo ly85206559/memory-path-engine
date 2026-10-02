@@ -72,7 +72,13 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Trusted Publisher workflow (`.github/workflows/publish.yml`) + CI package build job
 - [x] Publish guide [`publish.md`](publish.md) + `CHANGELOG.md`
 - [x] `scripts/release.sh` one-shot tag/publish helper (no GitHub Environment required)
-- [ ] First `v0.8.0` upload (one-time PyPI Trusted Publisher pending-publisher click)
+- [x] First upload: **`memory-path-engine==0.8.0`** on PyPI
+
+### M9 — Release polish
+
+- [x] ROADMAP/progress/README reflect published status + PyPI badge
+- [x] `mpe doctor` install tips prefer PyPI
+- [x] GitHub Release for `v0.8.0` / follow-up `v0.8.1` polish tag
 
 ## Non-goals (for now)
 
@@ -82,4 +88,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M8 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M9 scorecard against the original vision + benchmark strategy.

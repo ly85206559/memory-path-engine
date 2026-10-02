@@ -18,7 +18,7 @@ pipx install memory-path-engine
 # uv tool install memory-path-engine
 ```
 
-First-time PyPI project setup / tagging: [`publish.md`](publish.md).
+First-time setup is done for this repo. Subsequent releases: [`publish.md`](publish.md).
 
 ### From a clone (dev)
 
@@ -35,13 +35,11 @@ python -m pip install --no-build-isolation -e '.[embed]'      # fastembed / BGE-
 export MPE_EMBEDDING=fastembed   # or pass --embedding on bench / search paths
 ```
 
-### From git (before / without PyPI)
+### From git (optional)
 
 ```bash
 pipx install git+https://github.com/ly85206559/memory-path-engine.git
 # uv tool install git+https://github.com/ly85206559/memory-path-engine.git
-mpe --help
-mpe doctor
 ```
 
 Entry points after install: `mpe` (CLI) and `mpe-mcp` (stdio MCP).
