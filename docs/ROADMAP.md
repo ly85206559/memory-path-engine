@@ -71,7 +71,8 @@ recall becomes a first-class product KPI (Layer A).
 - [x] PyPI-ready `pyproject.toml` metadata (classifiers, keywords, URLs, extras)
 - [x] Trusted Publisher workflow (`.github/workflows/publish.yml`) + CI package build job
 - [x] Publish guide [`publish.md`](publish.md) + `CHANGELOG.md`
-- [ ] First `v0.8.0` tag upload (one-time PyPI Trusted Publisher + GitHub `pypi` environment)
+- [x] `scripts/release.sh` one-shot tag/publish helper (no GitHub Environment required)
+- [ ] First `v0.8.0` upload (one-time PyPI Trusted Publisher pending-publisher click)
 
 ## Non-goals (for now)
 
