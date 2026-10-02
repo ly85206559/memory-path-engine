@@ -2,6 +2,13 @@
 
 All notable product releases are listed here.
 
+## 0.8.1 — Product M9 (release polish)
+
+- Docs/ROADMAP mark PyPI `0.8.0` as published
+- `mpe doctor` install tips prefer PyPI / pipx / uv
+- GitHub Release notes for `v0.8.0`
+- PyPI badge on README
+
 ## 0.8.0 — Product M8 (PyPI-ready)
 
 - Package metadata enriched for PyPI (classifiers, keywords, URLs, `pydantic>=2`)
@@ -9,6 +16,7 @@ All notable product releases are listed here.
 - CI package build + `twine check` job
 - `scripts/release.sh` automates tag + publish watch
 - Publish guide: [`docs/publish.md`](docs/publish.md)
+- **Published to PyPI:** https://pypi.org/project/memory-path-engine/0.8.0/
 
 ## 0.7.0 — Product M7 (hybrid NDCG)
 

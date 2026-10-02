@@ -206,8 +206,10 @@ def doctor_report(path: Path | str | None = None) -> dict[str, Any]:
         "checks": checks,
         "palace": palace_info,
         "install_tips": [
-            "pipx install git+https://github.com/ly85206559/memory-path-engine.git",
-            "uv tool install git+https://github.com/ly85206559/memory-path-engine.git",
+            "pip install memory-path-engine",
+            "pipx install memory-path-engine",
+            "uv tool install memory-path-engine",
+            "pip install 'memory-path-engine[embed]'  # optional dense embeddings",
             "pip install -e .  # from a clone",
             "docker build -t mpe-mcp . && docker run -i --rm -v \"$PWD/.mpe:/data/palace\" -e MPE_PALACE=/data/palace mpe-mcp",
         ],
