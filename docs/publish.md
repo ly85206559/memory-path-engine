@@ -23,54 +23,48 @@ pipx install memory-path-engine
 Until the first PyPI release lands, continue using the git URL documented in
 [`install.md`](install.md).
 
-## One-time PyPI Trusted Publisher setup
+## Automated release (recommended)
 
-Publishing uses **OpenID Connect** (no long-lived API token in GitHub secrets).
+One-time (human, ~2 minutes) — register Trusted Publisher on PyPI:
 
-1. Create the project on https://pypi.org (name: `memory-path-engine`) if it does
-   not exist yet — first publish can also create it via Trusted Publisher.
-2. On PyPI → **Publishing** → **Add a new pending publisher**:
-   - Owner: `ly85206559`
-   - Repository: `memory-path-engine`
-   - Workflow: `publish.yml`
-   - Environment: `pypi`
-3. In GitHub → **Settings → Environments → New environment**: name it `pypi`.
-   Optional: require reviewers before deploy.
+```bash
+bash scripts/print_pypi_trusted_publisher.sh
+```
 
-## Release checklist
+On https://pypi.org/manage/account/publishing/ add a **pending publisher** with
+those fields. Leave **Environment name blank** (workflow no longer requires a
+GitHub Environment).
 
-1. Version bump in `pyproject.toml` (and `CHANGELOG.md` entry).
-2. Local dry-run:
+Then from a clean `master`:
 
-   ```bash
-   python -m pip install -e '.[dev]'
-   python scripts/check_package_build.py
-   ```
+```bash
+bash scripts/release.sh
+```
 
-3. Merge to `master` with CI green.
-4. Tag and push:
+This script:
 
-   ```bash
-   git tag v0.8.0
-   git push origin v0.8.0
-   ```
+1. Reads version from `pyproject.toml`
+2. Runs `scripts/check_package_build.py` (sdist/wheel + `twine check`)
+3. Creates annotated tag `vX.Y.Z` and pushes it
+4. Watches the `publish` GitHub Actions workflow when `gh` is available
 
-5. GitHub Actions workflow **publish** builds the sdist/wheel, runs `twine check`,
-   then uploads to PyPI via Trusted Publisher.
-6. Verify:
+## Manual checklist (equivalent)
 
-   ```bash
-   pip index versions memory-path-engine
-   pipx install memory-path-engine==0.8.0
-   mpe --help
-   ```
+1. Version bump in `pyproject.toml` + `CHANGELOG.md`
+2. `python scripts/check_package_build.py`
+3. Merge to `master` with CI green
+4. `git tag v0.8.0 && git push origin v0.8.0`
+5. Verify: `pip index versions memory-path-engine`
 
 ## Manual / dry-run workflow
 
-`workflow_dispatch` on **publish** with `dry_run=true` (default) only builds and
-checks artifacts; it does **not** upload.
+`workflow_dispatch` on **publish**:
+
+- `dry_run=true` (default): build + twine check only
+- `dry_run=false`: build + upload via Trusted Publisher / OIDC
 
 ## Non-goals
 
 - Publishing private forks with a different package name
 - Bundling `fastembed` / `sentence-transformers` into the default wheel
+- Storing long-lived PyPI API tokens in the repository

@@ -7,6 +7,7 @@ All notable product releases are listed here.
 - Package metadata enriched for PyPI (classifiers, keywords, URLs, `pydantic>=2`)
 - Trusted Publisher publish workflow (`.github/workflows/publish.yml`)
 - CI package build + `twine check` job
+- `scripts/release.sh` automates tag + publish watch
 - Publish guide: [`docs/publish.md`](docs/publish.md)
 
 ## 0.7.0 — Product M7 (hybrid NDCG)

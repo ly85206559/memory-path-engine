@@ -38,11 +38,11 @@ jobs:
 
   publish:
     needs: build
+    # Tag pushes always publish. Manual runs publish only when dry_run=false.
     if: >-
-      github.event_name == 'push'
-      && startsWith(github.ref, 'refs/tags/v')
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
     runs-on: ubuntu-latest
-    environment: pypi
     permissions:
       id-token: write
       contents: read
@@ -52,5 +52,5 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - name: Publish to PyPI
+      - name: Publish to PyPI (Trusted Publisher / OIDC)
         uses: pypa/gh-action-pypi-publish@release/v1

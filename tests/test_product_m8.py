@@ -35,7 +35,12 @@ class PackageMetadataTests(unittest.TestCase):
         text = workflow.read_text(encoding="utf-8")
         self.assertIn("pypa/gh-action-pypi-publish", text)
         self.assertIn("id-token: write", text)
-        self.assertIn("environment: pypi", text)
+        # Environment is intentionally omitted so Trusted Publisher can use a blank env.
+        self.assertNotIn("environment: pypi", text)
+
+    def test_release_helper_scripts_exist(self) -> None:
+        self.assertTrue((ROOT / "scripts" / "release.sh").is_file())
+        self.assertTrue((ROOT / "scripts" / "print_pypi_trusted_publisher.sh").is_file())
 
 
 if __name__ == "__main__":
