@@ -52,6 +52,13 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Default stack stays dependency-light; Layer B hashing defaults unchanged unless embedding is explicit
 - [x] LongMemEval medium KPI comparison artifacts (ngram vs fastembed)
 
+### M6 — Batch dense encode + full public KPI
+
+- [x] `embed_many` + retriever prefetch for dense backends
+- [x] Long-text head+tail truncation / adaptive batch sizing for ONNX context
+- [x] Commit full LongMemEval-S (500q) public KPI table (`longmemeval_kpi_full_ngram.*`)
+- [x] Optional full fastembed comparison artifact when runtime permits
+
 ## Non-goals (for now)
 
 - Hosted multi-vendor vector zoo as a hard requirement
@@ -60,4 +67,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M5 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M6 scorecard against the original vision + benchmark strategy.

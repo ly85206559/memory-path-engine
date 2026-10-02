@@ -1,0 +1,50 @@
+{
+  "label": "full-ngram",
+  "generated_at": "2026-10-01T23:53:18+00:00",
+  "source": "longmemeval_s_cleaned.json",
+  "samples": 500,
+  "granularity": "session",
+  "embedding": "ngram",
+  "notes": [
+    "Product M6: full LongMemEval-S public KPI (session, ngram default).",
+    "Primary product mode is hybrid; lexical_baseline remains a strong ceiling on this corpus.",
+    "Do not treat as Layer B architecture proof."
+  ],
+  "modes": {
+    "lexical_baseline": {
+      "questions": 500,
+      "recall_at_5": 0.95,
+      "recall_at_10": 0.974,
+      "ndcg_at_10": 0.862959,
+      "avg_latency_ms": 97.396
+    },
+    "embedding_baseline": {
+      "questions": 500,
+      "recall_at_5": 0.74,
+      "recall_at_10": 0.836,
+      "ndcg_at_10": 0.579484,
+      "avg_latency_ms": 497.959
+    },
+    "weighted_graph": {
+      "questions": 500,
+      "recall_at_5": 0.882,
+      "recall_at_10": 0.928,
+      "ndcg_at_10": 0.684144,
+      "avg_latency_ms": 501.004
+    },
+    "hybrid": {
+      "questions": 500,
+      "recall_at_5": 0.938,
+      "recall_at_10": 0.978,
+      "ndcg_at_10": 0.767435,
+      "avg_latency_ms": 618.154
+    },
+    "activation_spreading_v1": {
+      "questions": 500,
+      "recall_at_5": 0.892,
+      "recall_at_10": 0.922,
+      "ndcg_at_10": 0.783947,
+      "avg_latency_ms": 446.976
+    }
+  }
+}

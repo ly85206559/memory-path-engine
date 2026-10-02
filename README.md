@@ -97,25 +97,27 @@ mpe bench longmemeval --label tiny --granularity turn
 
 Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
 
-**Latest medium-slice public recall (session, LongMemEval-S cleaned):**
+**Latest public recall (session, LongMemEval-S cleaned):**
 
 | Slice | Embedding | Mode | R@5 | R@10 | NDCG@10 |
 | --- | --- | --- | ---: | ---: | ---: |
 | 30q | ngram | hybrid | 1.000 | 1.000 | 0.932 |
-| 30q | ngram | lexical_baseline | 1.000 | 1.000 | 0.988 |
 | 50q | ngram | hybrid | 0.960 | 1.000 | 0.871 |
-| 50q | ngram | lexical_baseline | 0.980 | 1.000 | 0.948 |
 | 50q | fastembed | hybrid | 0.980 | 1.000 | 0.872 |
-| 50q | fastembed | embedding_baseline | 0.800 | 0.920 | 0.752 |
+| **500q (full)** | **ngram** | **hybrid** | **0.938** | **0.978** | **0.767** |
+| 500q (full) | ngram | lexical_baseline | 0.950 | 0.974 | 0.863 |
 
-Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}*.{json,md}`.
+Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,full_ngram}.*`.
 
-**Optional dense embeddings (Product M5):** default remains dependency-free `ngram`. Install `pip install 'memory-path-engine[embed]'` then:
+Optional dense embeddings (Product M5+): default remains dependency-free `ngram`. Install `pip install 'memory-path-engine[embed]'` then:
 
 ```bash
 mpe bench longmemeval --label tiny --embedding fastembed
 # or: export MPE_EMBEDDING=fastembed
+# optional: export MPE_EMBEDDING_MAX_CHARS=4000
 ```
+
+Dense backends batch-encode when texts are short, and head+tail-truncate long session memories to fit model context.
 
 **Reproduce full LongMemEval-S (public KPI):**
 
@@ -363,10 +365,10 @@ Current run matrix:
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M5** are done; next levers:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M6** are done; next levers:
 
 - Organization-side Layer C private gold labels
-- Optional full LongMemEval-S public table (with `--embedding fastembed` if desired)
+- Optional full LongMemEval-S with `--embedding fastembed`
 - Optional PyPI publish
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).

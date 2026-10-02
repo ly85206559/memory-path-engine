@@ -212,7 +212,7 @@ class FastEmbedEmbeddingProvider:
         model_name: str = "BAAI/bge-small-en-v1.5",
         *,
         batch_size: int = 32,
-        max_chars: int = 2000,
+        max_chars: int = 4000,
         long_text_chars: int = 1500,
     ) -> None:
         try:
@@ -281,7 +281,7 @@ class SentenceTransformerEmbeddingProvider:
         model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
         *,
         batch_size: int = 32,
-        max_chars: int = 2000,
+        max_chars: int = 4000,
         long_text_chars: int = 1500,
     ) -> None:
         try:
@@ -388,12 +388,16 @@ def resolve_embedding_provider(
     elif key in {"hash", "hashing"}:
         provider = HashingEmbeddingProvider()
     elif key in {"fastembed", "bge", "bge-small"}:
+        max_chars = int(os.environ.get("MPE_EMBEDDING_MAX_CHARS") or "4000")
         provider = FastEmbedEmbeddingProvider(
             model_name=model or "BAAI/bge-small-en-v1.5",
+            max_chars=max_chars,
         )
     elif key in {"sentence", "minilm", "sentence-transformers"}:
+        max_chars = int(os.environ.get("MPE_EMBEDDING_MAX_CHARS") or "4000")
         provider = SentenceTransformerEmbeddingProvider(
             model_name=model or "sentence-transformers/all-MiniLM-L6-v2",
+            max_chars=max_chars,
         )
     else:
         raise ValueError(

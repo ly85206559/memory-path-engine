@@ -75,6 +75,7 @@ Committed medium-slice KPI tables (no raw dataset):
 - `baselines/longmemeval_kpi_medium30.md` — 30q session (ngram)
 - `baselines/longmemeval_kpi_medium50.md` — 50q session (ngram)
 - `baselines/longmemeval_kpi_medium50_fastembed.md` — 50q session (`fastembed` / BGE-small)
+- `baselines/longmemeval_kpi_full_ngram.md` — **500q full** LongMemEval-S (ngram)
 
 Primary product mode for public recall is **`hybrid`** (BM25-aware lexical + pluggable embeddings + score-ordered ranking). Default embedding is dependency-free **`ngram`**; optional dense backends:
 
@@ -84,7 +85,7 @@ mpe bench longmemeval --label tiny --embedding fastembed
 # or: MPE_EMBEDDING=fastembed mpe bench longmemeval --limit 50 ...
 ```
 
-On the medium50 slice, `fastembed` lifts hybrid R@5 **0.960 → 0.980** and embedding_baseline **0.680 → 0.800** vs default ngram. Layer B path/contradiction fixtures remain the architecture proof surface.
+Full ngram headline: hybrid **R@5=0.938 / R@10=0.978** on 500 questions. Layer B path/contradiction fixtures remain the architecture proof surface.
 
 ## Product KPI baseline
 
