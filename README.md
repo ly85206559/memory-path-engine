@@ -105,10 +105,11 @@ Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
 | 50q | ngram | lexical_baseline | 0.980 | 1.000 | 0.948 |
 | **500q (full)** | **ngram** | **hybrid** | **0.950** | **0.974** | **0.863** |
 | 500q (full) | ngram | lexical_baseline | 0.950 | 0.974 | 0.863 |
+| **500q (full)** | **fastembed** | **hybrid** | **0.962** | **0.980** | **0.875** |
 
 Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,full_ngram,full_fastembed}.*`.
 
-M7 note: hybrid public ranking now reuses BM25/blend seed scores so NDCG matches lexical on this corpus (path explanations still come from graph expansion).
+M7 note: hybrid public ranking now reuses BM25/blend seed scores so NDCG no longer collapses after graph expansion. With `fastembed`, hybrid **beats** lexical on full R@5/R@10/NDCG.
 
 Optional dense embeddings (Product M5+): default remains dependency-free `ngram`. Install `pip install 'memory-path-engine[embed]'` then:
 
