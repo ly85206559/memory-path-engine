@@ -16,6 +16,7 @@ from memory_engine.embeddings import (
     bm25_score,
     content_tokens,
     cosine_similarity,
+    embed_many,
     lexical_overlap,
     resolve_embedding_provider,
     tokenize,
@@ -131,11 +132,13 @@ class EmbeddingTopKRetriever:
         return _with_palace_result(RetrievalResult(query=query, paths=paths))
 
     def rank_candidates(self, query: str, top_k: int = 3) -> list[tuple]:
+        nodes = list(self.store.nodes())
+        self._prefetch([query, *(node.content for node in nodes)])
         query_embedding = self._embed(query)
         ranked = sorted(
             (
                 (node, cosine_similarity(query_embedding, self._embed(node.content)))
-                for node in self.store.nodes()
+                for node in nodes
             ),
             key=lambda item: item[1],
             reverse=True,
@@ -143,7 +146,15 @@ class EmbeddingTopKRetriever:
         return ranked[:top_k]
 
     def semantic_similarity(self, query: str, text: str) -> float:
+        self._prefetch([query, text])
         return cosine_similarity(self._embed(query), self._embed(text))
+
+    def _prefetch(self, texts: list[str]) -> None:
+        missing = [text for text in texts if text not in self._embedding_cache]
+        if not missing:
+            return
+        for text, vector in zip(missing, embed_many(self.embedding_provider, missing)):
+            self._embedding_cache[text] = vector
 
     def _embed(self, text: str) -> list[float]:
         if text not in self._embedding_cache:
