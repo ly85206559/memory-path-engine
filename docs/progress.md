@@ -3,14 +3,14 @@
 > 对照 [vision.md](vision.md) 三阶段路线图与 [benchmark-strategy.md](benchmark-strategy.md) 三层评测模型。  
 > 本文件是可交付的现状快照；**不取代**也不修改历史 plan 文件。
 
-**快照：** Product **M10**（HotpotQA mid-slice KPI + dense cache）；**PyPI** [`memory-path-engine`](https://pypi.org/project/memory-path-engine/)（`0.8.1` 已发；本分支 bump `0.9.0`）。
+**快照：** Product **M11**（LongMemEval turn mid-slice KPI）；**PyPI** [`memory-path-engine==0.9.0`](https://pypi.org/project/memory-path-engine/0.9.0/)（本分支 bump `0.10.0`）。
 
 ## 1. 定位与成熟度
 
 | 维度 | 现状 |
 | --- | --- |
 | 定位 | 从研究原型转向 **本地记忆产品**（可回放路径） |
-| 版本 | `pyproject.toml` → `0.9.0`（M10）；PyPI 当前 `0.8.1` |
+| 版本 | `pyproject.toml` → `0.10.0`（M11）；PyPI 当前 `0.9.0` |
 | 产品入口 | `mpe` CLI、`.mpe/` SQLite palace、`mpe mcp` / Docker `mpe-mcp`、hooks |
 | 研究内核 | typed graph、`MemoryPath`、Palace v1、Stage 6 类脑机制 |
 | Embedding | 默认 `ngram`；可选 `fastembed` / `sentence-transformers` |
@@ -42,7 +42,7 @@
 
 | Layer | 目标 | 现状 | 验收命令 |
 | --- | --- | --- | --- |
-| **A** 外部站位 | LongMemEval / HotpotQA | LongMemEval full 500q；**HotpotQA medium64 KPI**（hybrid 领先） | `mpe bench longmemeval` / `scripts/run_hotpotqa_benchmark.py --limit 64` |
+| **A** 外部站位 | LongMemEval / HotpotQA | LongMemEval session full + **turn medium50**；HotpotQA medium64 | `mpe bench longmemeval --granularity turn` / HotpotQA `--limit 64` |
 | **B** 机制验证 | path / semantic / contradiction / dynamic | fixtures + Stage1 标注规格 + Layer B / ablation 报告 | `python scripts/generate_layer_b_report.py` |
 | **C** 真实迁移 | 噪声文档 + 私有金标流程 | stand-in 可跑 + inventory/annotation 模板 + 试点清单 | `python scripts/run_layer_c_benchmark.py` |
 
@@ -72,7 +72,8 @@
 - [x] M7 hybrid seed 重排（full hybrid NDCG@10 **0.767→0.863**，对齐 lexical）  
 - [x] M8 PyPI 元数据 + Trusted Publisher；**已上架** `memory-path-engine==0.8.0`  
 - [x] M9 发布面收口（文档 / doctor 提示 / Release）  
-- [x] M10 HotpotQA mid-slice KPI + HF 下载回退 + embedding 磁盘缓存
+- [x] M10 HotpotQA mid-slice KPI + HF 下载回退 + embedding 磁盘缓存  
+- [x] M11 LongMemEval turn mid-slice KPI（medium50）
 
 ## 7. 计划附录：你还需要准备的数据
 
@@ -100,15 +101,16 @@
 已提交 medium KPI：`benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}.*`。  
 M5 对比：`longmemeval_kpi_medium50_fastembed.*`。  
 M6 full：`longmemeval_kpi_full_ngram.*` / `longmemeval_kpi_full_fastembed.*`（500q）。  
-M10 HotpotQA mid：`benchmarks/external/hotpotqa/baselines/hotpotqa_kpi_medium64*.*`。
+M10 HotpotQA mid：`benchmarks/external/hotpotqa/baselines/hotpotqa_kpi_medium64*.*`。  
+M11 turn mid：`benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium50_turn.*`。
 
 ## 8. 建议的下一步优先级
 
 1. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
-2. **可选**：HotpotQA full distractor KPI / LongMemEval turn-granularity 扩展表  
+2. **可选**：HotpotQA full distractor KPI / turn+fastembed 扩展表  
 3. **可选**：路径可解释性 / agent UX 打磨
 
 ## 9. 关闭结论
 
-原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M10**，PyPI 正式包可用。  
+原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M11**，PyPI 正式包可用。  
 未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选体验增强。

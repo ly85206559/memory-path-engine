@@ -75,8 +75,20 @@ Committed medium-slice KPI tables (no raw dataset):
 - `baselines/longmemeval_kpi_medium30.md` — 30q session (ngram)
 - `baselines/longmemeval_kpi_medium50.md` — 50q session (ngram)
 - `baselines/longmemeval_kpi_medium50_fastembed.md` — 50q session (`fastembed` / BGE-small)
+- `baselines/longmemeval_kpi_medium50_turn.md` — 50q **turn** (ngram; Product M11)
 - `baselines/longmemeval_kpi_full_ngram.md` — **500q full** LongMemEval-S (ngram)
 - `baselines/longmemeval_kpi_full_fastembed.md` — **500q full** with optional `fastembed`
+
+Turn mid-slice recipe:
+
+```bash
+mpe bench longmemeval \
+  --dataset benchmarks/external/longmemeval/data/longmemeval_s_cleaned.json \
+  --label medium50 --granularity turn --limit 50
+# writes longmemeval_baseline_medium50-turn.*; also commit kpi_*_turn for public tables
+```
+
+Labels auto-suffix `-turn` and `-<embedding>` (when not ngram) so dense runs do not overwrite ngram artifacts.
 
 Primary product mode for public recall is **`hybrid`** (BM25-aware lexical + pluggable embeddings + score-ordered ranking). Default embedding is dependency-free **`ngram`**; optional dense backends:
 

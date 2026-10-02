@@ -431,6 +431,9 @@ def _cmd_bench_longmemeval(args: argparse.Namespace) -> int:
     label = args.label
     if args.granularity == "turn" and "turn" not in label:
         label = f"{label}-turn"
+    embedding = (args.embedding or "").strip().lower()
+    if embedding and embedding not in {"ngram", "default", "product"} and embedding not in label:
+        label = f"{label}-{embedding}"
     result = run_longmemeval_baseline(
         dataset=args.dataset,
         limit=args.limit,

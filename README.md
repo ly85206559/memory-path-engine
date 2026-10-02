@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/memory-path-engine.svg)](https://pypi.org/project/memory-path-engine/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M10)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M11)-0e7c86.svg)](docs/ROADMAP.md)
 
 Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
@@ -110,10 +110,12 @@ Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
 | **500q (full)** | **ngram** | **hybrid** | **0.950** | **0.974** | **0.863** |
 | 500q (full) | ngram | lexical_baseline | 0.950 | 0.974 | 0.863 |
 | **500q (full)** | **fastembed** | **hybrid** | **0.962** | **0.980** | **0.875** |
+| 50q **turn** | ngram | hybrid | 0.840 | 0.920 | 0.714 |
+| 50q **turn** | ngram | lexical_baseline | 0.840 | 0.920 | 0.714 |
 
-Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,full_ngram,full_fastembed}.*`.
+Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,medium50_turn,full_ngram,full_fastembed}.*`.
 
-M7 note: hybrid public ranking now reuses BM25/blend seed scores so NDCG no longer collapses after graph expansion. With `fastembed`, hybrid **beats** lexical on full R@5/R@10/NDCG.
+M7 note: hybrid public ranking now reuses BM25/blend seed scores so NDCG no longer collapses after graph expansion. With `fastembed`, hybrid **beats** lexical on full R@5/R@10/NDCG. Turn mid-slice (Product M11) is harder than session (R@5 0.84 vs 0.98) as expected with finer units.
 
 **HotpotQA mid-slice (64q, evidence-hit, Product M10):**
 
@@ -402,10 +404,10 @@ Current run matrix:
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M10** are done (`memory-path-engine` is on PyPI); next levers:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M11** are done (`memory-path-engine` is on PyPI); next levers:
 
 - Organization-side Layer C private gold labels
-- Optional HotpotQA full distractor KPI / LongMemEval turn-granularity tables
+- Optional HotpotQA full distractor KPI / turn+fastembed tables
 - Optional path explainability / agent UX polish
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
