@@ -1,0 +1,76 @@
+{
+  "label": "medium64_fastembed",
+  "generated_at": "2026-10-02T08:40:31+00:00",
+  "source": "hotpot_dev_distractor_v1.json",
+  "embedding": "fastembed",
+  "samples": 64,
+  "metric_scope": "external_positioning",
+  "notes": [
+    "Product M10 dense comparison on the same 64q mid-slice.",
+    "fastembed embedding_baseline beats ngram especially on comparison (paraphrase-like) questions.",
+    "hybrid+fastembed edges hybrid+ngram overall (0.859 vs 0.844).",
+    "Do not treat as Layer B architecture proof."
+  ],
+  "modes": {
+    "lexical_baseline": {
+      "questions": 64,
+      "evidence_hit_rate": 0.40625,
+      "evidence_recall": 0.40625,
+      "avg_latency_ms": 2.006,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.354167,
+          "evidence_recall": 0.354167,
+          "avg_latency_ms": 2.111
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.5625,
+          "evidence_recall": 0.5625,
+          "avg_latency_ms": 1.69
+        }
+      }
+    },
+    "hybrid": {
+      "questions": 64,
+      "evidence_hit_rate": 0.859375,
+      "evidence_recall": 0.859375,
+      "avg_latency_ms": 340.117,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.833333,
+          "evidence_recall": 0.833333,
+          "avg_latency_ms": 351.438
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.9375,
+          "evidence_recall": 0.9375,
+          "avg_latency_ms": 306.152
+        }
+      }
+    },
+    "embedding_baseline": {
+      "questions": 64,
+      "evidence_hit_rate": 0.53125,
+      "evidence_recall": 0.53125,
+      "avg_latency_ms": 0.57,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.4375,
+          "evidence_recall": 0.4375,
+          "avg_latency_ms": 0.587
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.8125,
+          "evidence_recall": 0.8125,
+          "avg_latency_ms": 0.517
+        }
+      }
+    }
+  }
+}

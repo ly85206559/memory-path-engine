@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
+import os
 import re
 from collections import Counter
+from pathlib import Path
 from typing import Protocol
 
 _STOPWORDS = frozenset(
@@ -196,6 +199,53 @@ class NgramHashingEmbeddingProvider:
         return [compact[idx : idx + size] for idx in range(len(compact) - size + 1)]
 
 
+class DiskEmbeddingCache:
+    """Optional on-disk vector cache keyed by SHA-256(model + text).
+
+    Enable with ``MPE_EMBEDDING_CACHE_DIR=/path/to/dir``. Used by dense backends
+    so repeated LongMemEval / HotpotQA runs skip re-encoding identical texts.
+    """
+
+    def __init__(self, root: Path, *, model_name: str) -> None:
+        self.root = Path(root)
+        self.model_name = model_name
+        self.root.mkdir(parents=True, exist_ok=True)
+
+    def _path_for(self, text: str) -> Path:
+        digest = hashlib.sha256(f"{self.model_name}\0{text}".encode("utf-8")).hexdigest()
+        return self.root / digest[:2] / f"{digest}.json"
+
+    def get(self, text: str) -> list[float] | None:
+        path = self._path_for(text)
+        if not path.is_file():
+            return None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        vector = payload.get("vector")
+        if not isinstance(vector, list):
+            return None
+        return [float(value) for value in vector]
+
+    def put(self, text: str, vector: list[float]) -> None:
+        path = self._path_for(text)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".json.part")
+        tmp.write_text(
+            json.dumps({"model": self.model_name, "vector": vector}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        tmp.replace(path)
+
+
+def _optional_disk_cache(model_name: str) -> DiskEmbeddingCache | None:
+    root = os.environ.get("MPE_EMBEDDING_CACHE_DIR", "").strip()
+    if not root:
+        return None
+    return DiskEmbeddingCache(Path(root), model_name=model_name)
+
+
 class FastEmbedEmbeddingProvider:
     """Optional ONNX embedding backend via ``fastembed`` (Product M5/M6).
 
@@ -205,6 +255,8 @@ class FastEmbedEmbeddingProvider:
     Long session texts are head+tail truncated to ``max_chars`` (BGE context is
     ~512 tokens). Batch size auto-falls back to 1 for very long corpora where
     padding would dominate.
+
+    Optional disk cache: set ``MPE_EMBEDDING_CACHE_DIR``.
     """
 
     def __init__(
@@ -214,6 +266,7 @@ class FastEmbedEmbeddingProvider:
         batch_size: int = 32,
         max_chars: int = 4000,
         long_text_chars: int = 1500,
+        disk_cache: DiskEmbeddingCache | None = None,
     ) -> None:
         try:
             from fastembed import TextEmbedding
@@ -228,6 +281,7 @@ class FastEmbedEmbeddingProvider:
         self.long_text_chars = max(256, long_text_chars)
         self._model = TextEmbedding(model_name=model_name)
         self._cache: dict[str, list[float]] = {}
+        self._disk_cache = disk_cache if disk_cache is not None else _optional_disk_cache(model_name)
 
     def embed(self, text: str) -> list[float]:
         cached = self._cache.get(text)
@@ -244,6 +298,10 @@ class FastEmbedEmbeddingProvider:
         pending_texts: list[str] = []
         for index, text in enumerate(texts):
             cached = self._cache.get(text)
+            if cached is None and self._disk_cache is not None:
+                cached = self._disk_cache.get(text)
+                if cached is not None:
+                    self._cache[text] = cached
             if cached is not None:
                 results[index] = cached
             else:
@@ -269,12 +327,17 @@ class FastEmbedEmbeddingProvider:
             for index, text in zip(pending_idx, pending_texts):
                 vector = encoded[unique_index[text]]
                 self._cache[text] = vector
+                if self._disk_cache is not None:
+                    self._disk_cache.put(text, vector)
                 results[index] = vector
         return [vector or [] for vector in results]
 
 
 class SentenceTransformerEmbeddingProvider:
-    """Optional dense embedder via ``sentence-transformers`` (Product M5/M6)."""
+    """Optional dense embedder via ``sentence-transformers`` (Product M5/M6).
+
+    Optional disk cache: set ``MPE_EMBEDDING_CACHE_DIR``.
+    """
 
     def __init__(
         self,
@@ -283,6 +346,7 @@ class SentenceTransformerEmbeddingProvider:
         batch_size: int = 32,
         max_chars: int = 4000,
         long_text_chars: int = 1500,
+        disk_cache: DiskEmbeddingCache | None = None,
     ) -> None:
         try:
             from sentence_transformers import SentenceTransformer
@@ -297,6 +361,7 @@ class SentenceTransformerEmbeddingProvider:
         self.long_text_chars = max(256, long_text_chars)
         self._model = SentenceTransformer(model_name)
         self._cache: dict[str, list[float]] = {}
+        self._disk_cache = disk_cache if disk_cache is not None else _optional_disk_cache(model_name)
 
     def embed(self, text: str) -> list[float]:
         cached = self._cache.get(text)
@@ -313,6 +378,10 @@ class SentenceTransformerEmbeddingProvider:
         pending_texts: list[str] = []
         for index, text in enumerate(texts):
             cached = self._cache.get(text)
+            if cached is None and self._disk_cache is not None:
+                cached = self._disk_cache.get(text)
+                if cached is not None:
+                    self._cache[text] = cached
             if cached is not None:
                 results[index] = cached
             else:
@@ -340,6 +409,8 @@ class SentenceTransformerEmbeddingProvider:
             for index, text in zip(pending_idx, pending_texts):
                 vector = encoded[unique_index[text]]
                 self._cache[text] = vector
+                if self._disk_cache is not None:
+                    self._disk_cache.put(text, vector)
                 results[index] = vector
         return [vector or [] for vector in results]
 

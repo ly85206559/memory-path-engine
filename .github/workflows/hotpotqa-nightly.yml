@@ -22,7 +22,7 @@ on:
       modes:
         description: "Comma-separated retriever modes."
         required: false
-        default: "lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1"
+        default: "lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1"
   schedule:
     - cron: "0 2 * * *"
 
@@ -44,8 +44,11 @@ jobs:
       - name: Install
         run: python -m pip install --no-build-isolation -e .
 
+      - name: Install HuggingFace datasets (CMU URL fallback)
+        run: python -m pip install datasets
+
       - name: Download HotpotQA dev distractor
-        run: python scripts/download_hotpotqa.py --force
+        run: python scripts/download_hotpotqa.py --force --source auto --timeout 30 --retries 2
 
       - name: Resolve sample limit
         id: limit
@@ -64,7 +67,7 @@ jobs:
           --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json"
           --limit "${{ steps.limit.outputs.value }}"
           --top-k "${{ github.event.inputs.top_k || '10' }}"
-          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1' }}"
+          --modes "${{ github.event.inputs.modes || 'lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1' }}"
           --output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-report.json"
           --summary-output "benchmarks/external/hotpotqa/data/hotpotqa-nightly-summary.json"
 

@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/memory-path-engine.svg)](https://pypi.org/project/memory-path-engine/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M9)-0e7c86.svg)](docs/ROADMAP.md)
+[![Status: Productizing](https://img.shields.io/badge/status-productizing%20(M10)-0e7c86.svg)](docs/ROADMAP.md)
 
 Local memory with **replayable evidence paths** — not only `top-k` chunks. Structured graph retrieval for agents, with a local palace CLI, MCP closed loop, and public-benchmark KPIs.
 
@@ -115,6 +115,17 @@ Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,
 
 M7 note: hybrid public ranking now reuses BM25/blend seed scores so NDCG no longer collapses after graph expansion. With `fastembed`, hybrid **beats** lexical on full R@5/R@10/NDCG.
 
+**HotpotQA mid-slice (64q, evidence-hit, Product M10):**
+
+| Embedding | Mode | evidence_hit | comparison hit |
+| --- | --- | ---: | ---: |
+| ngram | lexical_baseline | 0.406 | 0.562 |
+| ngram | hybrid | **0.844** | 0.938 |
+| fastembed | embedding_baseline | 0.531 | **0.812** |
+| fastembed | hybrid | **0.859** | 0.938 |
+
+Artifacts: `benchmarks/external/hotpotqa/baselines/hotpotqa_kpi_medium64*.md`. Dense (`fastembed`) especially helps comparison/paraphrase-like questions; set `MPE_EMBEDDING_CACHE_DIR` to cache vectors on disk.
+
 Optional dense embeddings (Product M5+): default remains dependency-free `ngram`. Install `pip install 'memory-path-engine[embed]'` then:
 
 ```bash
@@ -169,6 +180,26 @@ Run the HotpotQA tiny benchmark sanity check:
 ```bash
 python scripts/run_hotpotqa_benchmark.py
 ```
+
+Download HotpotQA (CMU URL, with HuggingFace Hub fallback) and run the medium64 KPI slice:
+
+```bash
+python scripts/download_hotpotqa.py
+python scripts/run_hotpotqa_benchmark.py \
+  --dataset benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json \
+  --limit 64 --top-k 10 \
+  --modes lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1 \
+  --summary-output benchmarks/external/hotpotqa/data/hotpotqa-medium64-summary.json
+```
+
+Optional dense embedding disk cache (Product M10):
+
+```bash
+export MPE_EMBEDDING_CACHE_DIR="$PWD/.mpe/embed-cache"
+export MPE_EMBEDDING=fastembed
+```
+
+Committed mid-slice KPI: `benchmarks/external/hotpotqa/baselines/hotpotqa_kpi_medium64*.md`.
 
 Run the LongMemEval tiny benchmark sanity check:
 
@@ -371,11 +402,11 @@ Current run matrix:
 
 ## Planned next steps
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M9** are done (`memory-path-engine` is on PyPI); next levers:
+See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M10** are done (`memory-path-engine` is on PyPI); next levers:
 
 - Organization-side Layer C private gold labels
-- Optional dense-wins over lexical on paraphrase-heavy slices
-- Optional HotpotQA mid-slice / turn-granularity KPI tables
+- Optional HotpotQA full distractor KPI / LongMemEval turn-granularity tables
+- Optional path explainability / agent UX polish
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

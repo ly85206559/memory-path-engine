@@ -80,6 +80,14 @@ recall becomes a first-class product KPI (Layer A).
 - [x] `mpe doctor` install tips prefer PyPI
 - [x] GitHub Release for `v0.8.0` / follow-up `v0.8.1` polish tag
 
+### M10 — HotpotQA mid-slice KPI + dense cache
+
+- [x] Committed HotpotQA medium64 KPI tables (`hotpotqa_kpi_medium64*`)
+- [x] Dense (`fastembed`) comparison on the same slice — wins on comparison/paraphrase-like questions
+- [x] HotpotQA download: HuggingFace Hub fallback when CMU URL times out
+- [x] Optional embedding disk cache (`MPE_EMBEDDING_CACHE_DIR`)
+- [x] Nightly HotpotQA includes `hybrid` + HF fallback
+
 ## Non-goals (for now)
 
 - Hosted multi-vendor vector zoo as a hard requirement
@@ -88,4 +96,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M9 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M10 scorecard against the original vision + benchmark strategy.

@@ -2,6 +2,14 @@
 
 All notable product releases are listed here.
 
+## 0.9.0 — Product M10 (HotpotQA mid-slice KPI)
+
+- HotpotQA medium64 public KPI tables (ngram + fastembed)
+- `scripts/download_hotpotqa.py` HuggingFace Hub fallback when CMU URL is unreachable
+- `scripts/write_hotpotqa_kpi.py` for committed baseline artifacts
+- Optional dense embedding disk cache via `MPE_EMBEDDING_CACHE_DIR`
+- Nightly HotpotQA workflow includes `hybrid` and HF fallback
+
 ## 0.8.1 — Product M9 (release polish)
 
 - Docs/ROADMAP mark PyPI `0.8.0` as published
