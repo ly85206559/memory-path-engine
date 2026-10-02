@@ -1,3 +1,4 @@
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -39,11 +40,15 @@ class HotpotDownloadFallbackTests(unittest.TestCase):
         ]
         fake_ds = MagicMock()
         fake_ds.__iter__.return_value = iter(fake_rows)
+        fake_datasets = MagicMock()
+        fake_datasets.load_dataset.return_value = fake_ds
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "hotpot.json"
-            with patch("datasets.load_dataset", return_value=fake_ds) as mocked:
+            # CI does not install `datasets`; inject a stub module instead of
+            # patching an import that would fail to resolve.
+            with patch.dict(sys.modules, {"datasets": fake_datasets}):
                 path = export_from_huggingface(output_path=out, force=True)
-            mocked.assert_called_once()
+            fake_datasets.load_dataset.assert_called_once()
             payload = path.read_text(encoding="utf-8")
             self.assertIn('"_id": "1"', payload)
             self.assertIn('"supporting_facts": [["T", 0]]', payload)
