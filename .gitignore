@@ -14,6 +14,8 @@ mpe-backups/
 benchmarks/**/data/*.json
 benchmarks/**/*report*.json
 
-# Keep committed LongMemEval baseline KPI skeletons
+# Keep committed LongMemEval / HotpotQA baseline KPI skeletons
 !benchmarks/external/longmemeval/baselines/
 !benchmarks/external/longmemeval/baselines/**
+!benchmarks/external/hotpotqa/baselines/
+!benchmarks/external/hotpotqa/baselines/**

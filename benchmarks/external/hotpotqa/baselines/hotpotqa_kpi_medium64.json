@@ -1,0 +1,115 @@
+{
+  "label": "medium64",
+  "generated_at": "2026-10-02T08:40:31+00:00",
+  "source": "hotpot_dev_distractor_v1.json",
+  "embedding": "ngram",
+  "samples": 64,
+  "metric_scope": "external_positioning",
+  "notes": [
+    "Product M10 mid-slice (64q) public HotpotQA evidence-hit KPI.",
+    "hybrid (ngram) leads overall; retrieval-only (not official EM/F1).",
+    "Do not treat as Layer B architecture proof."
+  ],
+  "modes": {
+    "lexical_baseline": {
+      "questions": 64,
+      "evidence_hit_rate": 0.40625,
+      "evidence_recall": 0.40625,
+      "avg_latency_ms": 2.026,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.354167,
+          "evidence_recall": 0.354167,
+          "avg_latency_ms": 2.132
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.5625,
+          "evidence_recall": 0.5625,
+          "avg_latency_ms": 1.711
+        }
+      }
+    },
+    "embedding_baseline": {
+      "questions": 64,
+      "evidence_hit_rate": 0.234375,
+      "evidence_recall": 0.234375,
+      "avg_latency_ms": 6.031,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.208333,
+          "evidence_recall": 0.208333,
+          "avg_latency_ms": 6.249
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.3125,
+          "evidence_recall": 0.3125,
+          "avg_latency_ms": 5.378
+        }
+      }
+    },
+    "weighted_graph": {
+      "questions": 64,
+      "evidence_hit_rate": 0.609375,
+      "evidence_recall": 0.609375,
+      "avg_latency_ms": 4.478,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.604167,
+          "evidence_recall": 0.604167,
+          "avg_latency_ms": 4.603
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.625,
+          "evidence_recall": 0.625,
+          "avg_latency_ms": 4.103
+        }
+      }
+    },
+    "hybrid": {
+      "questions": 64,
+      "evidence_hit_rate": 0.84375,
+      "evidence_recall": 0.84375,
+      "avg_latency_ms": 17.628,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.8125,
+          "evidence_recall": 0.8125,
+          "avg_latency_ms": 18.288
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.9375,
+          "evidence_recall": 0.9375,
+          "avg_latency_ms": 15.647
+        }
+      }
+    },
+    "activation_spreading_v1": {
+      "questions": 64,
+      "evidence_hit_rate": 0.59375,
+      "evidence_recall": 0.59375,
+      "avg_latency_ms": 4.193,
+      "breakdown_by_type": {
+        "bridge": {
+          "questions": 48,
+          "evidence_hit_rate": 0.583333,
+          "evidence_recall": 0.583333,
+          "avg_latency_ms": 4.373
+        },
+        "comparison": {
+          "questions": 16,
+          "evidence_hit_rate": 0.625,
+          "evidence_recall": 0.625,
+          "avg_latency_ms": 3.653
+        }
+      }
+    }
+  }
+}

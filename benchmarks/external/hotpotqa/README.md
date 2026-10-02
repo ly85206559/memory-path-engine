@@ -24,6 +24,21 @@ You can download the file into the repository's external-benchmark area with:
 python scripts/download_hotpotqa.py
 ```
 
+If the official CMU URL is unreachable, the script automatically falls back to
+HuggingFace Hub (`hotpotqa/hotpot_qa`, distractor/validation) and rewrites the
+official JSON shape. Force HuggingFace only with `--source huggingface`.
+
+Committed **medium64** public KPI tables (no raw dataset):
+
+- `baselines/hotpotqa_kpi_medium64.md` — 64q (ngram; hybrid leads)
+- `baselines/hotpotqa_kpi_medium64_fastembed.md` — same slice with `fastembed`
+
+Regenerate from a summary JSON:
+
+```bash
+python scripts/write_hotpotqa_kpi.py --summary ... --label medium64 --embedding ngram
+```
+
 ## Run (local)
 
 Run the checked-in tiny fixture:
@@ -35,7 +50,7 @@ python scripts/run_hotpotqa_benchmark.py
 Run a downloaded official file:
 
 ```bash
-python scripts/run_hotpotqa_benchmark.py --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json" --limit 64 --top-k 10 --modes lexical_baseline,embedding_baseline,weighted_graph,activation_spreading_v1
+python scripts/run_hotpotqa_benchmark.py --dataset "benchmarks/external/hotpotqa/data/hotpot_dev_distractor_v1.json" --limit 64 --top-k 10 --modes lexical_baseline,embedding_baseline,weighted_graph,hybrid,activation_spreading_v1
 ```
 
 Pretty-print the full suite JSON:
@@ -62,7 +77,7 @@ The main CI workflow does **not** download HotpotQA. A dedicated sanity job uses
 
 A separate GitHub Actions workflow, `hotpotqa-nightly.yml`, is intended for scheduled or manual runs against the downloaded official `dev distractor` file and uploads both the full suite JSON and a compact summary artifact.
 
-Nightly defaults to a **medium** slice (`64` samples). Use `slice_profile=full` (or `sample_limit=0`) for the complete downloaded file. Summary artifacts are labeled `metric_scope=external_positioning` so they are not confused with Layer B architecture metrics.
+Nightly defaults to a **medium** slice (`64` samples) including **`hybrid`**. Use `slice_profile=full` (or `sample_limit=0`) for the complete downloaded file. Summary artifacts are labeled `metric_scope=external_positioning` so they are not confused with Layer B architecture metrics.
 
 For a combined HotpotQA + LongMemEval positioning report:
 
