@@ -88,6 +88,12 @@ recall becomes a first-class product KPI (Layer A).
 - [x] Optional embedding disk cache (`MPE_EMBEDDING_CACHE_DIR`)
 - [x] Nightly HotpotQA includes `hybrid` + HF fallback
 
+### M11 — LongMemEval turn mid-slice KPI
+
+- [x] Committed turn-granularity medium50 public KPI (`longmemeval_kpi_medium50_turn.*`)
+- [x] Bench label auto-suffix (`-turn` / `-<embedding>`) avoids overwriting session/ngram artifacts
+- [x] Document turn vs session gap (turn R@5 lower than session, as expected)
+
 ## Non-goals (for now)
 
 - Hosted multi-vendor vector zoo as a hard requirement
@@ -96,4 +102,4 @@ recall becomes a first-class product KPI (Layer A).
 
 ## Progress snapshot
 
-See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M10 scorecard against the original vision + benchmark strategy.
+See [`progress.md`](progress.md) for the Stage 0–6 / Layer A–C / Product M1–M11 scorecard against the original vision + benchmark strategy.

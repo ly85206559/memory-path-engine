@@ -2,6 +2,12 @@
 
 All notable product releases are listed here.
 
+## 0.10.0 — Product M11 (LongMemEval turn mid-slice KPI)
+
+- Committed LongMemEval medium50 **turn** public KPI (`longmemeval_kpi_medium50_turn.*`)
+- `mpe bench longmemeval` auto-suffixes labels with `-turn` / `-<embedding>` to avoid overwrites
+- Docs/ROADMAP mark M11; PyPI follow-up after merge
+
 ## 0.9.0 — Product M10 (HotpotQA mid-slice KPI)
 
 - HotpotQA medium64 public KPI tables (ngram + fastembed)
