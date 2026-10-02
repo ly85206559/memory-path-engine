@@ -21,7 +21,7 @@ from memory_engine.embeddings import (
     resolve_embedding_provider,
     tokenize,
 )
-from memory_engine.memory.domain.retrieval_result import PalaceRecallResult
+from memory_engine.memory.domain.retrieval_result import PalaceRecallResult, RetrievedMemory
 from memory_engine.memory_state import MemoryStatePolicy, decay_unvisited_nodes, reinforce_result_paths
 from memory_engine.replay import path_answer
 from memory_engine.schema import ActivationContext, ActivationTraceStep, RetrievalResult
@@ -628,6 +628,10 @@ class HybridRetriever(WeightedGraphRetriever):
 
     Weak local hash embeddings must not drown strong lexical hits, so the final
     similarity is ``max(lexical, blended)``.
+
+    After graph expansion, public ranking is re-aligned to the hybrid seed scores
+    (Product M7). WeightedSum path scoring is useful for explainable routes, but
+    it can bury strong BM25/blend seeds behind weaker neighbors and crush NDCG.
     """
 
     lexical_weight: float = 0.60
@@ -646,6 +650,80 @@ class HybridRetriever(WeightedGraphRetriever):
             scoring_strategy=scoring_strategy,
             memory_state_policy=memory_state_policy,
         )
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 3,
+        context: ActivationContext | None = None,
+    ) -> RetrievalResult:
+        seed_scores = {
+            node.id: float(score)
+            for node, score in self._rank_seed_candidates(query, top_k=top_k)
+        }
+        result = super().search(query, top_k=top_k, context=context)
+        return self._rerank_palace_by_seed_scores(result, seed_scores)
+
+    @staticmethod
+    def _rerank_palace_by_seed_scores(
+        result: RetrievalResult,
+        seed_scores: dict[str, float],
+    ) -> RetrievalResult:
+        palace = result.palace_result
+        if palace is None or not palace.retrieved_memories or not seed_scores:
+            return result
+
+        seed_floor = min(seed_scores.values())
+        rewritten: list[RetrievedMemory] = []
+        for item in palace.retrieved_memories:
+            if item.memory_id in seed_scores:
+                score = seed_scores[item.memory_id]
+                rewritten.append(
+                    RetrievedMemory(
+                        memory_id=item.memory_id,
+                        score=score,
+                        reason=f"hybrid seed rank score={score:.3f}",
+                        retrieval_role="seed",
+                        source_path=item.source_path,
+                        memory_kind=item.memory_kind,
+                        lifecycle_state=item.lifecycle_state,
+                        consolidation_kind=item.consolidation_kind,
+                    )
+                )
+                continue
+            # Expansion-only supports stay below the weakest seed.
+            score = min(float(item.score), seed_floor * 0.95)
+            rewritten.append(
+                RetrievedMemory(
+                    memory_id=item.memory_id,
+                    score=score,
+                    reason=item.reason,
+                    retrieval_role=item.retrieval_role,
+                    source_path=item.source_path,
+                    memory_kind=item.memory_kind,
+                    lifecycle_state=item.lifecycle_state,
+                    consolidation_kind=item.consolidation_kind,
+                )
+            )
+
+        rewritten.sort(
+            key=lambda memory: (
+                memory.score,
+                1 if memory.retrieval_role == "seed" else 0,
+            ),
+            reverse=True,
+        )
+        metadata = dict(palace.metadata)
+        metadata["hybrid_seed_rerank"] = True
+        result.palace_result = PalaceRecallResult(
+            query=palace.query,
+            retrieved_memories=tuple(rewritten),
+            routes=palace.routes,
+            activation_snapshot=palace.activation_snapshot,
+            final_answer=palace.final_answer,
+            metadata=metadata,
+        )
+        return result
 
     def _rank_seed_candidates(self, query: str, top_k: int) -> list[tuple]:
         combined: dict[str, tuple] = {}
