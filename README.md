@@ -106,8 +106,10 @@ Checked-in tiny reports live under `benchmarks/external/longmemeval/baselines/`.
 | 50q | fastembed | hybrid | 0.980 | 1.000 | 0.872 |
 | **500q (full)** | **ngram** | **hybrid** | **0.938** | **0.978** | **0.767** |
 | 500q (full) | ngram | lexical_baseline | 0.950 | 0.974 | 0.863 |
+| **500q (full)** | **fastembed** | **hybrid** | **0.952** | **0.982** | **0.775** |
+| 500q (full) | fastembed | embedding_baseline | 0.934 | 0.974 | 0.848 |
 
-Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,full_ngram}.*`.
+Artifacts: `benchmarks/external/longmemeval/baselines/longmemeval_kpi_{medium30,medium50,medium50_fastembed,full_ngram,full_fastembed}.*`.
 
 Optional dense embeddings (Product M5+): default remains dependency-free `ngram`. Install `pip install 'memory-path-engine[embed]'` then:
 
@@ -368,8 +370,8 @@ Current run matrix:
 See [`docs/ROADMAP.md`](docs/ROADMAP.md). Product **M1–M6** are done; next levers:
 
 - Organization-side Layer C private gold labels
-- Optional full LongMemEval-S with `--embedding fastembed`
 - Optional PyPI publish
+- Further full-corpus NDCG lift (hybrid still trails lexical on NDCG@10)
 
 For suggested GitHub topic tags (About section), see [`docs/github-topics.md`](docs/github-topics.md).
 

@@ -94,15 +94,15 @@
 不必自建；使用 `scripts/download_hotpotqa.py` / `download_longmemeval.py`。  
 已提交 medium KPI：`benchmarks/external/longmemeval/baselines/longmemeval_kpi_medium{30,50}.*`。  
 M5 对比：`longmemeval_kpi_medium50_fastembed.*`。  
-M6 full：`longmemeval_kpi_full_ngram.*`（500q）。
+M6 full：`longmemeval_kpi_full_ngram.*` / `longmemeval_kpi_full_fastembed.*`（500q）。
 
 ## 8. 建议的下一步优先级
 
 1. **组织侧 Layer C**：填 inventory + 私有金标（不提交私密文本）  
-2. **可选**：full LongMemEval-S + `--embedding fastembed` 对照表  
-3. **可选**：发布 PyPI 正式包名 / Homebrew 等二次分发
+2. **可选**：发布 PyPI 正式包名 / Homebrew 等二次分发  
+3. **可选**：继续抬升 full hybrid NDCG（相对 lexical 仍有差距）
 
 ## 9. 关闭结论
 
 原计划中的研究阶段 **0–6** 与附录「先动手清单」的**仓库侧交付**已合入主干；并行产品线完成 **M1–M6**。  
-未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选 PyPI / fastembed-full 对照。
+未改 plan 文件本身。剩余工作主要是组织侧私有数据与可选 PyPI。
